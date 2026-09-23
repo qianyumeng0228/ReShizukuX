@@ -63,17 +63,12 @@ public class ShizukuSettings {
         public static final String KEY_AVF_MANAGER_ENABLED = "avf_manager_enabled";
         public static final String KEY_STORAGE_PROXY_ENABLED = "storage_proxy_enabled";
         public static final String KEY_CONTINUITY_BRIDGE_ENABLED = "continuity_bridge_enabled";
-        public static final String KEY_AI_CORE_PLUS_ENABLED = "ai_core_plus_enabled";
-        public static final String KEY_AI_CORE_MASTER_ENABLED = "ai_core_master_enabled";
-        public static final String KEY_AI_CORE_EXPERIMENTAL_ENABLED = "ai_core_experimental_enabled";
-        public static final String KEY_NPU_ACCELERATION_ENABLED = "npu_acceleration_enabled";
 
         // External relay auto-activation (Scene ADB mode / Brevent): when enabled, an
         // accessibility service watches for Scene's ADB-code page and for Brevent opening,
         // and runs the relay activation chain automatically; permission requests from the
         // relayed apps are auto-allowed as well.
         public static final String KEY_EXTERNAL_RELAY_AUTO = "external_relay_auto";
-        public static final String KEY_NATIVE_WINDOW_CRAWLER_ENABLED = "native_window_crawler_enabled";
         public static final String KEY_WINDOW_MANAGER_PLUS_ENABLED = "window_manager_plus_enabled";
         public static final String KEY_OVERLAY_MANAGER_PLUS_ENABLED = "overlay_manager_plus_enabled";
         public static final String KEY_NETWORK_GOVERNOR_PLUS_ENABLED = "network_governor_plus_enabled";
@@ -166,7 +161,6 @@ public class ShizukuSettings {
         // Companion Mode (ShizukuX additions)
         public static final String KEY_COMPANION_MODE = "companion_mode";
         public static final String KEY_COMPANION_FALLBACK = "companion_fallback";
-        public static final String KEY_LIVE_ACTIVITY_ENABLED = "live_activity_enabled";
         public static final String KEY_AUTO_RECONNECT_MDNS = "auto_reconnect_mdns";
         public static final String KEY_STEALTH_MODE = "stealth_mode";
         public static final String KEY_HIDE_FROM_RECENTS = "hide_from_recents";
@@ -796,56 +790,6 @@ public class ShizukuSettings {
         return p == null || p.getBoolean(Keys.KEY_CONTINUITY_BRIDGE_ENABLED, true);
     }
 
-    public static boolean isAICoreExtraEnabled() {
-        SharedPreferences p = getPreferences();
-        return p == null || p.getBoolean(Keys.KEY_AI_CORE_PLUS_ENABLED, true);
-    }
-
-    public static void setAICoreExtraEnabled(boolean enabled) {
-        SharedPreferences p = getPreferences();
-        if (p != null) p.edit().putBoolean(Keys.KEY_AI_CORE_PLUS_ENABLED, enabled).apply();
-    }
-
-    public static boolean isAiCoreMasterEnabled() {
-        SharedPreferences p = getPreferences();
-        return p != null && p.getBoolean(Keys.KEY_AI_CORE_MASTER_ENABLED, false);
-    }
-
-    public static void setAiCoreMasterEnabled(boolean enabled) {
-        SharedPreferences p = getPreferences();
-        if (p != null) p.edit().putBoolean(Keys.KEY_AI_CORE_MASTER_ENABLED, enabled).apply();
-    }
-
-    public static boolean isAICoreExperimentalEnabled() {
-        SharedPreferences p = getPreferences();
-        return p != null && p.getBoolean(Keys.KEY_AI_CORE_EXPERIMENTAL_ENABLED, false);
-    }
-
-    public static void setAICoreExperimentalEnabled(boolean enabled) {
-        SharedPreferences p = getPreferences();
-        if (p != null) p.edit().putBoolean(Keys.KEY_AI_CORE_EXPERIMENTAL_ENABLED, enabled).apply();
-    }
-
-    public static boolean isNpuAccelerationEnabled() {
-        SharedPreferences p = getPreferences();
-        return p != null && p.getBoolean(Keys.KEY_NPU_ACCELERATION_ENABLED, false);
-    }
-
-    public static void setNpuAccelerationEnabled(boolean enabled) {
-        SharedPreferences p = getPreferences();
-        if (p != null) p.edit().putBoolean(Keys.KEY_NPU_ACCELERATION_ENABLED, enabled).apply();
-    }
-
-    public static boolean isNativeWindowCrawlerEnabled() {
-        SharedPreferences p = getPreferences();
-        return p != null && p.getBoolean(Keys.KEY_NATIVE_WINDOW_CRAWLER_ENABLED, false);
-    }
-
-    public static void setNativeWindowCrawlerEnabled(boolean enabled) {
-        SharedPreferences p = getPreferences();
-        if (p != null) p.edit().putBoolean(Keys.KEY_NATIVE_WINDOW_CRAWLER_ENABLED, enabled).apply();
-    }
-
     public static boolean isWindowManagerPlusEnabled() {
         SharedPreferences p = getPreferences();
         return p == null || p.getBoolean(Keys.KEY_WINDOW_MANAGER_PLUS_ENABLED, true);
@@ -1115,11 +1059,6 @@ public class ShizukuSettings {
                 service.updateExtraFeatureEnabled("avf_manager", isAvfManagerEnabled());
                 service.updateExtraFeatureEnabled("storage_proxy", isStorageProxyEnabled());
                 service.updateExtraFeatureEnabled("continuity_bridge", isContinuityBridgeEnabled());
-                service.updateExtraFeatureEnabled("ai_core_plus", isAICoreExtraEnabled());
-                service.updateExtraFeatureEnabled("ai_core_master", isAiCoreMasterEnabled());
-                service.updateExtraFeatureEnabled("ai_core_experimental", isAICoreExperimentalEnabled());
-                service.updateExtraFeatureEnabled("npu_acceleration", isNpuAccelerationEnabled());
-                service.updateExtraFeatureEnabled("native_window_crawler", isNativeWindowCrawlerEnabled());
                 service.updateExtraFeatureEnabled("window_manager_plus", isWindowManagerPlusEnabled());
                 service.updateExtraFeatureEnabled("overlay_manager_plus", isOverlayManagerPlusEnabled());
                 service.updateExtraFeatureEnabled("network_governor_plus", isNetworkGovernorPlusEnabled());
@@ -1272,15 +1211,6 @@ public class ShizukuSettings {
         if (p != null) p.edit().putBoolean(Keys.KEY_STEALTH_MODE, enable).apply();
     }
 
-
-    public static boolean isLiveActivityEnabled() {
-        SharedPreferences p = getPreferences();
-        return p == null || p.getBoolean(Keys.KEY_LIVE_ACTIVITY_ENABLED, true);
-    }
-    public static void setLiveActivityEnabled(boolean enable) {
-        SharedPreferences p = getPreferences();
-        if (p != null) p.edit().putBoolean(Keys.KEY_LIVE_ACTIVITY_ENABLED, enable).apply();
-    }
 
     public static boolean isAutoReconnectMdnsEnabled() {
         SharedPreferences p = getPreferences();

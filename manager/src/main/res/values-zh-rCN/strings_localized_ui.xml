@@ -246,11 +246,6 @@
     <string name="diagnostics_device_owner_message">Dhizuku 模式要求将本应用设为设备所有者。\n\n请在电脑上启用 USB 调试后运行以下命令：\n\n%1$s</string>
     <string name="diagnostics_clipboard_label">dpm 命令</string>
     <string name="notification_auth_errors_channel_name">身份验证错误</string>
-    <string name="live_activity_channel_name">ShizukuX 实时状态</string>
-    <string name="live_activity_channel_description">显示 Shizuku 的实时服务状态</string>
-    <string name="live_activity_notification_title">ShizukuX 已激活</string>
-    <string name="live_activity_status_system_bridge_active">系统桥接已激活</string>
-    <string name="live_activity_status_monitoring">正在监控...</string>
     <string name="quick_settings_tile_label_active">Shizuku：已激活</string>
     <string name="quick_settings_tile_label_starting">正在启动...</string>
     <string name="quick_settings_tile_label_off">Shizuku：已关闭</string>

@@ -247,11 +247,6 @@
     <string name="diagnostics_device_owner_message">Dhizuku Mode requires this app to be the Device Owner.\n\nRun this command from your PC while USB debugging is enabled:\n\n%1$s</string>
     <string name="diagnostics_clipboard_label">dpm command</string>
     <string name="notification_auth_errors_channel_name">Authentication Errors</string>
-    <string name="live_activity_channel_name">ShizukuX live status</string>
-    <string name="live_activity_channel_description">Shows live Shizuku activity</string>
-    <string name="live_activity_notification_title">ShizukuX active</string>
-    <string name="live_activity_status_system_bridge_active">System Bridge Active</string>
-    <string name="live_activity_status_monitoring">Monitoring...</string>
     <string name="quick_settings_tile_label_active">Shizuku: Active</string>
     <string name="quick_settings_tile_label_starting">Starting...</string>
     <string name="quick_settings_tile_label_off">Shizuku: Off</string>

@@ -16,6 +16,5 @@ class ActivityLogSettingsImpl : ActivityLogSettings {
 
     override fun showNotification(appName: String, action: String) {
         if (!ShizukuSettings.isActivityLogEnabled()) return
-        if (!ShizukuSettings.isLiveActivityEnabled()) return
     }
 }

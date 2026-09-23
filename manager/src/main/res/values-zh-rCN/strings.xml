@@ -1102,8 +1102,6 @@
     <string name="home_companion_open"><![CDATA[打开]]></string>
     <string name="home_companion_install"><![CDATA[安装]]></string>
     <string name="watchdog_open_stock_shizuku"><![CDATA[打开原版 Shizuku]]></string>
-    <string name="settings_live_activity"><![CDATA[实时状态通知]]></string>
-    <string name="settings_live_activity_summary"><![CDATA[在状态栏中显示服务实时状态]]></string>
     <string name="app_management_empty"><![CDATA[未找到应用]]></string>
     <string name="app_management_search_hint"><![CDATA[搜索应用]]></string>
     <string name="settings_adb_category"><![CDATA[ADB 管理]]></string>

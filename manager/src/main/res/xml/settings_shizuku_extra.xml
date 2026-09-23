@@ -235,52 +235,6 @@
             app:badgeType="experimental" />
 
         <af.shizuku.manager.settings.ExtraFeaturePreference
-            android:key="ai_core_plus_enabled"
-            android:title="@string/settings_ai_bridge_npu_title"
-            android:summary="@string/settings_ai_core_plus_summary"
-            android:icon="@drawable/ic_integration_instructions_24"
-            android:defaultValue="false"
-            app:infoTitle="@string/help_ai_core_plus_title"
-            app:infoDetail="@string/help_ai_core_plus_detail"
-            app:badgeType="experimental" />
-
-        <af.shizuku.manager.settings.ExtraFeaturePreference
-            android:key="ai_core_master_enabled"
-            android:title="@string/settings_ai_core_master_title"
-            android:summary="@string/settings_ai_core_master_summary"
-            android:icon="@drawable/ic_integration_instructions_24"
-            android:defaultValue="false"
-            android:dependency="ai_core_plus_enabled"
-            app:badgeType="experimental" />
-
-        <af.shizuku.manager.settings.ExtraFeaturePreference
-            android:key="npu_acceleration_enabled"
-            android:title="@string/settings_npu_acceleration_title"
-            android:summary="@string/settings_npu_acceleration_summary"
-            android:icon="@drawable/ic_settings_suggest_24"
-            android:defaultValue="false"
-            android:dependency="ai_core_master_enabled"
-            app:badgeType="experimental" />
-
-        <af.shizuku.manager.settings.ExtraFeaturePreference
-            android:key="native_window_crawler_enabled"
-            android:title="@string/settings_window_hierarchy_crawler_title"
-            android:summary="@string/settings_window_hierarchy_crawler_summary"
-            android:icon="@drawable/ic_code_24"
-            android:defaultValue="false"
-            android:dependency="ai_core_master_enabled"
-            app:badgeType="experimental" />
-
-        <af.shizuku.manager.settings.ExtraFeaturePreference
-            android:key="ai_core_experimental_enabled"
-            android:title="@string/settings_experimental_ai_automation_title"
-            android:summary="@string/settings_experimental_ai_automation_summary"
-            android:icon="@drawable/ic_science_24"
-            android:defaultValue="false"
-            android:dependency="ai_core_plus_enabled"
-            app:badgeType="experimental" />
-
-        <af.shizuku.manager.settings.ExtraFeaturePreference
             android:key="software_keystore_fallback_enabled"
             android:title="@string/settings_software_keystore_fallback_title"
             android:summary="@string/settings_software_keystore_fallback_summary"
