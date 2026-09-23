@@ -35,7 +35,6 @@ import af.shizuku.manager.home.showAdbPermissionGuide
 import af.shizuku.manager.receiver.DeveloperOptionsRestorer
 import af.shizuku.manager.utils.ShizukuStateMachine
 import rikka.shizuku.Shizuku
-import io.sentry.Sentry
 
 class ServiceDoctorActivity : AppBarActivity() {
 
@@ -295,7 +294,6 @@ class ServiceDoctorActivity : AppBarActivity() {
                                 withContext(Dispatchers.Main) { Toast.makeText(this@ServiceDoctorActivity, R.string.service_doctor_fix_requires_service, Toast.LENGTH_SHORT).show() }
                             }
                         } catch (e: Exception) {
-                            Sentry.captureException(e)
                             withContext(Dispatchers.Main) { Toast.makeText(this@ServiceDoctorActivity, getString(R.string.service_doctor_fix_failed, e.message), Toast.LENGTH_LONG).show() }
                         }
                     }

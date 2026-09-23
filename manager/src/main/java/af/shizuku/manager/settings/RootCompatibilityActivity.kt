@@ -43,7 +43,6 @@ import af.shizuku.manager.database.AppContextManager
 import af.shizuku.manager.database.RootCompatHelper
 import rikka.shizuku.Shizuku
 import af.shizuku.manager.database.RootSupportLevel
-import io.sentry.Sentry
 
 class RootCompatibilityActivity : AppBarActivity() {
 
@@ -417,9 +416,6 @@ class RootCompatibilityActivity : AppBarActivity() {
                     isInstalled = true
                 } catch (e: Exception) {
                     Timber.tag(TAG).w(e, "Failed to check if package $pkg is installed")
-                    if (e !is PackageManager.NameNotFoundException) {
-                        Sentry.captureException(e)
-                    }
                 }
 
                 holder.binding.suMagicSetup.isVisible = isInstalled
@@ -474,7 +470,6 @@ class RootCompatibilityActivity : AppBarActivity() {
                                 startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$pkg")))
                             } catch (e: Exception) {
                                 timber.log.Timber.w(e, "start application details settings failed")
-                                Sentry.captureException(e)
                             }
                         }
                     }
@@ -509,7 +504,6 @@ class RootCompatibilityActivity : AppBarActivity() {
                                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$pkg")))
                             } catch (e2: Exception) {
                                 Timber.w("start view intent failed", e2)
-                                Sentry.captureException(e2)
                             }
                         }
                     }

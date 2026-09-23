@@ -27,9 +27,6 @@ import af.shizuku.manager.adb.AdbKey
 import af.shizuku.manager.adb.AdbPairingClient
 import af.shizuku.manager.home.HomeActivity
 import af.shizuku.manager.utils.EnvironmentUtils
-import io.sentry.Sentry
-import io.sentry.Breadcrumb
-import io.sentry.SentryLevel
 import java.util.concurrent.atomic.AtomicBoolean
 
 class AdbPairingAccessibilityService : AccessibilityService() {
@@ -112,9 +109,6 @@ class AdbPairingAccessibilityService : AccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
         Log.i("AdbAccessibility", "onServiceConnected")
-        Sentry.addBreadcrumb(Breadcrumb("ADB Pairing Accessibility Service connected").apply {
-            category = "adb.pairing"
-        })
 
         val isTv = EnvironmentUtils.isTelevision()
 
@@ -211,10 +205,6 @@ class AdbPairingAccessibilityService : AccessibilityService() {
             if (className.contains("AlertDialog") || className.contains("Dialog")) {
                 val text = source.text ?: ""
                 Timber.tag("AdbAccessibility").d("Samsung Dialog detected: $text")
-                Sentry.addBreadcrumb(Breadcrumb("Samsung Dialog detected").apply {
-                    category = "adb.pairing"
-                    setData("text", text.toString())
-                })
             }
         }
 
@@ -280,7 +270,6 @@ class AdbPairingAccessibilityService : AccessibilityService() {
                     AdbKey(PreferenceAdbKeyStore(ShizukuSettings.getPreferences()), "shizukux")
                 } catch (e: Throwable) {
                     Timber.tag("AdbAccessibility").e(e, "Failed to load AdbKey")
-                    Sentry.captureException(e)
                     withContext(Dispatchers.Main) {
                         Toast.makeText(this@AdbPairingAccessibilityService, getString(R.string.adb_error_key_store), Toast.LENGTH_LONG).show()
                     }
@@ -323,9 +312,6 @@ class AdbPairingAccessibilityService : AccessibilityService() {
                 }.onSuccess {
                     if (it) {
                         Log.i("AdbAccessibility", "PAIRING succeeded")
-                        Sentry.addBreadcrumb(Breadcrumb("Pairing client succeeded").apply {
-                            category = "adb.pairing"
-                        })
                         withContext(Dispatchers.Main) {
                             Toast.makeText(
                                 this@AdbPairingAccessibilityService,
@@ -353,11 +339,6 @@ class AdbPairingAccessibilityService : AccessibilityService() {
                             }
                             startActivity(intent)
                         }
-                    } else {
-                        Sentry.addBreadcrumb(Breadcrumb("Pairing client returned false").apply {
-                            category = "adb.pairing"
-                            level = SentryLevel.WARNING
-                        })
                     }
                     resetAutoPairing()
                     disableSelf()
@@ -380,9 +361,6 @@ class AdbPairingAccessibilityService : AccessibilityService() {
                 delay(60_000)
                 if (timeoutGeneration == gen && (port == null || password == null)) {
                     Timber.tag("AdbAccessibility").w("Pairing discovery timed out")
-                    Sentry.addBreadcrumb(Breadcrumb("Pairing discovery timed out").apply {
-                        level = SentryLevel.WARNING
-                    })
                     Toast.makeText(this@AdbPairingAccessibilityService, getString(R.string.toast_pairing_timeout), Toast.LENGTH_LONG).show()
                     disableSelf()
                 }
@@ -779,9 +757,6 @@ class AdbPairingAccessibilityService : AccessibilityService() {
                 port = it
                 Log.i("AdbAccessibility", "PORT found=" + it + " text=[" + text + "] win=" + candidateWindowId)
                 Timber.tag("AdbAccessibility").i("Pairing port found: %d (window %d)", it, candidateWindowId)
-                Sentry.addBreadcrumb(Breadcrumb("Pairing port found via standard regex").apply {
-                    category = "adb.pairing"
-                })
                 return
             }
             // Samsung specific: sometimes the port is in a different view or has specific labels
@@ -790,9 +765,6 @@ class AdbPairingAccessibilityService : AccessibilityService() {
                     port = it
                     Log.i("AdbAccessibility", "PORT found(samsung)=" + it + " text=[" + text + "] win=" + candidateWindowId)
                     Timber.tag("AdbAccessibility").i("Pairing port found via Samsung fallback: %d (window %d)", it, candidateWindowId)
-                    Sentry.addBreadcrumb(Breadcrumb("Pairing port found via Samsung fallback").apply {
-                        category = "adb.pairing"
-                    })
                     return
                 }
             }
@@ -826,9 +798,6 @@ class AdbPairingAccessibilityService : AccessibilityService() {
                 password = it
                 Log.i("AdbAccessibility", "PASSWORD found=" + it + " text=[" + text + "] win=" + candidateWindowId)
                 Timber.tag("AdbAccessibility").i("Pairing password found: %s (window %d)", it, candidateWindowId)
-                Sentry.addBreadcrumb(Breadcrumb("Pairing password found").apply {
-                    category = "adb.pairing"
-                })
                 scheduleTimeoutIfNeeded()
                 return
             }

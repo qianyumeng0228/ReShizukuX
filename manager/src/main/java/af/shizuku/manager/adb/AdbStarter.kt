@@ -24,7 +24,6 @@ import af.shizuku.manager.adb.PreferenceAdbKeyStore
 import af.shizuku.manager.starter.Starter
 import af.shizuku.manager.utils.EnvironmentUtils
 import af.shizuku.manager.utils.ShizukuStateMachine
-import io.sentry.Sentry
 import android.app.Activity
 import android.content.ContextWrapper
 import android.view.ContextThemeWrapper
@@ -123,9 +122,6 @@ object AdbStarter {
                     }
                 }
             }
-            if (e !is CancellationException && !e.isExpectedAdbError()) {
-                Sentry.captureException(e)
-            }
             throw e
         } finally {
             if (ShizukuSettings.getAutoDisableUsbDebugging() && context.checkSelfPermission(WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED)
@@ -154,9 +150,6 @@ object AdbStarter {
                 }
             }
         }.onFailure {
-            if (it !is CancellationException && !it.isExpectedAdbError(includeIllegalState = true)) {
-                Sentry.captureException(it)
-            }
             if (EnvironmentUtils.getAdbTcpPort() > 0) {
                 ShizukuStateMachine.update()
                 withContext(Dispatchers.Main) {

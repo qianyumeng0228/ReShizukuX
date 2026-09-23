@@ -38,7 +38,6 @@ class StartRootViewHolder(
     private inline val start get() = binding.button1
     private inline val restart get() = binding.button2
 
-    private var lottieAvailable: Boolean? = null
     private val originalIcon = binding.icon.drawable
 
     init {
@@ -80,21 +79,6 @@ class StartRootViewHolder(
         val isRunning = data == true
         start.isVisible = !isRunning
         restart.isVisible = isRunning
-
-        // Expressive Lottie Integration — probe asset once and cache result.
-        if (af.shizuku.manager.ShizukuSettings.isExpressiveAnimationsEnabled()) {
-            val lottieView = itemView.findViewById<com.airbnb.lottie.LottieAnimationView>(R.id.lottie_start)
-            if (lottieView != null) {
-                val available = lottieAvailable ?: runCatching {
-                    context.assets.open("lottie/button_start.json").close(); true
-                }.getOrDefault(false).also { lottieAvailable = it }
-                lottieView.isVisible = available
-                if (available) {
-                    lottieView.setAnimation("lottie/button_start.json")
-                    lottieView.playAnimation()
-                }
-            }
-        }
 
         val sb = StringBuilder()
             .append(

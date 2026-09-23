@@ -14,8 +14,6 @@ import af.shizuku.manager.ShizukuApplication
 import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.BuildConfig
 import rikka.shizuku.Shizuku
-import io.sentry.Sentry
-import io.sentry.Breadcrumb
 
 object ShizukuStateMachine {
 
@@ -44,18 +42,11 @@ object ShizukuStateMachine {
     init {
         Shizuku.addBinderReceivedListenerSticky(
             Shizuku.OnBinderReceivedListener {
-                Sentry.addBreadcrumb(Breadcrumb("Binder received - service is now RUNNING").apply {
-                    category = "shizuku.service"
-                })
                 set(State.RUNNING)
             }
         )
         Shizuku.addBinderDeadListener(
             Shizuku.OnBinderDeadListener {
-                Sentry.addBreadcrumb(Breadcrumb("Binder dead - service connection lost").apply {
-                    category = "shizuku.service"
-                    level = io.sentry.SentryLevel.WARNING
-                })
                 setDead()
             }
         )
@@ -144,13 +135,10 @@ object ShizukuStateMachine {
     }
 
     fun update(): State {
-        val span = Sentry.getSpan()?.startChild("ipc.shizuku", "pingBinder")
         val isAlive = try {
             Shizuku.pingBinder()
         } catch (e: Exception) {
             false
-        } finally {
-            span?.finish()
         }
 
         val currentState = get()

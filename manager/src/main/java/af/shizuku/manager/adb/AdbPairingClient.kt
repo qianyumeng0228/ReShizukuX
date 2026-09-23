@@ -12,9 +12,6 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import javax.net.ssl.SSLSocket
 
-import io.sentry.Sentry
-import io.sentry.Breadcrumb
-
 private const val TAG = "AdbPairClient"
 
 private const val kCurrentKeyHeaderVersion = 1.toByte()
@@ -183,21 +180,12 @@ class AdbPairingClient(private val host: String, private val port: Int, private 
     private var state: State = State.Ready
 
     fun start(): Boolean {
-        Sentry.addBreadcrumb(Breadcrumb("ADB Pairing started").apply {
-            category = "adb.pairing"
-            setData("host", host)
-            setData("port", port.toString())
-        })
         try {
             setupTlsConnection()
 
             state = State.ExchangingMsgs
 
             if (!doExchangeMsgs()) {
-                Sentry.addBreadcrumb(Breadcrumb("ADB Pairing failed at message exchange").apply {
-                    category = "adb.pairing"
-                    level = io.sentry.SentryLevel.ERROR
-                })
                 state = State.Stopped
                 return false
             }
@@ -205,22 +193,13 @@ class AdbPairingClient(private val host: String, private val port: Int, private 
             state = State.ExchangingPeerInfo
 
             if (!doExchangePeerInfo()) {
-                Sentry.addBreadcrumb(Breadcrumb("ADB Pairing failed at peer info exchange").apply {
-                    category = "adb.pairing"
-                    level = io.sentry.SentryLevel.ERROR
-                })
                 state = State.Stopped
                 return false
             }
 
-            Sentry.addBreadcrumb(Breadcrumb("ADB Pairing succeeded").apply { category = "adb.pairing" })
             state = State.Stopped
             return true
         } catch (e: Exception) {
-            Sentry.addBreadcrumb(Breadcrumb("ADB Pairing error: ${e.message}").apply {
-                category = "adb.pairing"
-                level = io.sentry.SentryLevel.ERROR
-            })
             if (e is AdbInvalidPairingCodeException) {
                 Timber.tag(TAG).w("Invalid pairing code entered")
             } else {

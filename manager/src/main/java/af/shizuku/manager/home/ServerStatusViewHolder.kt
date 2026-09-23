@@ -44,7 +44,6 @@ class ServerStatusViewHolder(private val binding: HomeServerStatusBinding, root:
     private inline val logChip get() = binding.btnActivityLog
     private inline val diagnosticsChip get() = binding.btnDiagnostics
     private inline val statusIndicator get() = binding.statusIndicator
-    private inline val sentryButton get() = binding.btnSentryOffline
 
     override fun onBind() {
         val context = itemView.context
@@ -72,19 +71,6 @@ class ServerStatusViewHolder(private val binding: HomeServerStatusBinding, root:
             statusIndicator.startAnimation(pulse)
         } else {
             statusIndicator.clearAnimation()
-        }
-
-        // Show Sentry offline button only if limit is reached
-        sentryButton.visibility = if (af.shizuku.manager.ShizukuSettings.isSentryLimitReached()) View.VISIBLE else View.GONE
-        sentryButton.setOnClickListener {
-            com.google.android.material.dialog.MaterialAlertDialogBuilder(context)
-                .setTitle(R.string.sentry_offline_notice_title)
-                .setMessage(R.string.sentry_offline_notice_learn_more)
-                .setPositiveButton(android.R.string.ok, null)
-                .setNeutralButton(R.string.update_view_on_github) { _, _ ->
-                    af.shizuku.manager.utils.CustomTabsHelper.launchUrlOrCopy(context, ProjectLinks.ISSUES)
-                }
-                .show()
         }
 
         // S-Pen / DeX Mouse Hover Effect (Expressive Polish)

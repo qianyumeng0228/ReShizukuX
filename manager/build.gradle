@@ -8,10 +8,8 @@ plugins {
     id "dev.rikka.tools.refine"
     id "dev.rikka.tools.autoresconfig"
     id "dev.rikka.tools.materialthemebuilder"
-    id "io.sentry.android.gradle"
     id "org.jetbrains.kotlin.plugin.serialization" version "2.2.20"
     id "com.diffplug.spotless"
-    id "com.mikepenz.aboutlibraries.plugin"
 }
 
 android {
@@ -21,17 +19,6 @@ android {
         versionCode rootProject.ext.versionCode
         versionName rootProject.ext.versionName
         resValue "string", "app_name", "Shizuku"
-        def sentryDsn = project.findProperty('SENTRY_DSN') ?: ''
-        buildConfigField "String", "SENTRY_DSN", "\"${sentryDsn}\""
-        manifestPlaceholders = [
-            sentryDsn: sentryDsn,
-            // Dhizuku content-provider authority is defined directly in AndroidManifest.xml
-            // as ${applicationId}.dhizuku_server.provider - the exact authority the official
-            // Dhizuku client SDK resolves from the device-owner package name (see
-            // DhizukuVariables.getProviderAuthorityName). Keeping it package-scoped means the
-            // debug build (applicationIdSuffix ".debug") and every flavor resolve correctly
-            // with no provider conflict against an installed standalone Dhizuku.
-        ]
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
         multiDexKeepProguard file("multidex-keep.pro")
@@ -113,10 +100,6 @@ spotless {
         indentWithSpaces()
         endWithNewline()
     }
-}
-
-aboutLibraries {
-    registerAndroidTasks = true
 }
 
 autoResConfig {
@@ -219,8 +202,6 @@ dependencies {
     implementation libs.androidx.transition
     implementation libs.androidx.dynamicanimation
     implementation libs.androidx.interpolator
-    implementation libs.androidx.glance.appwidget
-    implementation libs.androidx.biometric
     implementation libs.androidx.core.remoteviews
 
     implementation libs.timber
@@ -229,15 +210,11 @@ dependencies {
 
     implementation libs.koin.android
     implementation libs.kotlinx.serialization.json
-    implementation libs.lottie
-    implementation libs.markwon.core
-    debugImplementation libs.leakcanary
 
     implementation libs.material
 
     implementation libs.libsu.core
     
-    implementation libs.aboutlibraries.core
     implementation libs.rikkax.appcompat
     implementation libs.rikkax.compatibility
     implementation libs.rikkax.core
@@ -260,11 +237,6 @@ dependencies {
 
     implementation libs.appiconloader
 
-    implementation libs.sentry.android.core
-    implementation libs.sentry.android.fragment
-    implementation libs.sentry.android.timber
-    implementation libs.sentry.android.okhttp
-
     testImplementation libs.kotestJunit5
     testImplementation libs.mockk
     testImplementation libs.robolectric
@@ -283,34 +255,6 @@ android {
         unitTests.all {
             useJUnitPlatform()
         }
-    }
-}
-
-sentry {
-    org = "af-developments"
-    projectName = "shizukuplus"
-    def sentryToken = System.getenv("SENTRY_AUTH_TOKEN") ?: project.findProperty("SENTRY_AUTH_TOKEN")
-    authToken = sentryToken ?: ""
-    
-    if (sentryToken == null || sentryToken.isEmpty()) {
-        uploadNativeSymbols = false
-        includeNativeSources = false
-        includeSourceContext = false
-        autoUploadProguardMapping = provider { false }
-    } else {
-        uploadNativeSymbols = true
-        includeNativeSources = true
-        includeSourceContext = true
-        autoUploadProguardMapping = provider { true }
-    }
-    
-    // Track releases with git commit info
-    ignoredBuildTypes = ["debug"]
-
-    // Project uses Glance (compose-based widgets) but not full compose-ui.
-    // Disable Sentry's compose bytecode instrumentation to avoid R8 missing-class errors.
-    tracingInstrumentation {
-        enabled = false
     }
 }
 

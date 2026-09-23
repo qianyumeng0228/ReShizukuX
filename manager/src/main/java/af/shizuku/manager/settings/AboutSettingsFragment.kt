@@ -9,7 +9,6 @@ import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.TwoStatePreference
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import io.noties.markwon.Markwon
 import kotlinx.coroutines.launch
 import af.shizuku.manager.BuildConfig
 import af.shizuku.manager.R
@@ -210,7 +209,6 @@ class AboutSettingsFragment : BaseSettingsFragment() {
                 notes?.takeIf { it.isNotBlank() }
                     ?.let { formatForDialog(it) }
                     ?.takeIf { it.isNotBlank() }
-                    ?.let { Markwon.create(context).toMarkdown(it) }
                     ?: getString(R.string.changelog_fallback_message)
             } catch (e: Exception) {
                 Timber.w(e, "Failed to format update content")

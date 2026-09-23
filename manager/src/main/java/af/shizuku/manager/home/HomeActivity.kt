@@ -49,7 +49,6 @@ import af.shizuku.manager.update.UpdateChecker
 import af.shizuku.manager.update.UpdateManager
 import af.shizuku.manager.utils.AppIconCache
 import af.shizuku.manager.utils.EnvironmentUtils
-import io.noties.markwon.Markwon
 import af.shizuku.manager.utils.HapticUtils
 import af.shizuku.manager.utils.ProjectLinks
 import af.shizuku.manager.utils.SettingsHelper
@@ -692,7 +691,7 @@ open class HomeActivity : AppActivity(), MavericksView {
             .trim()
             .ifEmpty { getString(R.string.update_no_release_notes) }
         val releaseNotesView = dialogView.findViewById<TextView>(R.id.update_release_notes)
-        Markwon.create(this).setMarkdown(releaseNotesView, notesBody)
+        releaseNotesView.text = notesBody
         releaseNotesView?.movementMethod = LinkMovementMethod.getInstance()
 
         val openReleases = {

@@ -11,7 +11,6 @@ import android.view.MotionEvent
 import android.widget.TextView
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import io.noties.markwon.Markwon
 import af.shizuku.manager.R
 import af.shizuku.manager.utils.ProjectLinks
 import timber.log.Timber
@@ -73,11 +72,9 @@ class ChangelogDialogFragment : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val rawNotes = arguments?.getString(ARG_NOTES)
         val tagName = arguments?.getString(ARG_TAG_NAME) ?: ""
-        val markwon = Markwon.create(requireContext())
 
         val message: CharSequence = try {
             rawNotes?.let { formatForDialog(it) }?.takeIf { it.isNotBlank() }
-                ?.let { markwon.toMarkdown(it) }
                 ?: getString(R.string.changelog_fallback_message)
         } catch (e: Exception) {
             Timber.w(e, "Failed to format release notes for dialog")

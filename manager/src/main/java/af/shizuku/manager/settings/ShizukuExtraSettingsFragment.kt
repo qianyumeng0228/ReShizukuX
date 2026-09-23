@@ -18,8 +18,6 @@ import rikka.html.text.toHtml
 import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
 import rikka.shizuku.Shizuku
-import af.shizuku.manager.security.BiometricLock
-import androidx.biometric.BiometricPrompt
 import af.shizuku.manager.ShizukuSettings.Keys.*
 
 import android.view.Menu
@@ -82,48 +80,21 @@ class ShizukuExtraSettingsFragment : BaseSettingsFragment() {
     private val createBackupLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         if (uri == null) return@registerForActivityResult
         val ctx = requireContext()
-        val lock = BiometricLock(requireActivity())
-        val useAuth = lock.canAuthenticate(ctx)
-
-        if (!useAuth) {
-            try {
-                val cipher = CryptoUtils.getCipherForEncryption(userAuthRequired = false)
-                val payload = BackupRestoreManager.createBackupPayload(ctx, cipher)
-                ctx.contentResolver.openOutputStream(uri)?.use { os ->
-                    OutputStreamWriter(os, Charsets.UTF_8).use { it.write(payload) }
-                }
-                Toast.makeText(ctx, R.string.settings_backup_exported, Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                Toast.makeText(ctx, backupErrorMessage(ctx, R.string.settings_backup_failed_prefix, false, e), Toast.LENGTH_LONG).show()
-            }
-            return@registerForActivityResult
-        }
-
         try {
-            val cipher = CryptoUtils.getCipherForEncryption(userAuthRequired = true)
-            lock.authenticate(onSuccess = { crypto ->
-                try {
-                    val payload = BackupRestoreManager.createBackupPayload(ctx, crypto?.cipher ?: cipher)
-                    ctx.contentResolver.openOutputStream(uri)?.use { os ->
-                        OutputStreamWriter(os, Charsets.UTF_8).use { it.write(payload) }
-                    }
-                Toast.makeText(ctx, R.string.settings_backup_exported, Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
-                    Toast.makeText(ctx, backupErrorMessage(ctx, R.string.settings_backup_failed_prefix, false, e), Toast.LENGTH_LONG).show()
-                }
-            }, onError = { errCode ->
-                Toast.makeText(ctx, ctx.getString(R.string.settings_authentication_failed, errCode), Toast.LENGTH_SHORT).show()
-            }, crypto = BiometricPrompt.CryptoObject(cipher))
+            val cipher = CryptoUtils.getCipherForEncryption(userAuthRequired = false)
+            val payload = BackupRestoreManager.createBackupPayload(ctx, cipher)
+            ctx.contentResolver.openOutputStream(uri)?.use { os ->
+                OutputStreamWriter(os, Charsets.UTF_8).use { it.write(payload) }
+            }
+            Toast.makeText(ctx, R.string.settings_backup_exported, Toast.LENGTH_SHORT).show()
         } catch (e: Exception) {
-            Toast.makeText(ctx, R.string.settings_backup_operation_failed, Toast.LENGTH_LONG).show()
+            Toast.makeText(ctx, backupErrorMessage(ctx, R.string.settings_backup_failed_prefix, false, e), Toast.LENGTH_LONG).show()
         }
     }
 
     private val restoreBackupLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@registerForActivityResult
         val ctx = requireContext()
-        val lock = BiometricLock(requireActivity())
-        val useAuth = lock.canAuthenticate(ctx)
 
         try {
             val payload = ctx.contentResolver.openInputStream(uri)?.use { `is` ->
@@ -143,28 +114,13 @@ class ShizukuExtraSettingsFragment : BaseSettingsFragment() {
 
             val iv = BackupRestoreManager.extractIv(payload)
 
-            if (!useAuth) {
-                try {
-                    val cipher = CryptoUtils.getCipherForDecryption(iv, userAuthRequired = false)
-                    BackupRestoreManager.restoreFromPayload(ctx, payload, cipher)
-                    Toast.makeText(ctx, R.string.settings_backup_restored_restart, Toast.LENGTH_LONG).show()
-                } catch (e: Exception) {
-                    Toast.makeText(ctx, backupErrorMessage(ctx, R.string.settings_restore_failed_prefix, true, e), Toast.LENGTH_LONG).show()
-                }
-                return@registerForActivityResult
+            try {
+                val cipher = CryptoUtils.getCipherForDecryption(iv, userAuthRequired = false)
+                BackupRestoreManager.restoreFromPayload(ctx, payload, cipher)
+                Toast.makeText(ctx, R.string.settings_backup_restored_restart, Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(ctx, backupErrorMessage(ctx, R.string.settings_restore_failed_prefix, true, e), Toast.LENGTH_LONG).show()
             }
-
-            val cipher = CryptoUtils.getCipherForDecryption(iv, userAuthRequired = true)
-            lock.authenticate(onSuccess = { crypto ->
-                try {
-                    BackupRestoreManager.restoreFromPayload(ctx, payload, crypto?.cipher ?: cipher)
-                    Toast.makeText(ctx, R.string.settings_backup_restored_restart, Toast.LENGTH_LONG).show()
-                } catch (e: Exception) {
-                    Toast.makeText(ctx, backupErrorMessage(ctx, R.string.settings_restore_failed_prefix, true, e), Toast.LENGTH_LONG).show()
-                }
-            }, onError = { errCode ->
-                Toast.makeText(ctx, ctx.getString(R.string.settings_authentication_failed, errCode), Toast.LENGTH_SHORT).show()
-            }, crypto = BiometricPrompt.CryptoObject(cipher))
         } catch (e: Exception) {
             Toast.makeText(ctx, R.string.settings_restore_operation_failed, Toast.LENGTH_LONG).show()
         }
@@ -461,20 +417,6 @@ class ShizukuExtraSettingsFragment : BaseSettingsFragment() {
 
         findPreference<Preference>("ai_core_plus_enabled")?.setOnPreferenceChangeListener { _, newValue ->
             val enabled = newValue as? Boolean ?: false
-            if (enabled) {
-                val lock = BiometricLock(requireActivity())
-                if (lock.canAuthenticate(requireContext())) {
-                    lock.authenticate({
-                        ShizukuSettings.setAICoreExtraEnabled(true)
-                        ShizukuSettings.syncAllExtraFeaturesToServer()
-                        activity?.runOnUiThread {
-                            findPreference<TwoStatePreference>("ai_core_plus_enabled")?.isChecked = true
-                            updatePlusFeatureDependency("ai_core_plus_enabled", true)
-                        }
-                    }, { _ -> /* Ignore or show toast */ })
-                    return@setOnPreferenceChangeListener false
-                }
-            }
             // fallback / standard or disabling
             preferenceManager.sharedPreferences?.edit()?.putBoolean("ai_core_plus_enabled", enabled)?.apply()
             // Cascade child state BEFORE syncing: disabling ai_core_plus force-unchecks the

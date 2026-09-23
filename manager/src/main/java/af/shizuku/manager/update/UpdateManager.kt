@@ -17,7 +17,6 @@ import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.FileProvider
-import io.sentry.Sentry
 import af.shizuku.manager.home.HomeActivity
 import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.BuildConfig
@@ -147,7 +146,6 @@ class UpdateManager(private val context: Context) {
             monitorDownload(downloadId, file, versionName)
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Failed to start download")
-            Sentry.captureException(e)
             showDownloadErrorNotification()
         }
     }
@@ -212,7 +210,6 @@ class UpdateManager(private val context: Context) {
                     }
                 } catch (e: Exception) {
                     Timber.tag(TAG).e(e, "Error monitoring download")
-                    Sentry.captureException(e)
                 }
                 delay(500)
             }
@@ -359,7 +356,6 @@ class UpdateManager(private val context: Context) {
             // "Failed to find configured root" when the APK landed on a volume our paths don't
             // cover). The download itself succeeded; degrade to the error notification.
             Timber.tag(TAG).e(e, "Failed to build install notification")
-            Sentry.captureException(e)
             showDownloadErrorNotification()
         }
     }
@@ -483,7 +479,6 @@ class UpdateManager(private val context: Context) {
             return true
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Failed to launch install intent")
-            Sentry.captureException(e)
             return false
         }
     }

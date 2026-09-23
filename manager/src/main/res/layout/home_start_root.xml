@@ -50,16 +50,6 @@
             android:contentDescription="@string/accessibility_button_start"
             app:icon="@drawable/ic_server_start_24" />
 
-        <com.airbnb.lottie.LottieAnimationView
-            android:id="@+id/lottie_start"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_gravity="center_vertical|start"
-            android:layout_marginStart="12dp"
-            android:visibility="gone"
-            app:lottie_autoPlay="false"
-            app:lottie_loop="true" />
-
         <com.google.android.material.button.MaterialButton
             android:id="@android:id/button2"
             style="@style/CardButton"
