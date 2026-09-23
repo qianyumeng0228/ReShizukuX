@@ -89,24 +89,10 @@ private fun androidColorScheme(context: Context, darkTheme: Boolean): ColorSchem
     }
 }
 
-// Mirrors ShapeAppearance.OneUI.Corner.{ExtraSmall,Small,Medium,Large,ExtraLarge}
-// (manager/src/main/res/values/themes_overlay.xml) so Compose screens match One UI's rounder
-// corner language exactly like the XML side does when ThemeOverlay.OneUI is applied. Only used
-// when the caller passes isOneUi = true (see ShizukuSettings.isOneUiThemeEnabled()) - Compose's
-// stock Material3 Shapes() is left untouched for every other Shape Style (Modern/Classic/Squircle).
-private val OneUiShapes = Shapes(
-    extraSmall = RoundedCornerShape(6.dp),
-    small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(18.dp),
-    large = RoundedCornerShape(26.dp),
-    extraLarge = RoundedCornerShape(36.dp),
-)
-
 @Composable
 fun AppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     isBlackNightTheme: Boolean = false,
-    isOneUi: Boolean = false,
     themeVersion: Int = 0,
     content: @Composable () -> Unit
 ) {
@@ -123,7 +109,7 @@ fun AppTheme(
         )
     }
 
-    val shapes = if (isOneUi) OneUiShapes else Shapes()
+    val shapes = Shapes()
 
     MaterialTheme(
         colorScheme = colorScheme,

@@ -85,7 +85,6 @@ data class StarterStep(
 class StarterActivity : AppBarActivity() {
 
     companion object {
-        const val EXTRA_IS_SYSTEM = "$EXTRA.IS_SYSTEM"
         const val EXTRA_IS_ROOT = "$EXTRA.IS_ROOT"
         const val EXTRA_PORT = "$EXTRA.PORT"
         const val EXTRA_AUTO_PAIRING = "$EXTRA.AUTO_PAIRING"
@@ -283,11 +282,10 @@ class StarterActivity : AppBarActivity() {
         // Android 16+ gates mDNS discovery and the ADB sockets behind a local-network
         // permission. The request (fired in onCreate for non-root flows) shows a separate
         // window, so a start here would run before the user answers. Wait for
-        // onRequestPermissionsResult instead of starting without the permission. Root and
-        // Samsung-system flows don't need it.
+        // onRequestPermissionsResult instead of starting without the permission. Root
+        // flows don't need it.
         val isRoot = intent.getBooleanExtra(EXTRA_IS_ROOT, false)
-        val isSystem = intent.getBooleanExtra(EXTRA_IS_SYSTEM, false)
-        if (!isRoot && !isSystem && !af.shizuku.manager.adb.LocalNetworkPermission.granted(this)) {
+        if (!isRoot && !af.shizuku.manager.adb.LocalNetworkPermission.granted(this)) {
             startPending = true
             return
         }
@@ -308,7 +306,6 @@ class StarterActivity : AppBarActivity() {
         val port = intent.getIntExtra(EXTRA_PORT, 0)
         viewModel.start(
             intent.getBooleanExtra(EXTRA_IS_ROOT, false),
-            intent.getBooleanExtra(EXTRA_IS_SYSTEM, false),
             port,
             intent.getBooleanExtra(EXTRA_AUTO_PAIRING, false)
         )
@@ -522,7 +519,7 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
 
     fun hasLog(): Boolean = sb.isNotEmpty()
 
-    fun start(root: Boolean, isSystem: Boolean, port: Int, autoPairing: Boolean = false) {
+    fun start(root: Boolean, port: Int, autoPairing: Boolean = false) {
         if (started) return
         started = true
         autoPairingMode = autoPairing
@@ -534,7 +531,6 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
         flowJob?.cancel()
         flowJob = viewModelScope.launch {
             if (root) runRootFlow()
-            else if (isSystem) runSystemFlow()
             else runAdbFlow(port)
         }
     }
@@ -548,12 +544,11 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
         flowJob = viewModelScope.launch {
             val last = lastStart ?: return@launch
             if (last.first) runRootFlow()
-            else if (last.second) runSystemFlow()
-            else runAdbFlow(last.third)
+            else runAdbFlow(last.second)
         }
     }
 
-    private var lastStart: Triple<Boolean, Boolean, Int>? = null
+    private var lastStart: Pair<Boolean, Int>? = null
 
     fun cancel() {
         flowJob?.cancel()
@@ -717,7 +712,7 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
         clearStaleStartingState()
         waitingForPairing = false
         waitingForWireless = false
-        lastStart = Triple(false, false, intentPort ?: 0)
+        lastStart = Pair(false, intentPort ?: 0)
         setSteps(
             listOf(
                 StarterStep("detect_port", R.string.starter_step_detect_port),
@@ -959,7 +954,7 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
         clearStaleStartingState()
         waitingForPairing = false
         waitingForWireless = false
-        lastStart = Triple(false, false, intentPort ?: 0)
+        lastStart = Pair(false, intentPort ?: 0)
         setSteps(
             listOf(
                 StarterStep("one_tap_wireless", R.string.one_tap_step_wireless),
@@ -1124,7 +1119,7 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
         clearStaleStartingState()
         waitingForPairing = false
         waitingForWireless = false
-        lastStart = Triple(true, false, 0)
+        lastStart = Pair(true, 0)
         setSteps(
             listOf(
                 StarterStep("check_root", R.string.starter_step_check_root),
@@ -1278,59 +1273,4 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
         throw lastError ?: Exception("All SU invocation strategies failed for: $suPath")
     }
 
-    // ---------------------------------------------------------------- System flow
-
-    private suspend fun runSystemFlow() {
-        lastStart = Triple(false, true, 0)
-        setSteps(
-            listOf(
-                StarterStep("start_system", R.string.starter_step_start_root),
-                StarterStep("wait_binder", R.string.starter_step_wait_binder),
-                StarterStep("complete", R.string.starter_step_complete)
-            )
-        )
-
-        if (!ShizukuSettings.isSamsungSystemUidEscalationEnabled()) {
-            log("Samsung System UID Escalation is disabled for security reasons.\n")
-            log("Enable it in Developer Settings to use this experimental feature.\n\n")
-            updateStep("start_system", StepStatus.ERROR, "")
-            setError(Exception("Samsung System UID Escalation disabled"))
-            return
-        }
-
-        updateStep("start_system", StepStatus.RUNNING, appContext.getString(R.string.starter_step_system_running))
-        withContext(Dispatchers.IO) {
-            try {
-                val intent = Intent().apply {
-                    setClassName("com.sdet.fotaagent", "com.sdet.fotaagent.Main")
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                appContext.startActivity(intent)
-
-                val mIntent = Intent("com.sdet.fotaagent.intent.CP_FILE")
-                mIntent.putExtra("CP_FILE", "/data")
-                mIntent.putExtra("CP_LOC", "; " + appContext.applicationInfo.nativeLibraryDir
-                        + "/libshizuku.so" + "; am force-stop com.sdet.fotaagent")
-                kotlinx.coroutines.delay(1000)
-                appContext.sendBroadcast(mIntent)
-                log("FOTA command broadcast sent!\n\n")
-            } catch (e: Exception) {
-                log(e.message ?: "FOTA escalation failed")
-                throw e
-            }
-        }
-        updateStep("start_system", StepStatus.COMPLETED, "")
-
-        updateStep("wait_binder", StepStatus.RUNNING, appContext.getString(R.string.starter_step_wait_binder_running))
-        try {
-            Starter.waitForBinder { log(it) }
-        } catch (e: Exception) {
-            if (e is CancellationException) throw e
-            updateStep("wait_binder", StepStatus.ERROR, e.message ?: "")
-            setError(e)
-            return
-        }
-        updateStep("wait_binder", StepStatus.COMPLETED, "")
-        markCompleted()
-    }
 }

@@ -235,15 +235,13 @@ class ShizukuExtraSettingsFragment : BaseSettingsFragment() {
             "shadow_binder_enabled" to "shadow_binder",
             "binder_firewall_enabled" to "binder_firewall",
             "binder_logging_enabled" to "binder_logging",
-            "samsung_system_uid_escalation_enabled" to "samsung_system_uid_escalation",
             "software_keystore_fallback_enabled" to "software_keystore_fallback"
         )
         val experimentalKeys = setOf(
             "avf_manager_enabled",
             "vector_enabled",
             "experimental_root_compat",
-            "spoof_device_enabled",
-            "samsung_system_uid_escalation_enabled"
+            "spoof_device_enabled"
         )
 
         plusKeys.forEach { (prefKey, featureName) ->

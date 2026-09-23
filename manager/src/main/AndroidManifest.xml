@@ -117,13 +117,17 @@
         tools:remove="android:appComponentFactory"
         tools:targetApi="33">
 
-        <!-- Samsung DeX: keep the process alive across a mobile<->DeX mode switch instead of
-             being killed and cold-started, same motivation as WatchdogAlarmReceiver - both tags
-             are the officially documented pair for pre-3.0 vs Dual Mode DeX (developer.samsung.
-             com/samsung-dex/modify-optimizing.html); each is a no-op on the DeX version it
-             doesn't apply to, so both are safe to declare together. -->
-        <meta-data android:name="com.samsung.android.keepalive.density" android:value="true" />
-        <meta-data android:name="com.samsung.android.multidisplay.keep_process_alive" android:value="true" />
+        <!-- Compose 四 Tab 骨架宿主（Portable 新入口）。LAUNCHER 从原 LauncherAlias
+             移到这里；MainActivity 及 View 体系页面全部保留，仅不再是桌面入口。 -->
+        <activity
+            android:name=".ui.PortableMainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.App.Starting">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
         <!-- Main launcher activity -->
         <activity
@@ -132,16 +136,14 @@
             android:exported="true"
             android:theme="@style/Theme.App.Starting" />
 
-        <!-- Toggleable launcher alias — disabled by stealth mode -->
+        <!-- Toggleable launcher alias — disabled by stealth mode.
+             LAUNCHER intent-filter moved to .ui.PortableMainActivity; alias kept for
+             backwards-compatible component-enabled toggling. -->
         <activity-alias
             android:name=".LauncherAlias"
             android:targetActivity=".MainActivity"
             android:enabled="true"
             android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
             <meta-data
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />

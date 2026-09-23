@@ -73,35 +73,6 @@ class ServerStatusViewHolder(private val binding: HomeServerStatusBinding, root:
             statusIndicator.clearAnimation()
         }
 
-        // S-Pen / DeX Mouse Hover Effect (Expressive Polish)
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            itemView.setOnHoverListener { v, event ->
-                when (event.action) {
-                    android.view.MotionEvent.ACTION_HOVER_ENTER -> {
-                        v?.animate()
-                            ?.scaleX(1.015f)
-                            ?.scaleY(1.015f)
-                            ?.translationZ(6f)
-                            ?.setDuration(af.shizuku.manager.ShizukuSettings.scaledAnimationDuration(150))
-                            ?.setInterpolator(android.view.animation.DecelerateInterpolator())
-                            ?.start()
-                        true
-                    }
-                    android.view.MotionEvent.ACTION_HOVER_EXIT -> {
-                        v?.animate()
-                            ?.scaleX(1f)
-                            ?.scaleY(1f)
-                            ?.translationZ(0f)
-                            ?.setDuration(af.shizuku.manager.ShizukuSettings.scaledAnimationDuration(150))
-                            ?.setInterpolator(android.view.animation.AccelerateInterpolator())
-                            ?.start()
-                        true
-                    }
-                    else -> false
-                }
-            }
-        }
-
         logChip.visibility = if (ok && af.shizuku.manager.ShizukuSettings.showActivityLogHome()) View.VISIBLE else View.GONE
         logChip.setOnClickListener {
             val activity = context.asActivity<android.app.Activity>() ?: return@setOnClickListener

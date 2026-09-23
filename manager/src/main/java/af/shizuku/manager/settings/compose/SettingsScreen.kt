@@ -57,23 +57,7 @@ fun SettingsScreen(
         onSearchQueryChanged("")
     }
 
-    val isOneUi = af.shizuku.manager.ShizukuSettings.isOneUiThemeEnabled()
-    val isOneHanded = af.shizuku.manager.ShizukuSettings.isOneHandedModeEnabled()
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-
-    // Samsung OneUI one-handed mode: scale entire settings panel to 75%, anchored to bottom-right.
-    val oneHandedScale by animateFloatAsState(
-        targetValue = if (isOneHanded) 0.75f else 1f,
-        animationSpec = if (!af.shizuku.manager.ShizukuSettings.isExpressiveAnimationsEnabled()) {
-            snap()
-        } else {
-            spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMedium * af.shizuku.manager.ShizukuSettings.getAnimationDurationScale()
-            )
-        },
-        label = "settingsOneHandedScale"
-    )
 
     Box(modifier = Modifier.fillMaxSize()) {
         // PERF: WallpaperBackground removed from settings. ShizukuExtra (which settings are
@@ -85,52 +69,7 @@ fun SettingsScreen(
         Scaffold(
             containerColor = Color.Transparent,
         topBar = {
-            if (isOneUi && !isSearchActive) {
-                LargeTopAppBar(
-                    title = {
-                        Text(
-                            text = title,
-                            // Samsung OneUI 6/7 uses W800 (ExtraBold) for the large expanded header
-                            style = MaterialTheme.typography.headlineLarge.copy(
-                                fontWeight = FontWeight.ExtraBold,
-                                fontSize = 28.sp,
-                                letterSpacing = (-0.5).sp
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = { onNavigateUp() }) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_back_24),
-                                contentDescription = stringResource(R.string.accessibility_back)
-                            )
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = { isSearchActive = true }) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_search_24),
-                                contentDescription = stringResource(R.string.accessibility_search)
-                            )
-                        }
-                    },
-                    // Samsung OneUI: transparent container until scrolled, then subtle surface tint
-                    colors = TopAppBarDefaults.largeTopAppBarColors(
-                        containerColor = Color.Transparent,
-                        scrolledContainerColor = if (af.shizuku.manager.ShizukuSettings.isBlurUiEnabled())
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
-                        else
-                            MaterialTheme.colorScheme.surfaceContainer,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-                        actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
-                    scrollBehavior = scrollBehavior
-                )
-            } else {
-                TopAppBar(
+            TopAppBar(
                     title = {
                         if (isSearchActive) {
                             TextField(
@@ -197,11 +136,9 @@ fun SettingsScreen(
                         }
                     }
                 )
-            }
         }
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
-            // Fragment Container for Preferences — apply Samsung OneUI one-handed scale+pivot transform
             AndroidView(
                 factory = { context ->
                     FrameLayout(context).apply {
@@ -215,11 +152,6 @@ fun SettingsScreen(
                 },
                 modifier = Modifier
                     .fillMaxSize()
-                    .graphicsLayer(
-                        scaleX = oneHandedScale,
-                        scaleY = oneHandedScale,
-                        transformOrigin = TransformOrigin(0.5f, 1f)
-                    )
                     .padding(
                         top = innerPadding.calculateTopPadding(),
                         bottom = innerPadding.calculateBottomPadding()

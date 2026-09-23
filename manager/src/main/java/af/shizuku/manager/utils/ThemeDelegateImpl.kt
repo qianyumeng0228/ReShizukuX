@@ -14,7 +14,6 @@ class ThemeDelegateImpl : ThemeDelegate {
         return ThemeHelper.getTheme(context) + ThemeHelper.isUsingSystemColor() + customAccent +
             ShizukuSettings.isExpressiveShapesEnabled() + ShizukuSettings.getShapeStyle() +
             ShizukuSettings.getIconStyle() + ShizukuSettings.getIconColorMode() +
-            ShizukuSettings.isOneUiThemeEnabled() + ShizukuSettings.isOneHandedModeEnabled() +
             ShizukuSettings.getWallpaperTheme()
     }
 
@@ -60,13 +59,6 @@ class ThemeDelegateImpl : ThemeDelegate {
             if (shapeStyleRes != 0) {
                 theme.applyStyle(shapeStyleRes, true)
             }
-        }
-
-        // One UI theme overlay is structure-only (shapes/typography, see themes_overlay.xml) -
-        // no color attrs, so it composes with whichever color source (dynamic/custom accent/
-        // default) was applied above instead of competing with it, and needs no day/night variant.
-        if (ShizukuSettings.isOneUiThemeEnabled()) {
-            theme.applyStyle(R.style.ThemeOverlay_OneUI, true)
         }
 
         theme.applyStyle(ThemeHelper.getThemeStyleRes(context), true)

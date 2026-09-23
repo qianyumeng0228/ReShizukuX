@@ -141,8 +141,6 @@
     <string name="settings_experimental_ai_automation_summary">启用手势模拟、像素捕获和文本注入，以支持 AI 驱动的自动化</string>
     <string name="settings_software_keystore_fallback_title">软件 KeyStore 备用方案</string>
     <string name="settings_software_keystore_fallback_summary">如果设备硬件 KeyStore 失败（例如 Samsung Knox），允许使用软件静态 AES 密钥加密缓存 ADB RSA 私钥。可减少配对提示，但会降低安全性。</string>
-    <string name="settings_samsung_system_uid_title">Samsung System UID 提权</string>
-    <string name="settings_samsung_system_uid_summary">尝试利用未修补 Samsung 设备上的特定漏洞提权到 UID 1000（system），风险自负。</string>
 
     <string name="system_hub_title">系统中心</string>
     <string name="system_hub_metrics">指标</string>
@@ -207,7 +205,6 @@
     <string name="settings_plain_backup_option">纯文本，仅用于跨重装测试</string>
     <string name="settings_no_file_manager_save">没有找到可保存备份的文件管理器应用</string>
     <string name="settings_no_file_manager_open">没有找到可打开备份的文件管理器应用</string>
-    <string name="home_samsung_auto_blocker_message">Samsung 自动拦截器可能会在 One UI 7/8 上阻止 ADB。请检查安全设置。</string>
     <string name="home_check_security_action">检查</string>
     <string name="accessibility_back">返回</string>
     <string name="accessibility_search">搜索</string>

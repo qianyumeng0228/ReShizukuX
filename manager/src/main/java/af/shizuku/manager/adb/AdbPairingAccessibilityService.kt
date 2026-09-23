@@ -118,7 +118,7 @@ class AdbPairingAccessibilityService : AccessibilityService() {
             return
         }
 
-        // On Samsung/TV we don't necessarily want to jump to MainActivity immediately
+        // On TV we don't necessarily want to jump to MainActivity immediately
         // as the user might be manually navigating Developer Options.
         if (isTv) {
             val intent = Intent(this, MainActivity::class.java).apply {
@@ -197,15 +197,6 @@ class AdbPairingAccessibilityService : AccessibilityService() {
             timeoutGeneration++
             Log.i("AdbAccessibility", "WINDOW switch -> " + windowId + " (candidates cleared, port was " + port + ")")
             Timber.tag("AdbAccessibility").w("Window switched to %d, stale candidates cleared", windowId)
-        }
-
-        // Debug Samsung-specific dialog titles
-        if (EnvironmentUtils.isSamsung() && event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            val className = event.className?.toString() ?: ""
-            if (className.contains("AlertDialog") || className.contains("Dialog")) {
-                val text = source.text ?: ""
-                Timber.tag("AdbAccessibility").d("Samsung Dialog detected: $text")
-            }
         }
 
         Timber.tag("AdbAccessibility").d(
@@ -758,15 +749,6 @@ class AdbPairingAccessibilityService : AccessibilityService() {
                 Log.i("AdbAccessibility", "PORT found=" + it + " text=[" + text + "] win=" + candidateWindowId)
                 Timber.tag("AdbAccessibility").i("Pairing port found: %d (window %d)", it, candidateWindowId)
                 return
-            }
-            // Samsung specific: sometimes the port is in a different view or has specific labels
-            if (text.contains("Port", ignoreCase = true)) {
-                fiveDigitRegex.find(text)?.value?.toIntOrNull()?.let {
-                    port = it
-                    Log.i("AdbAccessibility", "PORT found(samsung)=" + it + " text=[" + text + "] win=" + candidateWindowId)
-                    Timber.tag("AdbAccessibility").i("Pairing port found via Samsung fallback: %d (window %d)", it, candidateWindowId)
-                    return
-                }
             }
         }
         try {

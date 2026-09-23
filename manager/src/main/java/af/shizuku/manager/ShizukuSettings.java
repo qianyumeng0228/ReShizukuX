@@ -103,7 +103,6 @@ public class ShizukuSettings {
         public static final String KEY_EXPORT_DIR_URI = "export_dir_uri";
 
         // Long-press action toggles (ShizukuX additions)
-        public static final String KEY_SAMSUNG_SYSTEM_UID_ESCALATION_ENABLED = "samsung_system_uid_escalation_enabled";
         public static final String KEY_SOFTWARE_KEYSTORE_FALLBACK_ENABLED = "software_keystore_fallback_enabled";
         public static final String KEY_OVERLAY_FS_PROXY_ENABLED = "overlay_fs_proxy_enabled";
         public static final String KEY_ROOT_KERNEL_GHOSTING_ENABLED = "root_kernel_ghosting_enabled";
@@ -136,8 +135,6 @@ public class ShizukuSettings {
         public static final String KEY_ANIMATION_INTENSITY = "animation_intensity";
         public static final String KEY_EDGE_TO_EDGE = "edge_to_edge_enabled";
         public static final String KEY_BLUR_UI = "blur_ui_enabled";
-        public static final String KEY_ONEUI_THEME = "oneui_theme_enabled";
-        public static final String KEY_ONE_HANDED_MODE = "one_handed_mode";
         public static final String KEY_WALLPAPER_THEME = "wallpaper_theme";
 
         // Migration (ShizukuX additions)
@@ -266,14 +263,6 @@ public class ShizukuSettings {
 
     public static boolean isBlurUiEnabled() {
         return getPreferences().getBoolean(Keys.KEY_BLUR_UI, false);
-    }
-
-    public static boolean isOneUiThemeEnabled() {
-        return getPreferences().getBoolean(Keys.KEY_ONEUI_THEME, false);
-    }
-
-    public static boolean isOneHandedModeEnabled() {
-        return getPreferences().getBoolean(Keys.KEY_ONE_HANDED_MODE, false);
     }
 
     // Wallpaper theme (ShizukuX beautification): "white_miku" = light Miku wallpaper,
@@ -411,10 +400,6 @@ public class ShizukuSettings {
         String token = Token.generateToken();
         getPreferences().edit().putString("auth_token", token).apply();
         return token;
-    }
-
-    public static boolean isSamsungSystemUidEscalationEnabled() {
-        return getPreferences().getBoolean(Keys.KEY_SAMSUNG_SYSTEM_UID_ESCALATION_ENABLED, false);
     }
 
     public static boolean isSoftwareKeystoreFallbackEnabled() {
@@ -1082,7 +1067,6 @@ public class ShizukuSettings {
                 service.updateExtraFeatureEnabled("binder_logging", isBinderLoggingEnabled());
                 service.updateExtraFeatureEnabled("shadow_binder", isShadowBinderEnabled());
                 service.setExtraSetting("shadow_hidden_packages", getShadowBinderHiddenPackages());
-                service.updateExtraFeatureEnabled("samsung_system_uid_escalation", isSamsungSystemUidEscalationEnabled());
                 service.updateExtraFeatureEnabled("software_keystore_fallback", isSoftwareKeystoreFallbackEnabled());
                 service.updateExtraFeatureEnabled("overlay_fs_proxy", isOverlayFsProxyEnabled());
                 service.updateExtraFeatureEnabled("root_kernel_ghosting", isRootKernelGhostingEnabled());

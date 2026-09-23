@@ -84,49 +84,23 @@ fun HomeScreen(
             )
         }
     ) { innerPadding ->
-        // Samsung OneUI one-handed mode: scale content to 75% and anchor to bottom-center,
-        // matching Samsung's actual one-handed mode behavior instead of just adding top padding.
-        // animateFloatAsState provides a smooth spring-physics transition when toggling the mode.
-        val isOneHanded = ShizukuSettings.isOneHandedModeEnabled()
-        val scale by animateFloatAsState(
-            targetValue = if (isOneHanded) 0.75f else 1f,
-            animationSpec = if (!ShizukuSettings.isExpressiveAnimationsEnabled()) {
-                snap()
-            } else {
-                spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium * ShizukuSettings.getAnimationDurationScale()
-                )
-            },
-            label = "oneHandedScale"
-        )
-        val adjustedPadding = PaddingValues(
-            top = innerPadding.calculateTopPadding(),
-            bottom = innerPadding.calculateBottomPadding() + 72.dp
-        )
         af.shizuku.manager.app.WallpaperBackground {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .graphicsLayer(
-                        scaleX = scale,
-                        scaleY = scale,
-                        // Pivot at bottom-center (Samsung OneUI style)
-                        transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0.5f, 1f)
-                    )
             ) {
             if (showEmptyState) {
-                Box(modifier = Modifier.padding(adjustedPadding)) {
+                Box(modifier = Modifier.padding(innerPadding)) {
                     HomeEmptyState(onRestoreHomeCards)
                 }
             } else {
                 AndroidView(
                     factory = { context ->
-                        recyclerViewProvider(context, adjustedPadding).also { rv ->
+                        recyclerViewProvider(context, innerPadding).also { rv ->
                             (rv.parent as? android.view.ViewGroup)?.removeView(rv)
                         }
                     },
-                    update = { view -> recyclerViewProvider(view.context, adjustedPadding) },
+                    update = { view -> recyclerViewProvider(view.context, innerPadding) },
                     modifier = Modifier.fillMaxSize()
                 )
             }

@@ -34,21 +34,6 @@
             android:entryValues="@array/custom_accents_values"
             android:icon="@drawable/ic_palette_24" />
 
-        <SwitchPreferenceCompat
-            android:key="oneui_theme_enabled"
-            android:title="@string/settings_oneui_theme"
-            android:summary="@string/settings_oneui_theme_summary"
-            android:defaultValue="false"
-            android:icon="@drawable/ic_palette_24" />
-
-        <SwitchPreferenceCompat
-            android:key="one_handed_mode"
-            android:title="@string/settings_one_handed_mode"
-            android:summary="@string/settings_one_handed_mode_summary"
-            android:defaultValue="false"
-            android:dependency="oneui_theme_enabled"
-            android:icon="@drawable/ic_settings_suggest_24" />
-
         <rikka.preference.SimpleMenuPreference
             android:key="wallpaper_theme"
             android:title="@string/settings_wallpaper"

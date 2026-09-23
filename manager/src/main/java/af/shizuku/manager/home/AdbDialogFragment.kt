@@ -41,23 +41,6 @@ class AdbDialogFragment : DialogFragment() {
             setView(binding.root)
             setNegativeButton(android.R.string.cancel, null)
             setPositiveButton(R.string.development_settings, null)
-
-            // Samsung Specific: Launch in Pop-up mode
-            if (EnvironmentUtils.isSamsung()) {
-                setNeutralButton(R.string.dialog_adb_popup_settings) { _, _ ->
-                    val intent = SettingsPage.Developer.WirelessDebugging.buildIntent(context).apply {
-                        // Samsung specific flags for Pop-up window
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
-                        putExtra("android.intent.extra.WINDOW_MODE", 5) // WINDOW_MODE_FREEFORM
-                        putExtra("com.samsung.android.intent.extra.LAUNCH_MODE", 4)
-                    }
-                    try {
-                        context.startActivity(intent)
-                    } catch (e: Exception) {
-                        SettingsPage.Developer.WirelessDebugging.launch(context)
-                    }
-                }
-            }
         }
         val dialog = builder.create()
         dialog.setCanceledOnTouchOutside(false)

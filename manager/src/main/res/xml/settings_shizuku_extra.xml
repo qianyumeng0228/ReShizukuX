@@ -242,15 +242,6 @@
             android:defaultValue="false"
             app:severityBadge="risky" />
 
-        <af.shizuku.manager.settings.ExtraFeaturePreference
-            android:key="samsung_system_uid_escalation_enabled"
-            android:title="@string/settings_samsung_system_uid_title"
-            android:summary="@string/settings_samsung_system_uid_summary"
-            android:icon="@drawable/ic_warning_24"
-            android:defaultValue="false"
-            app:badgeType="root"
-            app:severityBadge="dangerous" />
-
     </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
 
 </PreferenceScreen>

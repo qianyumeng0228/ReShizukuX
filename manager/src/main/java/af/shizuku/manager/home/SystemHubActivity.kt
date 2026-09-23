@@ -18,7 +18,6 @@ class SystemHubActivity : AppActivity() {
             AppTheme(
                 darkTheme = isSystemInDarkTheme(),
                 isBlackNightTheme = ThemeHelper.isBlackNightTheme(this),
-                isOneUi = ShizukuSettings.isOneUiThemeEnabled()
             ) {
                 SystemHubScreen(
                     onBackClick = { finish() }

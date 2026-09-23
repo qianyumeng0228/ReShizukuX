@@ -218,7 +218,7 @@ class HomeAdapter(
             when (id) {
                 ID_TERMINAL -> if (isEditMode || (adbPermission && ShizukuSettings.showTerminalHome()))
                     addItem(TerminalViewHolder.CREATOR, status, id)
-                ID_START_ROOT -> if (isEditMode || (isPrimaryUser && (EnvironmentUtils.isRooted() || ShizukuSettings.isSamsungSystemUidEscalationEnabled())))
+                ID_START_ROOT -> if (isEditMode || (isPrimaryUser && EnvironmentUtils.isRooted()))
                     addItem(StartRootViewHolder.CREATOR, rootRestart, id)
                 ID_START_WADB -> if (isEditMode || (isPrimaryUser && (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R || EnvironmentUtils.getAdbTcpPort() > 0)))
                     addItem(startWadbCreator, null, id)

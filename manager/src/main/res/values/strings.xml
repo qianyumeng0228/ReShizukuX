@@ -34,10 +34,6 @@
     <string name="settings_blur_ui_summary">Apply blur and translucency to dialogs and the top bar. Best on Android 12+</string>
 
     <!-- UI Settings - One UI Theme -->
-    <string name="settings_oneui_theme">One UI Style</string>
-    <string name="settings_oneui_theme_summary">Match Samsung One UI\'s design language — large rounded corners and bold typography. Color is unaffected; use Material You or a custom accent above for that.</string>
-    <string name="settings_one_handed_mode">One-Handed Mode</string>
-    <string name="settings_one_handed_mode_summary">Shift interactive content toward the bottom of the screen for comfortable thumb reach</string>
     <string name="settings_wallpaper">Wallpaper</string>
     <string name="settings_wallpaper_summary">Background wallpaper theme</string>
     <string name="settings_wallpaper_original">Original</string>
@@ -218,21 +214,15 @@ Alternatively, while the pop-up is open, pull down the notification shade and ty
     <string name="dialog_adb_pairing_accessibility_permission_template">On Android 14, installing/updating Shizuku with the Package Installer revokes the ^1 permission, which is required to enable the accessibility service for pairing.\n\nTo grant it, run the following ADB command:\n\n^2\n\nAfter running the command, you may continue with the pairing process.\n\nNote: you can bypass this by installing/updating Shizuku with ADB.</string>
 
     <!-- Service Doctor -->
-    <string name="doctor_check_samsung_autoblocker">Samsung Auto Blocker</string>
-    <string name="doctor_check_samsung_battery_protection">Samsung Battery Protection</string>
     <string name="doctor_check_secondary_user">Secondary User / Secure Folder</string>
     <string name="doctor_check_phantom_process">Phantom Process Killer</string>
     <string name="doctor_tips_title">Troubleshooting Tips</string>
     <string name="doctor_status_manual_check">Needs Manual Check</string>
     <string name="doctor_status_detected">Detected</string>
     <string name="doctor_status_review">Review required</string>
-    <string name="doctor_tip_samsung_autoblocker"><b>Samsung Auto Blocker</b>: Ensure it is turned <b>OFF</b> or that \'Maximum Restrictions\' is disabled. It silently blocks ADB commands on One UI 7/8+.</string>
-    <string name="doctor_tip_oneui_connectivity"><b>One UI 7/8 Connectivity</b>: If Wireless Pairing fails, try using <b>Split Screen mode</b> with Shizuku and Developer Options open simultaneously.</string>
     <string name="doctor_tip_s22_ultra"><b>S22 Ultra Tip</b>: For consistent ADB, dial `*#0808#` and select `MTP + ADB` if you encounter connection drops.</string>
     <string name="doctor_tip_secure_folder"><b>Secure Folder Detected</b>: Shizuku works best in the Main User (Owner). Running inside Secure Folder or a Work Profile may require starting the server from the Main User first.</string>
     <string name="doctor_tip_phantom_process"><b>Phantom Process Killer</b>: Android 12-15+ may kill Shizuku if too many commands are run. The \'Fix\' button attempts to disable this limit.</string>
-    <string name="doctor_tip_samsung_optimization"><b>Samsung Auto-Optimization</b>: Disable \'Auto Restart\' in Device Care to prevent Shizuku from being killed at night.</string>
-    <string name="doctor_tip_samsung_sleeping"><b>Samsung Sleeping Apps</b>: Tapping Fix opens the <b>\'Never sleeping apps\'</b> list directly. Tap the <b>+</b> button and add ShizukuX to prevent Samsung from freezing the background service.</string>
     <string name="doctor_tip_s22_ultra_exynos"><b>S22 Ultra (Exynos)</b>: If service response is sluggish, try disabling <b>\'RAM Plus\'</b> in Device Care > Memory.</string>
     <string name="doctor_tip_s22_ultra_snapdragon"><b>S22 Ultra (Snapdragon)</b>: Ensure \'Enhanced Processing\' is enabled in Quick Settings for maximum command throughput.</string>
     <string name="doctor_system_well_configured">Your system seems well-configured for ShizukuX.</string>
@@ -774,13 +764,11 @@ To make sure the watchdog itself survives, allow ShizukuX to keep running in the
     <string name="doctor_status_restricted_bg">Restricted background execution</string>
     <string name="doctor_status_enabled_turn_off">Enabled (Turn OFF)</string>
     <string name="doctor_status_enabled_must_off">Enabled (Must be OFF)</string>
-    <string name="doctor_status_review_sleeping_apps">Review (Check sleeping apps)</string>
     <string name="doctor_tip_xiaomi">Xiaomi/HyperOS: Enable "USB Debugging (Security Settings)" in Developer Options.</string>
     <string name="doctor_tip_oppo_permission">Oppo/Realme/OnePlus: Disable "Permission Monitoring" in Developer Options to prevent background service kills.</string>
     <string name="doctor_tip_tcl_background">TCL: Ensure ShizukuX is added to "Auto-start" and "High background power consumption" allowlists in Settings.</string>
     <string name="doctor_tip_battery">Disable battery optimization for ShizukuX to prevent it from being killed in the background.</string>
     <string name="doctor_tip_adb">Wireless debugging must be active for Shizuku to start in non-root mode after a reboot.</string>
-    <string name="doctor_tip_oneui_maximum_restrictions">One UI 8: "Maximum Restrictions" in Auto Blocker disables ADB. Turn it off to use Shizuku.</string>
     <string name="doctor_button_fix">Fix</string>
 
     <!-- Snackbar -->
@@ -843,7 +831,6 @@ To make sure the watchdog itself survives, allow ShizukuX to keep running in the
     <string name="notification_adb_pairing_working_title">Pairing in progress</string>
     <string name="notification_adb_pairing_starting_title">Pairing successful, starting service…</string>
     <string name="notification_adb_pairing_starting_text">Connecting to the wireless-debugging port</string>
-    <string name="starter_step_system_running">Attempting Samsung System UID escalation…</string>
     <string name="starter_local_network_permission_needed">Local-network permission is required to discover the wireless-debugging service and pair. Grant it in the permission dialog and try again.</string>
     <string name="starter_local_network_permission_rationale">ShizukuX needs local-network access to discover the wireless-debugging service and complete pairing. Grant the permission to continue.</string>
     <string name="starter_local_network_permission_denied">Local-network permission is disabled. Enable it in system settings to use wireless debugging.</string>

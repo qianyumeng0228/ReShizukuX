@@ -199,51 +199,6 @@ class ServiceDoctorActivity : AppBarActivity() {
             tips.add("• " + getString(R.string.doctor_tip_tcl_background))
         }
 
-        // 7. Samsung Auto Blocker (One UI 6.1+)
-        if (EnvironmentUtils.isSamsung()) {
-            val oneUi = EnvironmentUtils.getOneUiVersion()
-            val isAutoBlockerOff = SettingsHelper.isSamsungAutoBlockerDisabled(this)
-            checks.add(DoctorCheck(
-                getString(R.string.doctor_check_samsung_autoblocker),
-                if (isAutoBlockerOff) getString(R.string.doctor_status_ok) else getString(R.string.doctor_status_enabled_turn_off),
-                isAutoBlockerOff,
-                onFix = if (!isAutoBlockerOff || oneUi >= 6) { { SettingsPage.Samsung.AutoBlocker.launch(this) } } else null
-            ))
-
-            // OneUI 8+ specific check for "Maximum Restrictions"
-            if (oneUi >= 8) {
-                val isMaxRestrictionsOff = SettingsHelper.isSamsungMaxRestrictionsDisabled(this)
-                checks.add(DoctorCheck(
-                    getString(R.string.doctor_check_maximum_restrictions),
-                    if (isMaxRestrictionsOff) getString(R.string.doctor_status_ok) else getString(R.string.doctor_status_enabled_must_off),
-                    isMaxRestrictionsOff,
-                    onFix = if (!isMaxRestrictionsOff) { { SettingsPage.Samsung.AutoBlocker.launch(this) } } else null
-                ))
-            }
-
-            // Samsung Device Care / Always sleeping apps. ok=false (not true) is deliberate: this
-            // can't actually detect whether the app is on the Sleeping Apps list (no public API for
-            // that), so it always needs manual review - showing it as a passing green checkmark
-            // (as it did before) contradicted its own "Review" text and hid the exact setting behind
-            // #415 (Samsung freezing the process on screen-lock, watchdog can't recover a frozen
-            // process because the freeze kills it too).
-            checks.add(DoctorCheck(
-                getString(R.string.doctor_check_samsung_battery_protection),
-                getString(R.string.doctor_status_review_sleeping_apps),
-                false,
-                onFix = { SettingsPage.Samsung.BackgroundUsageLimits.launch(this) }
-            ))
-
-            if (oneUi >= 6) {
-                tips.add("• " + getString(R.string.doctor_tip_samsung_autoblocker))
-                if (oneUi >= 8) {
-                    tips.add("• " + getString(R.string.doctor_tip_oneui_maximum_restrictions))
-                }
-                tips.add("• " + getString(R.string.doctor_tip_oneui_connectivity))
-                tips.add("• " + getString(R.string.doctor_tip_s22_ultra))
-            }
-        }
-
         // 8. Secure Folder / Secondary User detection
         if (EnvironmentUtils.isSecondaryUser()) {
             checks.add(DoctorCheck(
@@ -302,11 +257,8 @@ class ServiceDoctorActivity : AppBarActivity() {
             tips.add("• " + getString(R.string.doctor_tip_phantom_process))
         }
 
-        // 11. Samsung Auto Restart & Sleeping Apps
+        // 11. Samsung chipset-specific notes (S22 Exynos/Snapdragon)
         if (EnvironmentUtils.isSamsung()) {
-            tips.add("• " + getString(R.string.doctor_tip_samsung_optimization))
-            tips.add("• " + getString(R.string.doctor_tip_samsung_sleeping))
-
             val board = Build.HARDWARE.lowercase()
             if (board.contains("exynos")) {
                 tips.add("• " + getString(R.string.doctor_tip_s22_ultra_exynos))

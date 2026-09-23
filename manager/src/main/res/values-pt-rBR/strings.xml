@@ -117,21 +117,15 @@
     <string name="dialog_adb_pairing_accessibility_permission">No Android 14, instalar/atualizar o Shizuku com o Instalador de Pacotes revoga a permissão %1$s, necessária para ativar o serviço de acessibilidade usado no pareamento.\n\nPara concedê-la, execute o seguinte comando ADB:\n\n%2$s\n\nApós executar o comando, você pode continuar com o processo de pareamento.\n\nObservação: você pode contornar isso instalando/atualizando o Shizuku com o ADB.</string>
 
     <!-- Service Doctor -->
-    <string name="doctor_check_samsung_autoblocker">Bloqueador Automático Samsung</string>
-    <string name="doctor_check_samsung_battery_protection">Proteção de Bateria Samsung</string>
     <string name="doctor_check_secondary_user">Usuário Secundário / Pasta Segura</string>
     <string name="doctor_check_phantom_process">Eliminador de Processos Fantasma</string>
     <string name="doctor_tips_title">Dicas de Solução de Problemas</string>
     <string name="doctor_status_manual_check">Requer Verificação Manual</string>
     <string name="doctor_status_detected">Detectado</string>
     <string name="doctor_status_review">Revisão necessária</string>
-    <string name="doctor_tip_samsung_autoblocker"><b>Bloqueador Automático Samsung</b>: Certifique-se de que esteja <b>DESATIVADO</b> ou que "Restrições Máximas" esteja desativado. Ele bloqueia silenciosamente comandos ADB no One UI 7/8+.</string>
-    <string name="doctor_tip_oneui_connectivity"><b>Conectividade One UI 7/8</b>: Se o Pareamento sem Fio falhar, tente usar o modo de <b>Tela Dividida</b> com o Shizuku e as Opções do Desenvolvedor abertos simultaneamente.</string>
     <string name="doctor_tip_s22_ultra"><b>Dica para o S22 Ultra</b>: Para um ADB consistente, disque `*#0808#` e selecione `MTP + ADB` caso ocorram quedas de conexão.</string>
     <string name="doctor_tip_secure_folder"><b>Pasta Segura Detectada</b>: O Shizuku funciona melhor no Usuário Principal (Proprietário). Executá-lo na Pasta Segura ou em um Perfil de Trabalho pode exigir que o servidor seja iniciado primeiro pelo Usuário Principal.</string>
     <string name="doctor_tip_phantom_process"><b>Eliminador de Processos Fantasma</b>: O Android 12-15+ pode encerrar o Shizuku se muitos comandos forem executados. O botão "Corrigir" tenta desativar esse limite.</string>
-    <string name="doctor_tip_samsung_optimization"><b>Otimização Automática Samsung</b>: Desative "Reinicialização Automática" em Cuidados com o Dispositivo para evitar que o Shizuku seja encerrado durante a noite.</string>
-    <string name="doctor_tip_samsung_sleeping"><b>Aplicativos Adormecidos Samsung</b>: Certifique-se de que o ShizukuX esteja na lista de <b>"Aplicativos nunca adormecidos"</b> em *Cuidados com o Dispositivo > Bateria > Limites de uso em segundo plano* para evitar o encerramento do serviço em segundo plano.</string>
     <string name="doctor_tip_s22_ultra_exynos"><b>S22 Ultra (Exynos)</b>: Se a resposta do serviço estiver lenta, tente desativar o <b>"RAM Plus"</b> em Cuidados com o Dispositivo > Memória.</string>
     <string name="doctor_tip_s22_ultra_snapdragon"><b>S22 Ultra (Snapdragon)</b>: Certifique-se de que o "Processamento Aprimorado" esteja ativado nas Configurações Rápidas para o máximo desempenho de comandos.</string>
     <string name="doctor_system_well_configured">Seu sistema parece bem configurado para o ShizukuX.</string>

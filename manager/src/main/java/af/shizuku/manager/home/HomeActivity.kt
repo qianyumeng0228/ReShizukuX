@@ -207,8 +207,7 @@ open class HomeActivity : AppActivity(), MavericksView {
             androidx.compose.runtime.remember(resumeTick) { }
             af.shizuku.core.ui.compose.AppTheme(
                 darkTheme = androidx.compose.foundation.isSystemInDarkTheme(),
-                isBlackNightTheme = af.shizuku.manager.app.ThemeHelper.isBlackNightTheme(context),
-                isOneUi = ShizukuSettings.isOneUiThemeEnabled()
+                isBlackNightTheme = af.shizuku.manager.app.ThemeHelper.isBlackNightTheme(context)
             ) {
                 HomeScreen(
                 isEditMode = isEditMode,
@@ -290,21 +289,11 @@ open class HomeActivity : AppActivity(), MavericksView {
                             val cy = statusCard?.let { it.top + it.height / 2 } ?: 100
                             val finalRadius = Math.hypot(view.width.toDouble(), view.height.toDouble()).toFloat()
 
-                            // OneUI 8+ uses more "elastic" easing (0.22, 1, 0.36, 1)
-                            val interpolator = if (EnvironmentUtils.isOneUi8())
-                                androidx.core.view.animation.PathInterpolatorCompat.create(0.22f, 1f, 0.36f, 1f)
-                            else
-                                androidx.core.view.animation.PathInterpolatorCompat.create(0.2f, 0f, 0f, 1f)
-
                             android.view.ViewAnimationUtils.createCircularReveal(view, cx, cy, 0f, finalRadius).apply {
-                                duration = ShizukuSettings.scaledAnimationDuration(if (EnvironmentUtils.isOneUi8()) 800L else 600L)
-                                this.interpolator = interpolator
+                                duration = ShizukuSettings.scaledAnimationDuration(600L)
+                                interpolator = androidx.core.view.animation.PathInterpolatorCompat.create(0.2f, 0f, 0f, 1f)
                                 start()
                             }
-                        }
-
-                        if (EnvironmentUtils.isOneUi8()) {
-                            HapticUtils.success(view)
                         }
                     }
                 }
@@ -320,34 +309,12 @@ open class HomeActivity : AppActivity(), MavericksView {
                     duration = Snackbar.LENGTH_INDEFINITE,
                     actionText = getString(R.string.snackbar_action_fix),
                     action = {
-                        if (EnvironmentUtils.isSamsung()) {
-                            SettingsPage.Samsung.DeviceCareBattery.launch(this)
-                        } else {
-                            SettingsHelper.requestIgnoreBatteryOptimizations(this, null)
-                        }
+                        SettingsHelper.requestIgnoreBatteryOptimizations(this, null)
                     }
                 )
             }
         }
         homeModel.checkBatteryOptimization()
-
-        // Samsung Auto Blocker check for One UI 7/8+
-        if (EnvironmentUtils.isSamsung() && EnvironmentUtils.getOneUiVersion() >= 6) {
-            homeModel.onEach(HomeState::serviceStatus) {
-                if (it is Success && it.invoke().isRunning == false) {
-                    SnackbarHelper.show(
-                        this,
-                        findViewById(android.R.id.content) ?: window.decorView,
-                        msg = getString(R.string.home_samsung_auto_blocker_message),
-                        duration = Snackbar.LENGTH_LONG,
-                        actionText = getString(R.string.home_check_security_action),
-                        action = {
-                            SettingsPage.Samsung.AutoBlocker.launch(this)
-                        }
-                    )
-                }
-            }
-        }
 
         appsModel.grantedCount.observe(this) {
             if (it.status == Status.SUCCESS) {
@@ -358,8 +325,8 @@ open class HomeActivity : AppActivity(), MavericksView {
 
         requestNotificationPermissionIfNeeded()
 
-        // Responsive grid for large screens and DeX (#76) - single column on phones preserves
-        // the original Shizuku look, 2 columns kicks in on tablets/landscape/DeX where a single
+        // Responsive grid for large screens (#76) - single column on phones preserves
+        // the original Shizuku look, 2 columns kicks in on tablets/landscape where a single
         // column of cards leaves most of the width empty.
         val spanCount = if (resources.configuration.screenWidthDp >= 600 ||
             resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
@@ -371,10 +338,6 @@ open class HomeActivity : AppActivity(), MavericksView {
         }
         recyclerView.layoutManager = layoutManager
 
-        // Samsung DeX Specific: add 'sidebar' feel with larger horizontal margins
-        val isDeX = EnvironmentUtils.isSamsung() && EnvironmentUtils.isDeX(this)
-        val dexPadding = if (isDeX) (48 * resources.displayMetrics.density).toInt() else 0
-
         recyclerView.adapter = adapter
         (recyclerView.itemAnimator as? androidx.recyclerview.widget.SimpleItemAnimator)?.supportsChangeAnimations = false
         recyclerView.fixEdgeEffect()
@@ -382,9 +345,9 @@ open class HomeActivity : AppActivity(), MavericksView {
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(recyclerView) { v, insets ->
             val systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars() or androidx.core.view.WindowInsetsCompat.Type.displayCutout())
             v.setPadding(
-                systemBars.left + dexPadding,
+                systemBars.left,
                 v.paddingTop,
-                systemBars.right + dexPadding,
+                systemBars.right,
                 v.paddingBottom
             )
             insets

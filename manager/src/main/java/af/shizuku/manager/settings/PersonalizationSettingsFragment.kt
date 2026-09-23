@@ -46,7 +46,6 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
     private lateinit var animationIntensityPreference: ListPreference
     private lateinit var edgeToEdgePreference: TwoStatePreference
     private lateinit var blurUiPreference: TwoStatePreference
-    private lateinit var oneUiThemePreference: TwoStatePreference
     private lateinit var wallpaperThemePreference: ListPreference
 
     override fun onCreateSettingsPreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -225,13 +224,6 @@ class PersonalizationSettingsFragment : BaseSettingsFragment() {
         blurUiPreference = requireNotNull(findPreference(KEY_BLUR_UI))
         blurUiPreference.isChecked = ShizukuSettings.isBlurUiEnabled()
         blurUiPreference.setOnPreferenceChangeListener { _, _ ->
-            applyTheme(requiresRecreate = false)
-            true
-        }
-
-        oneUiThemePreference = requireNotNull(findPreference(KEY_ONEUI_THEME))
-        oneUiThemePreference.isChecked = ShizukuSettings.isOneUiThemeEnabled()
-        oneUiThemePreference.setOnPreferenceChangeListener { _, _ ->
             applyTheme(requiresRecreate = false)
             true
         }
