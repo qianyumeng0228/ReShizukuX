@@ -169,6 +169,15 @@ class AdvancedSettingsFragment : BaseSettingsFragment() {
             true
         }
 
+        // Hostile-ROM wireless-debugging reassertion (opt-in).
+        findPreference<TwoStatePreference>("wifi_debug_reassert_enabled")?.apply {
+            isChecked = ShizukuSettings.isWifiDebugReassertEnabled()
+            setOnPreferenceChangeListener { _, newValue ->
+                ShizukuSettings.setWifiDebugReassertEnabled(newValue as Boolean)
+                true
+            }
+        }
+
         // The manifest's namespace (af.shizuku.manager) differs from the per-flavor applicationId
         // (context.packageName), so ".LauncherAlias" must resolve against the namespace, not the
         // package name, or ComponentName construction throws "Component class ... does not exist"

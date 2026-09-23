@@ -210,6 +210,14 @@ class ShizukuApplication : Application(), Configuration.Provider {
 
         af.shizuku.manager.automation.registerDefaultRules()
 
+        // Portable keep-alive: watch for Wi-Fi returning and re-trigger the ADB worker.
+        // Solves the "boot on cellular -> worker fails -> Wi-Fi never re-triggers" gap.
+        try {
+            af.shizuku.manager.utils.AdbNetworkObserver.register(this)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to register ADB network observer")
+        }
+
         Shizuku.addLogListener { appName, packageName, action ->
             ActivityLogManager.log(appName, packageName, action)
         }

@@ -165,6 +165,9 @@ public class ShizukuSettings {
         // Automation Engine (ShizukuX additions)
         public static final String KEY_AUTOMATION_TRUSTED_NETWORKS = "automation_trusted_networks";
         public static final String KEY_AUTOMATION_APP_PROFILES = "automation_app_profiles";
+
+        // Portable keep-alive (ShizukuX additions)
+        public static final String KEY_WIFI_DEBUG_REASSERT = "wifi_debug_reassert_enabled";
     }
 
     private static SharedPreferences sPreferences;
@@ -367,12 +370,14 @@ public class ShizukuSettings {
         LaunchMethod.UNKNOWN,
         LaunchMethod.ROOT,
         LaunchMethod.ADB,
+        LaunchMethod.DHIZUKU,
     })
     @Retention(SOURCE)
     public @interface LaunchMethod {
         int UNKNOWN = -1;
         int ROOT = 0;
         int ADB = 1;
+        int DHIZUKU = 2;
     }
 
     @LaunchMethod
@@ -1199,5 +1204,40 @@ public class ShizukuSettings {
     public static boolean isAutoReconnectMdnsEnabled() {
         SharedPreferences p = getPreferences();
         return p == null || p.getBoolean(Keys.KEY_AUTO_RECONNECT_MDNS, true);
+    }
+
+    // ------------------------------------------------------------------
+    // Portable keep-alive: hostile-ROM wireless-debugging reassertion
+    // ------------------------------------------------------------------
+
+    /** Opt-in: re-write adb_wifi_enabled 0->1 when hostile ROMs clear it on boot/network churn. */
+    public static boolean isWifiDebugReassertEnabled() {
+        SharedPreferences p = getPreferences();
+        return p != null && p.getBoolean(Keys.KEY_WIFI_DEBUG_REASSERT, false);
+    }
+
+    public static void setWifiDebugReassertEnabled(boolean enable) {
+        SharedPreferences p = getPreferences();
+        if (p != null) p.edit().putBoolean(Keys.KEY_WIFI_DEBUG_REASSERT, enable).apply();
+    }
+
+    // ------------------------------------------------------------------
+    // User-initiated stop latch
+    // ------------------------------------------------------------------
+
+    /**
+     * Set by the OFF path (HomeTab switch off) so the Watchdog does not immediately re-arm a
+     * service the user deliberately stopped. Cleared on the next explicit ON start. In-memory
+     * only: a fresh process after a crash should NOT remember "user stopped" — that would
+     * suppress legitimate crash-restart across a process death.
+     */
+    private static volatile boolean userInitiatedStop = false;
+
+    public static boolean isUserInitiatedStop() {
+        return userInitiatedStop;
+    }
+
+    public static void setUserInitiatedStop(boolean value) {
+        userInitiatedStop = value;
     }
 }

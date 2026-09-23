@@ -27,8 +27,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.adb.AdbMdns
@@ -39,8 +41,10 @@ import af.shizuku.manager.receiver.ShizukuReceiverStarter.WorkerState
 import af.shizuku.manager.receiver.ShizukuReceiverStarter.updateNotification
 import af.shizuku.manager.settings.BugReportDialogActivity
 import af.shizuku.manager.starter.Starter
+import af.shizuku.manager.utils.AdbPortProbe
 import af.shizuku.manager.utils.EnvironmentUtils
 import af.shizuku.manager.utils.ShizukuStateMachine
+import kotlin.coroutines.resume
 
 class AdbStartWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
@@ -49,6 +53,15 @@ class AdbStartWorker(context: Context, params: WorkerParameters) : CoroutineWork
                 applicationContext,
                 WorkerState.RUNNING
             )
+
+            // Full-path lock screen gate: on plain-TCP / wireless adb, attempting the
+            // handshake while the keyguard is locked deadlocks (adbd won't authenticate
+            // until the user unlocks). Wait for USER_PRESENT up to 30s; on timeout, retry
+            // later rather than burning the attempt on a locked-handshake failure.
+            if (!awaitUserUnlocked(applicationContext)) {
+                updateNotification(applicationContext, WorkerState.AWAITING_RETRY)
+                return Result.retry()
+            }
 
             val cr = applicationContext.contentResolver
 
@@ -62,7 +75,14 @@ class AdbStartWorker(context: Context, params: WorkerParameters) : CoroutineWork
 
             val savedPort = ShizukuSettings.getLastPort()
             val isWifiOk = !EnvironmentUtils.isWifiRequired() || ShizukuSettings.isForceStartWadbEnabled()
+
+            // Fast path: if a loopback ADB port is already listening (127.0.0.1), use it
+            // directly and skip the 15s mDNS discovery. This covers the common "wadb was
+            // already on from a previous session / boot" case and works even over cellular
+            // because loopback never leaves the device.
+            val livePort = AdbPortProbe.getLiveAdbTcpPort(applicationContext)
             val port = when {
+                livePort > 0 -> livePort
                 tcpPort > 0 && isWifiOk -> tcpPort
                 savedPort > 0 && isWifiOk && runAttemptCount == 0 -> savedPort
                 else -> callbackFlow {
@@ -149,6 +169,9 @@ class AdbStartWorker(context: Context, params: WorkerParameters) : CoroutineWork
             }
 
             AdbStarter.startAdb(applicationContext, port)
+            // Remember the port that actually worked so the next boot's loopback fast-path
+            // (and mDNS fallback) hits it immediately.
+            ShizukuSettings.setLastPort(port)
             Starter.waitForBinder()
             ActivityLogManager.log("Shizuku", applicationContext.packageName, "Service started via background ADB worker on port $port")
 
@@ -198,6 +221,42 @@ class AdbStartWorker(context: Context, params: WorkerParameters) : CoroutineWork
         }
     }
 
+    /**
+     * Full-path lock screen gate: returns true immediately when the keyguard isn't locked,
+     * otherwise suspends until ACTION_USER_PRESENT fires (user unlocked) or the 30s budget
+     * expires. On expiry returns false so the caller can Result.retry() rather than deadlocking
+     * the ADB handshake against a locked adbd.
+     */
+    private suspend fun awaitUserUnlocked(context: Context): Boolean {
+        val km = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+        if (!km.isKeyguardLocked) return true
+        return try {
+            withTimeoutOrNull(30_000) {
+                suspendCancellableCoroutine { cont ->
+                    var receiver: BroadcastReceiver? = null
+                    receiver = object : BroadcastReceiver() {
+                        override fun onReceive(c: Context, intent: Intent) {
+                            if (intent.action == Intent.ACTION_USER_PRESENT) {
+                                try { c.unregisterReceiver(this) } catch (_: Exception) {}
+                                receiver = null
+                                if (cont.isActive) cont.resume(true)
+                            }
+                        }
+                    }
+                    val filter = IntentFilter(Intent.ACTION_USER_PRESENT)
+                    ContextCompat.registerReceiver(
+                        context, receiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED
+                    )
+                    cont.invokeOnCancellation {
+                        try { receiver?.let { context.unregisterReceiver(it) } } catch (_: Exception) {}
+                    }
+                }
+            } != null
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     private fun showErrorNotification(context: Context, e: Exception) {
         val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -234,7 +293,16 @@ class AdbStartWorker(context: Context, params: WorkerParameters) : CoroutineWork
     }
 
     companion object {
-        fun enqueue(context: Context) {
+        private const val UNIQUE_WORK_NAME = "adb_start_worker"
+
+        @JvmStatic
+        fun enqueue(context: Context) = enqueue(context, ExistingWorkPolicy.REPLACE)
+
+        /**
+         * @param policy REPLACE (user manual start / orchestrator) or KEEP (network observer
+         *                re-trigger when a worker is already RUNNING — don't yank it out).
+         */
+        fun enqueue(context: Context, policy: ExistingWorkPolicy) {
             // WorkManager uses credential-encrypted storage which is unavailable during direct boot.
             // Skip enqueueing until the user has unlocked their device.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -252,8 +320,8 @@ class AdbStartWorker(context: Context, params: WorkerParameters) : CoroutineWork
                 .build()
 
             WorkManager.getInstance(context).enqueueUniqueWork(
-                "adb_start_worker",
-                ExistingWorkPolicy.REPLACE,
+                UNIQUE_WORK_NAME,
+                policy,
                 request
             )
         }

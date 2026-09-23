@@ -144,7 +144,7 @@ object ShizukuReceiverStarter {
         nm.notify(NOTIFICATION_ID, buildNotification(context, msg))
     }
 
-    private fun rootStart(context: Context) {
+    fun rootStart(context: Context) {
         if (!Shell.getShell().isRoot) {
             //NotificationHelper.notify(context, AppConstants.NOTIFICATION_ID_STATUS, AppConstants.NOTIFICATION_CHANNEL_STATUS, R.string.notification_service_start_no_root)
             Shell.getCachedShell()?.close()

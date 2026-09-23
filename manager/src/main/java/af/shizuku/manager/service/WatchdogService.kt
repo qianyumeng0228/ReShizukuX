@@ -88,6 +88,13 @@ class WatchdogService : Service() {
         job = scope.launch {
             ShizukuStateMachine.asFlow().collectLatest { state ->
                 if (state == ShizukuStateMachine.State.CRASHED) {
+                    // A deliberate user-initiated stop (HomeTab switch off) sets this latch;
+                    // suppress the immediate crash-restart that would otherwise fire when the
+                    // killed server's binder-dead callback lands as RUNNING -> CRASHED.
+                    if (ShizukuSettings.isUserInitiatedStop()) {
+                        Timber.tag(TAG).d("CRASHED ignored: userInitiatedStop latch set")
+                        return@collectLatest
+                    }
                     val now = System.currentTimeMillis()
                     val cooldown = backoffMs(consecutiveCrashes)
                     if (now - lastRestartMs > cooldown) {

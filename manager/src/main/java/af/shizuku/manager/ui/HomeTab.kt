@@ -1,37 +1,49 @@
 package af.shizuku.manager.ui
 
-import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import af.shizuku.manager.starter.StarterActivity
-import af.shizuku.manager.utils.EnvironmentUtils
+import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.utils.ShizukuStateMachine
+import kotlinx.coroutines.launch
 
 /**
- * 状态 Tab（首页）：服务状态大卡片 + 单开关。
+ * 状态 Tab（首页）：单开关驱动 ShizukuX Portable 的 11 步 ON / 5 步 OFF 全流程。
  *
- * 状态来源复用全局 [ShizukuStateMachine]（内部已挂接 binder received/dead 监听），
- * 不重新实现连接逻辑；开关打开时复用现有 [StarterActivity] 走 Root/ADB 激活流程。
+ * - ON  -> [PortableStartOrchestrator.startService]（Root / ADB / Dhizuku 自动检测）
+ * - OFF -> 确认对话框 -> [PortableStartOrchestrator.stopService]
+ *
+ * 状态来源复用全局 [ShizukuStateMachine]；步骤进度、错误提示、激活模式、守护模式均在本卡片渲染。
+ * 启动过程中开关禁用，防止重复点击。
  */
 @Composable
 fun HomeTab() {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     // ShizukuStateMachine 是全局单例，asFlow() 会立刻补发当前状态。
     val state by ShizukuStateMachine.asFlow()
@@ -49,6 +61,77 @@ fun HomeTab() {
         ShizukuStateMachine.State.STOPPING -> "停止中…"
         ShizukuStateMachine.State.CRASHED -> "服务已崩溃"
         ShizukuStateMachine.State.STOPPED -> "未运行"
+    }
+
+    // --- orchestrator UI state ---
+    var isWorking by remember { mutableStateOf(false) }
+    var currentStep by remember { mutableIntStateOf(0) }
+    var stepTitle by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var guardMode by remember { mutableStateOf<String?>(null) }
+    var showStopConfirm by remember { mutableStateOf(false) }
+
+    // Activation mode label, refreshed whenever the state settles to RUNNING/STOPPED.
+    var activationMode by remember { mutableStateOf("") }
+    LaunchedEffect(running, state) {
+        activationMode = when (ShizukuSettings.getLastLaunchMode()) {
+            ShizukuSettings.LaunchMethod.ROOT -> "Root"
+            ShizukuSettings.LaunchMethod.ADB -> "无线 ADB"
+            ShizukuSettings.LaunchMethod.DHIZUKU -> "Dhizuku"
+            else -> "未激活"
+        }
+    }
+
+    fun onToggle(wantOn: Boolean) {
+        if (isWorking) return
+        errorMessage = null
+        when {
+            wantOn && !running -> {
+                isWorking = true
+                currentStep = 1
+                scope.launch {
+                    val result = PortableStartOrchestrator.startService(context) { step, title ->
+                        currentStep = step
+                        stepTitle = title
+                    }
+                    isWorking = false
+                    currentStep = 0
+                    stepTitle = ""
+                    if (!result.success) {
+                        errorMessage = result.error ?: "启动失败"
+                    } else {
+                        guardMode = result.guardMode
+                        ShizukuStateMachine.update()
+                    }
+                }
+            }
+            !wantOn && running -> {
+                showStopConfirm = true
+            }
+        }
+    }
+
+    if (showStopConfirm) {
+        AlertDialog(
+            onDismissRequest = { showStopConfirm = false },
+            title = { Text("停止 Shizuku 服务？") },
+            text = { Text("停止后依赖 Shizuku 的应用将失去授权。看门狗 Alarm 也会被取消，直到下次手动开启。") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showStopConfirm = false
+                    isWorking = true
+                    errorMessage = null
+                    scope.launch {
+                        PortableStartOrchestrator.stopService(context)
+                        isWorking = false
+                        ShizukuStateMachine.update()
+                    }
+                }) { Text("停止") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showStopConfirm = false }) { Text("取消") }
+            }
+        )
     }
 
     Column(
@@ -77,9 +160,45 @@ fun HomeTab() {
                 )
                 Text(
                     text = if (running) "Shizuku 服务已就绪，可授权应用使用。"
+                    else if (isWorking) "正在启动…"
                     else "打开开关以 Root 或无线 ADB 方式启动服务。",
                     style = MaterialTheme.typography.bodyMedium
                 )
+
+                // Step progress indicator.
+                if (isWorking && currentStep in 1..11) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.padding(2.dp))
+                        Column {
+                            Text(
+                                text = "正在执行第 $currentStep / 11 步",
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                            if (stepTitle.isNotEmpty()) {
+                                Text(
+                                    text = stepTitle,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Error message.
+                errorMessage?.let { msg ->
+                    Text(
+                        text = "错误：$msg",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    OutlinedButton(onClick = { errorMessage = null }) {
+                        Text("知道了")
+                    }
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -91,27 +210,21 @@ fun HomeTab() {
                     )
                     Switch(
                         checked = running,
-                        onCheckedChange = { wantOn ->
-                            // 骨架阶段只实现"打开→拉起 StarterActivity"；
-                            // 关闭（停止服务）链路后续再接。
-                            if (wantOn && !running) {
-                                val intent = Intent(context, StarterActivity::class.java).apply {
-                                    // 与 StartRootViewHolder 相同的判定：Root 可用走 Root 流程，
-                                    // 否则走默认无线 ADB 流程（不带 EXTRA_IS_ROOT）。
-                                    if (EnvironmentUtils.isRooted()) {
-                                        putExtra(StarterActivity.EXTRA_IS_ROOT, true)
-                                    }
-                                }
-                                context.startActivity(intent)
-                            }
-                        }
+                        enabled = !isWorking,
+                        onCheckedChange = { wantOn -> onToggle(wantOn) }
                     )
                 }
             }
         }
 
+        // Activation mode line.
         Text(
-            text = "激活模式：Root / 无线 ADB / Dhizuku",
+            text = "激活模式：$activationMode",
+            style = MaterialTheme.typography.bodySmall
+        )
+        // Guard mode line (degraded to Alarm in this phase).
+        Text(
+            text = "守护：${guardMode ?: "Alarm"} 模式",
             style = MaterialTheme.typography.bodySmall
         )
     }
