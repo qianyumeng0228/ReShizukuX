@@ -47,14 +47,17 @@ import af.shizuku.manager.adb.AdbKeyException
 import af.shizuku.manager.adb.AdbMdns
 import af.shizuku.manager.adb.AdbPairingClient
 import af.shizuku.manager.adb.AdbPairingAccessibilityService
+import af.shizuku.manager.adb.AdbPairingService
 import af.shizuku.manager.adb.AdbStarter
 import af.shizuku.manager.adb.LocalNetworkPermission
+import af.shizuku.manager.adb.PairingSessionHolder
 import af.shizuku.manager.adb.PreferenceAdbKeyStore
 import af.shizuku.manager.starter.Starter
 import af.shizuku.manager.utils.AdbPortProbe
 import af.shizuku.manager.utils.ShizukuStateMachine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -141,14 +144,60 @@ fun AdbPairingWizard(
         }
     }
 
-    // --- When Step 2 becomes active, start mDNS pairing-port discovery ---
+    // --- Initialize PairingSessionHolder + start AdbPairingService (notification RemoteInput) ---
+    DisposableEffect(Unit) {
+        PairingSessionHolder.portableMode = true
+        PairingSessionHolder.resultCallback = { success, port, error ->
+            // Runs on the service's IO thread; post to main thread for Compose state updates.
+            scope.launch(Dispatchers.Main) {
+                if (success) {
+                    Timber.tag(TAG).i("Pairing succeeded via service, port=$port")
+                    step = 5
+                } else {
+                    Timber.tag(TAG).w(error, "Pairing failed via service")
+                    errorMessage = when (error) {
+                        is AdbInvalidPairingCodeException -> "配对码错误，请重试"
+                        is java.net.ConnectException -> "无法连接配对端口，请确认配对窗口仍打开"
+                        else -> "配对失败：${error?.message ?: "未知错误"}"
+                    }
+                    pairCode = ""
+                    step = 3
+                }
+            }
+        }
+        // Start the foreground service so the notification RemoteInput appears.
+        try {
+            context.startForegroundService(AdbPairingService.startIntent(context))
+        } catch (e: Throwable) {
+            Timber.tag(TAG).w(e, "Failed to start AdbPairingService; wizard will use in-app mDNS fallback")
+        }
+        onDispose {
+            PairingSessionHolder.clear()
+            try {
+                context.startService(
+                    Intent(context, AdbPairingService::class.java).setAction("stop")
+                )
+            } catch (_: Exception) {}
+        }
+    }
+
+    // --- When Step 2 becomes active: start our own mDNS (fallback) + observe service's port ---
     LaunchedEffect(step) {
         if (step == 2) {
             errorMessage = null
+            // Fallback mDNS in case the service's mDNS hasn't fired yet.
             pairingMdns = startPairingDiscovery(context) { port, host ->
                 if (port > 0 && pairingPort <= 0) {
                     pairingPort = port
                     pairingHost = host
+                    step = 3
+                }
+            }
+            // Also observe the service's mDNS result (it writes to PairingSessionHolder).
+            PairingSessionHolder.pairingPortFlow.collectLatest { servicePort ->
+                if (servicePort > 0 && pairingPort <= 0 && step == 2) {
+                    pairingPort = servicePort
+                    pairingHost = PairingSessionHolder.pairingHost
                     step = 3
                 }
             }
@@ -158,8 +207,6 @@ fun AdbPairingWizard(
     // --- Cleanup pairing mDNS when leaving step 2/3/4 or on dispose ---
     DisposableEffect(step) {
         onDispose {
-            // Keep the mDNS alive across step 3 (code entry) and step 4 (pairing) because the
-            // pairing port stays open only while the system pairing dialog is on screen.
             if (step == 5 || step == 1) {
                 pairingMdns?.stop()
                 pairingMdns = null
@@ -185,27 +232,30 @@ fun AdbPairingWizard(
         }
     }
 
-    // --- Step 3: auto-submit when 6 digits entered ---
+    // --- Step 3: when 6 digits entered, send code to AdbPairingService for pairing ---
     LaunchedEffect(pairCode) {
-        if (step == 3 && pairCode.length == 6) {
-            delay(200) // let the user see the 6th digit before flipping
-            step = 4
-        }
-    }
-
-    // --- Step 4: execute pairing ---
-    LaunchedEffect(step) {
-        if (step == 4 && pairingPort > 0 && pairCode.length == 6 && !isBusy) {
+        if (step == 3 && pairCode.length == 6 && !isBusy) {
+            delay(200)
             isBusy = true
             errorMessage = null
-            val ok = runPairing(context, pairingHost, pairingPort, pairCode)
-            isBusy = false
-            if (ok) {
-                step = 5
-            } else {
-                errorMessage = "配对失败，请确认配对码正确后重试"
-                step = 3 // back to code entry for retry
-                pairCode = ""
+            step = 4 // show "pairing in progress" UI while service works
+            // Hand the code to the service — it runs AdbPairingClient and calls back via
+            // PairingSessionHolder.resultCallback (set up above).
+            try {
+                val intent = AdbPairingService.dialogReplyIntent(
+                    context, pairingPort, pairCode
+                )
+                context.startService(intent)
+            } catch (e: Throwable) {
+                // Service unavailable — fall back to in-app pairing.
+                Timber.tag(TAG).w(e, "dialogReplyIntent failed, falling back to in-app pairing")
+                val ok = runPairing(context, pairingHost, pairingPort, pairCode)
+                isBusy = false
+                if (ok) { step = 5 } else {
+                    errorMessage = "配对失败，请确认配对码正确后重试"
+                    pairCode = ""
+                    step = 3
+                }
             }
         }
     }
@@ -302,6 +352,12 @@ fun AdbPairingWizard(
             // Cancel always available.
             OutlinedButton(onClick = {
                 pairingMdns?.stop(); pairingMdns = null
+                PairingSessionHolder.clear()
+                try {
+                    context.startService(
+                        Intent(context, AdbPairingService::class.java).setAction("stop")
+                    )
+                } catch (_: Exception) {}
                 onCancel()
             }) { Text("取消") }
 
@@ -421,13 +477,27 @@ private fun Step2Content() {
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                "系统会弹出一个窗口，显示 6 位配对码和 IP:端口。向导正在通过 mDNS 监听配对端口…",
+                "系统会弹出一个窗口，显示 6 位配对码和 IP:端口。",
                 style = MaterialTheme.typography.bodySmall
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.width(20.dp).height(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("正在等待配对端口…", style = MaterialTheme.typography.bodySmall)
+            }
+            // MIUI-specific guidance: pulling down the shade keeps the pairing dialog alive.
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(10.dp)) {
+                    Text(
+                        "MIUI / HyperOS 用户推荐：",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        "下拉通知栏，在 Shizuku 配对通知中直接输入配对码发送，避免切换应用导致配对中断。",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
             Text(
                 "打开配对码窗口后会自动进入下一步。",
@@ -465,6 +535,15 @@ private fun Step3Content(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(10.dp)) {
+                    Text(
+                        "也可以下拉通知栏，在 Shizuku 配对通知中输入配对码发送（MIUI 推荐）。",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
         }
     }
 }

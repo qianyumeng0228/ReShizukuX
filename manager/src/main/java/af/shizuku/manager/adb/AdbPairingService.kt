@@ -80,6 +80,9 @@ class AdbPairingService : Service() {
         Timber.tag(tag).i("Pairing service port: $port")
         if (port <= 0) return@Observer
 
+        // Bridge to the Compose wizard so it can advance to the code-input step.
+        PairingSessionHolder.onPairingPortFound(port, adbMdns?.resolvedHost ?: "127.0.0.1")
+
         // Since the service could be killed before user finishing input,
         // we need to put the port into Intent
         val notification = createInputNotification(port)
@@ -194,7 +197,7 @@ class AdbPairingService : Service() {
         serviceScope.launch {
             // Prefer the mDNS-resolved host; falls back to loopback if discovery isn't live (e.g.
             // the service was killed and restarted from the reply intent, which only carries the port).
-            val host = adbMdns?.resolvedHost ?: "127.0.0.1"
+            val host = adbMdns?.resolvedHost ?: PairingSessionHolder.pairingHost ?: "127.0.0.1"
 
             val key = try {
                 AdbKey(PreferenceAdbKeyStore(ShizukuSettings.getPreferences()), "shizukux")
@@ -206,17 +209,34 @@ class AdbPairingService : Service() {
             AdbPairingClient(host, port, code, key).runCatching {
                 start()
             }.onFailure {
-                handleResult(false, it)
+                handleResult(false, it, port)
             }.onSuccess {
-                handleResult(it, null)
+                handleResult(it, null, port)
             }
         }
 
         return workingNotification
     }
 
-    private fun handleResult(success: Boolean, exception: Throwable?) {
+    private fun handleResult(success: Boolean, exception: Throwable?, port: Int = -1) {
         stopForeground(STOP_FOREGROUND_DETACH)
+
+        // Portable Compose wizard mode: hand the result back to the wizard instead of
+        // auto-launching StarterActivity / pm-grant flow.
+        if (PairingSessionHolder.portableMode) {
+            Timber.tag(tag).i("Portable pairing result: success=$success, port=$port")
+            val cb = PairingSessionHolder.resultCallback
+            if (success) {
+                stopSearch()
+            }
+            cb?.invoke(success, port, exception)
+            if (success) {
+                // Keep the service alive briefly? No — wizard will handle post-pairing start.
+                stopForeground(STOP_FOREGROUND_REMOVE)
+            }
+            stopSelf()
+            return
+        }
 
         if (success) {
             Timber.tag(tag).i("Pair succeed")
