@@ -9,8 +9,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import af.shizuku.manager.R
 import af.shizuku.manager.databinding.FragmentServerMetricsBinding
-import rikka.shizuku.Shizuku
-import af.shizuku.server.IAICoreExtra
 import timber.log.Timber
 
 class ServerMetricsFragment : Fragment() {
@@ -18,7 +16,6 @@ class ServerMetricsFragment : Fragment() {
     private var _binding: FragmentServerMetricsBinding? = null
     private val binding get() = _binding!!
     private val handler = Handler(Looper.getMainLooper())
-    private var aiCore: IAICoreExtra? = null
 
     private val updateRunnable = object : Runnable {
         override fun run() {
@@ -32,23 +29,6 @@ class ServerMetricsFragment : Fragment() {
         return binding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        initAiCore()
-    }
-
-    private fun initAiCore() {
-        try {
-            if (Shizuku.pingBinder()) {
-                val binder = Shizuku.getBinder()
-                val shizukuService = moe.shizuku.server.IShizukuService.Stub.asInterface(binder)
-                aiCore = shizukuService.aiCoreExtra
-            }
-        } catch (e: Exception) {
-            Timber.w(e)
-        }
-    }
-
     override fun onResume() {
         super.onResume()
         handler.post(updateRunnable)
@@ -60,25 +40,9 @@ class ServerMetricsFragment : Fragment() {
     }
 
     private fun updateStats() {
-        val ai = aiCore ?: return
-        try {
-            val stats = ai.serverStats
-            val uptimeMs = stats.getLong("uptime_ms")
-            binding.textUptime.text = formatUptime(uptimeMs)
-            val clientCount = stats.getInt("client_count")
-            binding.textClientCount.text = getString(R.string.server_clients_connected, clientCount)
-            val total = stats.getLong("mem_total")
-            val free = stats.getLong("mem_free")
-            val maxRaw = stats.getLong("mem_max")
-            val used = (total - free).coerceAtLeast(0L)
-            val max = if (maxRaw == Long.MAX_VALUE || maxRaw <= 0) total else maxRaw
-            val progress = if (max > 0) ((used.toFloat() / max.toFloat()) * 100).toInt().coerceIn(0, 100) else 0
-            binding.progressMemory.progress = progress
-            val maxStr = if (maxRaw == Long.MAX_VALUE) getString(R.string.server_memory_uncapped) else formatSize(max)
-            binding.textMemoryDetails.text = getString(R.string.server_memory_details, formatSize(used), maxStr)
-        } catch (e: Exception) {
-            Timber.w(e)
-        }
+        // Server runtime metrics were previously sourced from the removed AICore+
+        // diagnostic bridge. The UI views retain their default values until an
+        // alternative metrics source is wired in.
     }
 
     private fun formatUptime(ms: Long): String {

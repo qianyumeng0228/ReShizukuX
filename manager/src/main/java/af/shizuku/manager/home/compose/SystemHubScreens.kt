@@ -39,50 +39,10 @@ fun ServerMetricsScreen() {
     var memoryDetails by remember { mutableStateOf("0 MB / 0 MB") }
 
     LaunchedEffect(Unit) {
+        // Server runtime metrics were previously sourced from the removed AICore+
+        // diagnostic bridge. The cards retain their default values until an
+        // alternative metrics source is wired in.
         while (true) {
-            try {
-                if (Shizuku.pingBinder()) {
-                    val binder = Shizuku.getBinder()
-                    val shizukuService = moe.shizuku.server.IShizukuService.Stub.asInterface(binder)
-                    val ai = shizukuService.aiCoreExtra
-                    if (ai == null) {
-                        // Null when connected to a stock/mismatched server that doesn't implement
-                        // the Plus AICore extension (SHIZUKUPLUS-6J) - not an error, just unavailable.
-                        delay(1000)
-                        continue
-                    }
-                    val stats = ai.serverStats
-
-                    val uptimeMs = stats.getLong("uptime_ms")
-                    val seconds = (uptimeMs / 1000) % 60
-                    val minutes = (uptimeMs / (1000 * 60)) % 60
-                    val hours = (uptimeMs / (1000 * 60 * 60)) % 24
-                    val days = (uptimeMs / (1000 * 60 * 60 * 24))
-                    uptimeText = if (days > 0) String.format("%dd %02d:%02d:%02d", days, hours, minutes, seconds)
-                    else String.format("%02d:%02d:%02d", hours, minutes, seconds)
-                    
-                    clientCountText = context.getString(R.string.server_clients_connected, stats.getInt("client_count"))
-                    
-                    val maxRaw = stats.getLong("mem_max")
-                    val total = stats.getLong("mem_total")
-                    val free = stats.getLong("mem_free")
-                    val used = (total - free).coerceAtLeast(0L)
-                    val max = if (maxRaw == Long.MAX_VALUE || maxRaw <= 0) total else maxRaw
-                    
-                    memoryProgress = if (max > 0) (used.toFloat() / max.toFloat()).coerceIn(0f, 1f) else 0f
-                    
-                    val formatSize = { bytes: Long ->
-                        val kb = bytes / 1024
-                        val mb = kb / 1024
-                        val gb = mb / 1024
-                        if (gb > 0) "$gb GB" else if (mb > 0) "$mb MB" else "$kb KB"
-                    }
-                    val maxStr = if (maxRaw == Long.MAX_VALUE) context.getString(R.string.server_memory_uncapped) else formatSize(max)
-                    memoryDetails = "${formatSize(used)} / $maxStr (Max Allowed)"
-                }
-            } catch (e: Exception) {
-                Timber.w(e)
-            }
             delay(1000)
         }
     }

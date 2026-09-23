@@ -48,21 +48,6 @@ import rikka.core.util.BuildUtils;
 import af.shizuku.common.util.OsUtils;
 import moe.shizuku.server.IRemoteProcess;
 import moe.shizuku.server.IShizukuApplication;
-import af.shizuku.server.IVirtualMachineManager;
-import af.shizuku.server.IStorageProxy;
-import af.shizuku.server.IAICoreExtra;
-import af.shizuku.server.IWindowManagerExtra;
-import af.shizuku.server.IContinuityBridge;
-import af.shizuku.server.IOverlayManagerExtra;
-import af.shizuku.server.INetworkGovernorExtra;
-import af.shizuku.server.IActivityManagerExtra;
-import af.shizuku.server.IStatusBarGovernorExtra;
-import af.shizuku.server.IPackageGovernorExtra;
-import af.shizuku.server.IDisplayTunerExtra;
-import af.shizuku.server.IAppInspector;
-import af.shizuku.server.IPrivilegedDataSource;
-import af.shizuku.server.IBackupRestoreExtra;
-import af.shizuku.server.IApkPatcher;
 import rikka.hidden.compat.ActivityManagerApis;
 import rikka.hidden.compat.DeviceIdleControllerApis;
 import rikka.hidden.compat.PackageManagerApis;
@@ -184,22 +169,6 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
     private volatile int secondaryManagerAppId;
     // uptimeMillis of the last on-demand manager-appId re-resolve (throttle; see checkCallerManagerPermission).
     private volatile long lastManagerAppIdRefresh;
-    private final VirtualMachineManagerImpl virtualMachineManager = new VirtualMachineManagerImpl();
-    private final StorageProxyImpl storageProxy = new StorageProxyImpl();
-    private final AICorePlusImpl aiCoreExtra;
-    private final WindowManagerPlusImpl windowManagerExtra = new WindowManagerPlusImpl();
-    private final ContinuityBridgeImpl continuityBridge = new ContinuityBridgeImpl();
-    private final OverlayManagerPlusImpl overlayManagerExtra = new OverlayManagerPlusImpl();
-    private final NetworkGovernorPlusImpl networkGovernorExtra = new NetworkGovernorPlusImpl();
-    private final ActivityManagerPlusImpl activityManagerExtra = new ActivityManagerPlusImpl();
-    private final StatusBarGovernorExtraImpl statusBarGovernorExtra = new StatusBarGovernorExtraImpl();
-    private final PackageGovernorExtraImpl packageGovernorExtra = new PackageGovernorExtraImpl();
-    private final DisplayTunerExtraImpl displayTunerExtra = new DisplayTunerExtraImpl();
-    private final AppInspectorImpl appInspector = new AppInspectorImpl();
-    private final PrivilegedDataSourceImpl privilegedDataSource = new PrivilegedDataSourceImpl();
-    private final BackupRestoreExtraImpl backupRestoreExtra = new BackupRestoreExtraImpl();
-    private final ApkPatcherImpl apkPatcher = new ApkPatcherImpl();
-
     private void grantRuntimePermissionRobust(String packageName, String permName, int userId) throws Throwable {
         Android17Compat.grantRuntimePermission(packageName, permName, userId);
     }
@@ -350,7 +319,6 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
 
         configManager = getConfigManager();
         clientManager = getClientManager();
-        aiCoreExtra = new AICorePlusImpl(clientManager, this);
 
         ApkChangedObservers.start(ai.sourceDir, () -> {
             if (getManagerApplicationInfo() == null) {
@@ -1212,13 +1180,6 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
                 } else if (baseCmd.equals("mount") && cmd.length > 1 && String.join(" ", cmd).contains("remount")) {
                     String fullCmd = String.join(" ", cmd);
                     LOGGER.i("SUBridge: intercepting mount remount. Delegating to OverlayManager Proxy.");
-                    if (isFeatureEnabled("overlay_fs_proxy_enabled") && (fullCmd.contains("/system") || fullCmd.contains("/vendor"))) {
-                        try {
-                            overlayManagerExtra.prepareShadowMount(callingPkg, "/system");
-                        } catch (Exception e) {
-                            LOGGER.e("SUBridge: shadow mount proxy failed", e);
-                        }
-                    }
                     return newProcessInternal(new String[]{"true"}, env, dir);
                 } else if (baseCmd.equals("mount") && cmd.length > 3 && String.join(" ", cmd).contains("--bind")) {
                     String fullCmd = String.join(" ", cmd);
@@ -1663,21 +1624,7 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
             }
 
             // Backporting: Native Acceleration for regular apps
-            if (baseCmd.equals("am") && cmd.length >= 3) {
-                if (cmd[1].equals("force-stop")) {
-                    String pkg = cmd[2];
-                    LOGGER.i("Plus Optimization: am force-stop " + pkg + " via ActivityManagerPlus");
-                    if (activityManagerExtra.deepForceStop(pkg)) {
-                        return newProcessInternal(new String[]{"true"}, env, dir);
-                    }
-                } else if (cmd[1].equals("freeze") || cmd[1].equals("suspend")) {
-                    String pkg = cmd[2];
-                    LOGGER.i("Plus Optimization: am freeze " + pkg + " -> restricted bucket");
-                    if (activityManagerExtra.setAppStandbyBucket(pkg, 45)) { // 45 = RESTRICTED
-                        return newProcessInternal(new String[]{"true"}, env, dir);
-                    }
-                }
-            } else if (baseCmd.equals("settings") && cmd.length >= 5 && cmd[1].equals("put")) {
+            if (baseCmd.equals("settings") && cmd.length >= 5 && cmd[1].equals("put")) {
                 String namespace = cmd[2];
                 String key = cmd[3];
                 String value = cmd[4];
@@ -1756,39 +1703,6 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
                         LOGGER.e("SUBridge: failed to evaluate raw service call securely", e);
                         // Default to mock success on error to prevent escalation
                         return newProcessInternal(new String[]{"echo", "Result: Parcel(00000000    '....')"}, env, dir);
-                    }
-                }
-            } else if (isFeatureEnabled("storage_proxy") && (baseCmd.equals("ls") || baseCmd.equals("rm") || baseCmd.equals("mkdir") || baseCmd.equals("cat") || baseCmd.equals("stat"))) {
-                String path = cmd[cmd.length - 1];
-                if (path.startsWith("/data/data/") || path.startsWith("/sdcard/Android/data/") || path.startsWith("/data/app/")) {
-                    LOGGER.i("Plus Optimization (Storage Bridge): mapping " + baseCmd + " " + path);
-                    try {
-                        if (baseCmd.equals("ls")) {
-                            java.util.List<String> files = storageProxy.listFiles(path);
-                            if (files != null) {
-                                String joined = String.join("\n", files);
-                                return newProcessInternal(new String[]{"echo", joined}, env, dir);
-                            }
-                        } else if (baseCmd.equals("cat")) {
-                            android.os.ParcelFileDescriptor pfd = storageProxy.openFile(path, android.os.ParcelFileDescriptor.MODE_READ_ONLY);
-                            if (pfd != null) {
-                                return new ProxyRemoteProcess(pfd, 0);
-                            }
-                        } else if (baseCmd.equals("stat")) {
-                            android.os.Bundle info = storageProxy.getFileInfo(path);
-                            if (info.getBoolean("exists")) {
-                                String statOut = "File: " + path + "\nSize: " + info.getLong("size") + "\nModify: " + info.getLong("lastModified");
-                                return newProcessInternal(new String[]{"echo", statOut}, env, dir);
-                            }
-                        } else if (baseCmd.equals("rm")) {
-                            if (storageProxy.delete(path)) {
-                                return newProcessInternal(new String[]{"true"}, env, dir);
-                            }
-                        } else if (baseCmd.equals("mkdir")) {
-                            return newProcessInternal(new String[]{"true"}, env, dir);
-                        }
-                    } catch (Exception e) {
-                        LOGGER.e("SUBridge: StorageProxy command failed", e);
                     }
                 }
             }
@@ -2418,112 +2332,6 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
         return success;
     }
 
-    // ------ Sui only ------
-
-    @Override
-    public IVirtualMachineManager getVirtualMachineManager() {
-        enforceCallingPermission("getVirtualMachineManager");
-        if (!isFeatureEnabled("avf_manager")) return null;
-        return virtualMachineManager;
-    }
-
-    @Override
-    public IStorageProxy getStorageProxy() {
-        enforceCallingPermission("getStorageProxy");
-        if (!isFeatureEnabled("storage_proxy")) return null;
-        return storageProxy;
-    }
-
-    @Override
-    public IAICoreExtra getAICoreExtra() {
-        enforceCallingPermission("getAICoreExtra");
-        // Always hand out the AICorePlus object. Diagnostic stats (getServerStats) are
-        // read-only and must stay available no matter how the ai_core_plus switch is set;
-        // actual AI features are gated per-call inside AICorePlusImpl
-        // (ai_core_plus + ai_core_experimental / ai_core_master / npu_acceleration).
-        return aiCoreExtra;
-    }
-
-    @Override
-    public IWindowManagerExtra getWindowManagerExtra() {
-        enforceCallingPermission("getWindowManagerExtra");
-        if (!isFeatureEnabled("window_manager_plus")) return null;
-        return windowManagerExtra;
-    }
-
-    @Override
-    public IContinuityBridge getContinuityBridge() {
-        enforceCallingPermission("getContinuityBridge");
-        if (!isFeatureEnabled("continuity_bridge")) return null;
-        return continuityBridge;
-    }
-
-    @Override
-    public IOverlayManagerExtra getOverlayManagerExtra() {
-        enforceCallingPermission("getOverlayManagerExtra");
-        if (!isFeatureEnabled("overlay_manager_plus")) return null;
-        return overlayManagerExtra;
-    }
-
-    @Override
-    public INetworkGovernorExtra getNetworkGovernorExtra() {
-        enforceCallingPermission("getNetworkGovernorExtra");
-        if (!isFeatureEnabled("network_governor_plus")) return null;
-        return networkGovernorExtra;
-    }
-
-    @Override
-    public IActivityManagerExtra getActivityManagerExtra() {
-        enforceCallingPermission("getActivityManagerExtra");
-        if (!isFeatureEnabled("activity_manager_plus")) return null;
-        return activityManagerExtra;
-    }
-
-    @Override
-    public IStatusBarGovernorExtra getStatusBarGovernorExtra() {
-        enforceCallingPermission("getStatusBarGovernorExtra");
-        if (!isFeatureEnabled("status_bar_governor_extra")) return null;
-        return statusBarGovernorExtra;
-    }
-
-    @Override
-    public IPackageGovernorExtra getPackageGovernorExtra() {
-        enforceCallingPermission("getPackageGovernorExtra");
-        if (!isFeatureEnabled("package_governor_extra")) return null;
-        return packageGovernorExtra;
-    }
-
-    @Override
-    public IDisplayTunerExtra getDisplayTunerExtra() {
-        enforceCallingPermission("getDisplayTunerExtra");
-        if (!isFeatureEnabled("display_tuner_extra")) return null;
-        return displayTunerExtra;
-    }
-
-    @Override
-    public IAppInspector getAppInspector() {
-        enforceCallingPermission("getAppInspector");
-        return appInspector;
-    }
-
-    @Override
-    public IPrivilegedDataSource getPrivilegedDataSource() {
-        enforceCallingPermission("getPrivilegedDataSource");
-        return privilegedDataSource;
-    }
-
-    @Override
-    public IBackupRestoreExtra getBackupRestoreExtra() {
-        enforceCallingPermission("getBackupRestoreExtra");
-        return backupRestoreExtra;
-    }
-
-    @Override
-    public IApkPatcher getApkPatcher() {
-        enforceCallingPermission("getApkPatcher");
-        return apkPatcher;
-    }
-
     @Override
     public void elevateApp(String packageName) {
         enforceCallingPermission("elevateApp");
@@ -2592,17 +2400,6 @@ public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuCl
     public boolean isExtraFeatureEnabled(String key) {
         enforceCallingPermission("isExtraFeatureEnabled");
         return checkExtraFeatureEnabled(key);
-    }
-
-    private af.shizuku.server.IAIAutomationBridge aiAutomationBridge;
-
-    @Override
-    public void registerAIAutomationBridge(af.shizuku.server.IAIAutomationBridge bridge) {
-        enforceCallingPermission("registerAIAutomationBridge");
-        this.aiAutomationBridge = bridge;
-        if (aiCoreExtra != null) {
-            aiCoreExtra.setAutomationBridge(bridge);
-        }
     }
 
     @Override

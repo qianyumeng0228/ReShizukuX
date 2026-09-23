@@ -3,22 +3,6 @@ package moe.shizuku.server;
 import moe.shizuku.server.IRemoteProcess;
 import moe.shizuku.server.IShizukuApplication;
 import moe.shizuku.server.IShizukuServiceConnection;
-import af.shizuku.server.IVirtualMachineManager;
-import af.shizuku.server.IStorageProxy;
-import af.shizuku.server.IAICoreExtra;
-import af.shizuku.server.IAIAutomationBridge;
-import af.shizuku.server.IWindowManagerExtra;
-import af.shizuku.server.IContinuityBridge;
-import af.shizuku.server.IOverlayManagerExtra;
-import af.shizuku.server.INetworkGovernorExtra;
-import af.shizuku.server.IActivityManagerExtra;
-import af.shizuku.server.IStatusBarGovernorExtra;
-import af.shizuku.server.IPackageGovernorExtra;
-import af.shizuku.server.IDisplayTunerExtra;
-import af.shizuku.server.IAppInspector;
-import af.shizuku.server.IPrivilegedDataSource;
-import af.shizuku.server.IBackupRestoreExtra;
-import af.shizuku.server.IApkPatcher;
 
 interface IShizukuService {
 
@@ -62,25 +46,9 @@ interface IShizukuService {
 
     void updateFlagsForUid(int uid, int mask, int value) = 106;
 
-    IVirtualMachineManager getVirtualMachineManager() = 107;
-
-    IStorageProxy getStorageProxy() = 108;
-
-    IAICoreExtra getAICoreExtra() = 109;
-
-    IWindowManagerExtra getWindowManagerExtra() = 110;
-
-    IContinuityBridge getContinuityBridge() = 111;
-
     void updateExtraFeatureEnabled(String key, boolean enabled) = 112;
 
     void setExtraSetting(String key, String value) = 116;
-
-    IOverlayManagerExtra getOverlayManagerExtra() = 113;
-
-    INetworkGovernorExtra getNetworkGovernorExtra() = 114;
-
-    IActivityManagerExtra getActivityManagerExtra() = 115;
 
     void elevateApp(String packageName) = 117;
 
@@ -89,20 +57,4 @@ interface IShizukuService {
     String getExtraSetting(String key) = 119;
 
     boolean isExtraFeatureEnabled(String key) = 120;
-
-    void registerAIAutomationBridge(in IAIAutomationBridge bridge) = 121;
-
-    IStatusBarGovernorExtra getStatusBarGovernorExtra() = 122;
-
-    IPackageGovernorExtra getPackageGovernorExtra() = 123;
-
-    IDisplayTunerExtra getDisplayTunerExtra() = 124;
-
-    IAppInspector getAppInspector() = 125;
-
-    IPrivilegedDataSource getPrivilegedDataSource() = 126;
-
-    IBackupRestoreExtra getBackupRestoreExtra() = 127;
-
-    IApkPatcher getApkPatcher() = 128;
  }

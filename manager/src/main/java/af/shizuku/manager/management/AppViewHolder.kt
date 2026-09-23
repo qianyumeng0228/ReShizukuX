@@ -249,65 +249,6 @@ class AppViewHolder(private val binding: AppListItemBinding) :
                 })
             }
 
-            // Freeze/Unfreeze — binder calls are safe here since buildEnabledActions runs on IO
-            if (ShizukuSettings.isCustomApiEnabled()) {
-                val shizukuService = try { Shizuku.getBinder() } catch (e: Exception) { null }
-                if (shizukuService != null) {
-                    val amPlus = try {
-                        moe.shizuku.server.IShizukuService.Stub.asInterface(shizukuService).activityManagerExtra
-                    } catch (e: Exception) { null }
-                    if (amPlus != null) {
-                        val isFrozen = try { amPlus.isAppFrozen(capturedPackage) } catch (e: Exception) { false }
-                        val freezeLabel = context.getString(
-                            if (isFrozen) {
-                                R.string.app_management_context_unfreeze
-                            } else {
-                                R.string.app_management_context_freeze
-                            }
-                        )
-                        add(LpAction(freezeLabel) {
-                            CoroutineScope(Dispatchers.IO).launch {
-                                try {
-                                    val success = if (isFrozen) amPlus.unfreezeApp(capturedPackage) else amPlus.freezeApp(capturedPackage)
-                                    withContext(Dispatchers.Main) {
-                                        if (success) {
-                                            Toast.makeText(
-                                                context,
-                                                if (isFrozen) R.string.app_management_app_unfrozen else R.string.app_management_app_frozen,
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                            ActivityLogManager.log(
-                                                appLabel,
-                                                capturedPackage,
-                                                context.getString(
-                                                    R.string.app_management_log_long_press,
-                                                    if (isFrozen) {
-                                                        context.getString(R.string.app_management_context_unfreeze)
-                                                    } else {
-                                                        context.getString(R.string.app_management_context_freeze)
-                                                    }
-                                                )
-                                            )
-                                            val pos = adapterPosition
-                                            if (pos != androidx.recyclerview.widget.RecyclerView.NO_POSITION) adapter.notifyItemChanged(pos)
-                                        } else {
-                                            Toast.makeText(context, R.string.app_management_operation_failed, Toast.LENGTH_SHORT).show()
-                                        }
-                                    }
-                                } catch (e: Exception) {
-                                    withContext(Dispatchers.Main) {
-                                        Toast.makeText(
-                                            context,
-                                            context.getString(R.string.app_management_operation_error, e.message ?: e.javaClass.simpleName),
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    }
-                                }
-                            }
-                        })
-                    }
-                }
-            }
         }
     }
 
