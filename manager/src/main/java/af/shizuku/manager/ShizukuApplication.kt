@@ -24,7 +24,6 @@ import rikka.material.app.LocaleDelegate
 import rikka.shizuku.Shizuku
 import timber.log.Timber
 import af.shizuku.manager.di.appModule
-import af.shizuku.manager.worker.RemoteDbSyncWorker
 import android.os.UserManager
 import com.airbnb.mvrx.Mavericks
 import kotlinx.coroutines.CoroutineScope
@@ -209,32 +208,12 @@ class ShizukuApplication : Application(), Configuration.Provider {
             }
         }
 
-        try {
-            af.shizuku.manager.automation.registerDefaultRules()
-            val automationIntent = Intent(this, af.shizuku.manager.automation.AutomationService::class.java)
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                startForegroundService(automationIntent)
-            } else {
-                startService(automationIntent)
-            }
-        } catch (e: Exception) {
-            Timber.e(e, "Failed to start AutomationService")
-        }
+        af.shizuku.manager.automation.registerDefaultRules()
 
         Shizuku.addLogListener { appName, packageName, action ->
             ActivityLogManager.log(appName, packageName, action)
         }
 
-        val userManager = getSystemService(Context.USER_SERVICE) as? UserManager
-        if (userManager == null || userManager.isUserUnlocked) {
-            try {
-                RemoteDbSyncWorker.schedule(this)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to schedule RemoteDbSyncWorker")
-            }
-        } else {
-            Timber.w("Direct Boot mode: skipping RemoteDbSyncWorker scheduling")
-        }
     }
 
     override fun onCreate() {
@@ -337,20 +316,6 @@ class ShizukuApplication : Application(), Configuration.Provider {
                 AppCompatDelegate.setDefaultNightMode(wallpaperForced)
             }
 
-            if (ShizukuSettings.getWatchdog() && ShizukuSettings.isLiveActivityEnabled()) {
-                try {
-                    // startForegroundService() is required on API 26+ to start from background;
-                    // plain startService() throws BackgroundServiceStartNotAllowedException on API 31+.
-                    val liveServiceIntent = Intent(this, af.shizuku.manager.service.ShizukuLiveService::class.java)
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        startForegroundService(liveServiceIntent)
-                    } else {
-                        startService(liveServiceIntent)
-                    }
-                } catch (e: Exception) {
-                    android.util.Log.w("ShizukuApplication", "Failed to start ShizukuLiveService", e)
-                }
-            }
         } catch (e: Throwable) {
             Timber.e(e, "Failed to initialize managers")
             if (e is Error) throw e

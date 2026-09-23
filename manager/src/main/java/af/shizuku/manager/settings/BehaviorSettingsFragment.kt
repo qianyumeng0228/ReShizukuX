@@ -16,7 +16,6 @@ import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.ShizukuSettings.Keys.*
 import af.shizuku.manager.app.SnackbarHelper
 import af.shizuku.manager.receiver.DeveloperOptionsRestorer
-import af.shizuku.manager.service.ShizukuLiveService
 import af.shizuku.manager.utils.EnvironmentUtils
 import af.shizuku.manager.utils.ShizukuStateMachine
 import androidx.lifecycle.lifecycleScope
@@ -169,19 +168,6 @@ class BehaviorSettingsFragment : BaseSettingsFragment(), SharedPreferences.OnSha
                 }
                 false
             }
-        }
-
-        findPreference<TwoStatePreference>(KEY_LIVE_ACTIVITY_ENABLED)?.setOnPreferenceChangeListener { _, newValue ->
-            val enable = newValue as Boolean
-            val ctx = requireContext()
-            val svcIntent = Intent(ctx, ShizukuLiveService::class.java)
-            if (enable) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ctx.startForegroundService(svcIntent)
-                else ctx.startService(svcIntent)
-            } else {
-                ctx.stopService(svcIntent)
-            }
-            true
         }
 
         // Auto-restore developer options on boot. Requires WRITE_SECURE_SETTINGS (an adb-granted

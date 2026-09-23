@@ -105,13 +105,6 @@ class AppProfilesActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         saveProfilesToJson()
-        // Auto-start/stop AutomationService based on current rules.
-        val svcIntent = Intent(this, AutomationService::class.java)
-        if (ShizukuSettings.hasAnyAutomationRulesConfigured()) {
-            startService(svcIntent)
-        } else {
-            stopService(svcIntent)
-        }
     }
 
     private fun loadApps(): List<AppEntry> {

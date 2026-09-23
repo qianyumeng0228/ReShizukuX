@@ -368,18 +368,6 @@
             android:name=".service.AdbProxyService"
             android:exported="false" />
 
-        <service
-            android:name=".service.ShizukuLiveService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Displays a persistent status notification while the Shizuku bridge is active.
-                    The service monitors the Shizuku binder state and shows or hides the notification accordingly.
-                    It runs silently in the background when Shizuku is not active." />
-        </service>
-
         <receiver
             android:name=".receiver.BinderRequestReceiver"
             android:directBootAware="true"
@@ -527,21 +515,6 @@
             android:excludeFromRecents="true"
             android:exported="false" />
 
-        <service
-            android:name="af.shizuku.manager.automation.AutomationService"
-            android:exported="false"
-            android:foregroundServiceType="specialUse">
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Context-aware automation engine. Monitors Wi-Fi connectivity and the
-                    foreground app so user-defined automation rules (e.g. auto-start the Shizuku bridge
-                    on a trusted network) can react in real time. This must run continuously in the
-                    background for the duration the user keeps automation enabled; dataSync's 6-hour
-                    daily budget would silently stop it. It performs no constant polling beyond a light
-                    foreground-app check and reacts to system network callbacks, so battery impact is
-                    minimal, and it is toggleable via settings." />
-        </service>
-
         <!-- Tasker/Locale-compatible automation plugin (#6): exposes start/stop as a plugin
              action and "service is running" as a plugin condition to any Locale-style host app
              (Tasker, MacroDroid, etc). -->
@@ -588,22 +561,6 @@
                 <action android:name="com.twofortyfouram.locale.intent.action.QUERY_CONDITION" />
             </intent-filter>
         </receiver>
-
-        <!-- AICore+ automation accessibility service. Restored: a modularity refactor
-             (af6eca73) accidentally dropped this declaration, hiding it from Android's
-             Accessibility settings (#305). -->
-        <service
-            android:name=".automation.AICoreExtraService"
-            android:label="@string/aicore_extra_label"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.accessibilityservice"
-                android:resource="@xml/accessibility_service_automation" />
-        </service>
 
         <!-- ADB pairing code auto-detection accessibility service (enabled on demand
              during pairing). Also dropped by af6eca73; restored alongside AICore+. -->
