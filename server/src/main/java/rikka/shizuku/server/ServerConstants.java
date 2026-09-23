@@ -8,13 +8,10 @@ public class ServerConstants {
     public static final String PERMISSION_LEGACY = "af.shizuku.manager.permission.API_V23";
     public static final String PERMISSION_ORIGINAL = "moe.shizuku.manager.permission.API_V23";
 
-    // Both the Plus and Drop-In flavors share this same server binary but ship under different
-    // application ids. This defaults to the Plus id; ShizukuService.getManagerApplicationInfo()
-    // corrects it at startup to whichever flavor is actually installed, since a Drop-In-only
-    // install would otherwise never find "the manager app" and exit(MANAGER_APP_NOT_FOUND)
-    // immediately. Not final so that correction can take effect everywhere this is read.
-    public static String MANAGER_APPLICATION_ID = "xyz.shizuku.extra.api";
-    public static final String PLUS_APPLICATION_ID = "xyz.shizuku.extra.api";
+    // Portable is single-flavor (moe.shizuku.privileged.api). The runtime correction in
+    // ShizukuService.getManagerApplicationInfo() still checks both ids for robustness.
+    public static String MANAGER_APPLICATION_ID = "moe.shizuku.privileged.api";
+    public static final String PLUS_APPLICATION_ID = "moe.shizuku.privileged.api";
     public static final String DROPIN_APPLICATION_ID = "moe.shizuku.privileged.api";
 
     // Computed on demand (rather than a constant) because it derives from MANAGER_APPLICATION_ID,

@@ -1,0 +1,495 @@
+package rikka.shizuku.server;
+
+import android.os.Binder;
+import android.os.Bundle;
+import android.os.IBinder;
+import android.os.Parcel;
+import android.os.RemoteException;
+import android.os.SELinux;
+import android.os.SystemProperties;
+import android.system.Os;
+
+import androidx.annotation.CallSuper;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+
+import moe.shizuku.server.IRemoteProcess;
+import moe.shizuku.server.IShizukuApplication;
+import moe.shizuku.server.IShizukuService;
+import moe.shizuku.server.IShizukuServiceConnection;
+import af.shizuku.common.compat.Android17Compat;
+import rikka.rish.RishConfig;
+import rikka.rish.RishService;
+import rikka.shizuku.ShizukuApiConstants;
+import rikka.shizuku.server.api.RemoteProcessHolder;
+import rikka.shizuku.server.util.Logger;
+import rikka.shizuku.server.util.OsUtils;
+import af.shizuku.common.util.UserHandleCompat;
+
+public abstract class Service<
+        UserServiceMgr extends UserServiceManager,
+        ClientMgr extends ClientManager<ConfigMgr>,
+        ConfigMgr extends ConfigManager> extends IShizukuService.Stub {
+
+    private final UserServiceMgr userServiceManager;
+    private final ConfigMgr configManager;
+    private final ClientMgr clientManager;
+    private final RishService rishService;
+
+    protected static final Logger LOGGER = new Logger("Service");
+
+    public Service() {
+        RishConfig.init(ShizukuApiConstants.BINDER_DESCRIPTOR, 30000);
+
+        userServiceManager = onCreateUserServiceManager();
+        configManager = onCreateConfigManager();
+        clientManager = onCreateClientManager();
+        rishService = new RishService() {
+
+            @Override
+            public void enforceCallingPermission(String func) {
+                Service.this.enforceCallingPermission(func);
+            }
+        };
+    }
+
+    public abstract UserServiceMgr onCreateUserServiceManager();
+
+    public abstract ClientMgr onCreateClientManager();
+
+    public abstract ConfigMgr onCreateConfigManager();
+
+    public final UserServiceMgr getUserServiceManager() {
+        return userServiceManager;
+    }
+
+    public final ClientMgr getClientManager() {
+        return clientManager;
+    }
+
+    public ConfigMgr getConfigManager() {
+        return configManager;
+    }
+
+    public boolean checkCallerManagerPermission(String func, int callingUid, int callingPid) {
+        return false;
+    }
+
+    public final void enforceManagerPermission(String func) {
+        int callingUid = Binder.getCallingUid();
+        int callingPid = Binder.getCallingPid();
+
+        if (callingPid == Os.getpid()) {
+            return;
+        }
+
+        if (checkCallerManagerPermission(func, callingUid, callingPid)) {
+            return;
+        }
+
+        String msg = "Permission Denial: " + func + " from pid="
+                + Binder.getCallingPid()
+                + " is not manager ";
+        LOGGER.w(msg);
+        throw new SecurityException(msg);
+    }
+
+    public boolean checkCallerPermission(String func, int callingUid, int callingPid, @Nullable ClientRecord clientRecord) {
+        return false;
+    }
+
+    public final void enforceCallingPermission(String func) {
+        int callingUid = Binder.getCallingUid();
+        int callingPid = Binder.getCallingPid();
+
+        if (callingUid == OsUtils.getUid()) {
+            return;
+        }
+
+        ClientRecord clientRecord = clientManager.findClient(callingUid, callingPid);
+
+        if (checkCallerPermission(func, callingUid, callingPid, clientRecord)) {
+            return;
+        }
+
+        if (clientRecord == null) {
+            String msg = "Permission Denial: " + func + " from pid="
+                    + Binder.getCallingPid()
+                    + " is not an attached client";
+            LOGGER.w(msg);
+            throw new SecurityException(msg);
+        }
+
+        if (!clientRecord.allowed) {
+            String msg = "Permission Denial: " + func + " from pid="
+                    + Binder.getCallingPid()
+                    + " requires permission";
+            LOGGER.w(msg);
+            throw new SecurityException(msg);
+        }
+    }
+
+    public final void transactRemote(Parcel data, Parcel reply, int flags) throws RemoteException {
+        enforceCallingPermission("transactRemote");
+
+        IBinder targetBinder = data.readStrongBinder();
+        // Caller can write a null strong binder into the transact payload; fail with a
+        // clear error instead of an opaque NPE on getInterfaceDescriptor() below.
+        if (targetBinder == null) {
+            throw new IllegalArgumentException("transactRemote: null target binder");
+        }
+        int targetCode = data.readInt();
+        int targetFlags;
+
+        int callingUid = Binder.getCallingUid();
+        int callingPid = Binder.getCallingPid();
+        ClientRecord clientRecord = clientManager.findClient(callingUid, callingPid);
+
+        if (clientRecord != null && clientRecord.apiVersion >= 13) {
+            targetFlags = data.readInt();
+        } else {
+            targetFlags = flags;
+        }
+
+        String descriptor = targetBinder.getInterfaceDescriptor();
+
+        // AIDL Logging (Issue #199)
+        if (checkExtraFeatureEnabled("binder_logging")) {
+            LOGGER.i("AIDL: uid=%d pkg=%s descriptor=%s code=%d", 
+                callingUid, (clientRecord != null ? clientRecord.packageName : "unknown"), 
+                descriptor, targetCode);
+        }
+
+        // Binder Firewall (Issue #199)
+        if (checkExtraFeatureEnabled("binder_firewall")) {
+            if (isBinderCallBlocked(callingUid, descriptor, targetCode)) {
+                LOGGER.w("Firewall: Blocked transaction %s code %d from uid %d", descriptor, targetCode, callingUid);
+                throw new SecurityException("Binder Firewall: Transaction blocked by ShizukuX policy");
+            }
+        }
+
+        // Shadow Binder (Issue #199) - optional interception point
+        if (checkExtraFeatureEnabled("shadow_binder")) {
+            if (handleShadowBinderTransaction(targetBinder, targetCode, data, reply, targetFlags)) {
+                return;
+            }
+        }
+
+        // FIX (k2013): IPackageManager code=90 is setApplicationEnabledSetting(String,int,int,int,String),
+        // NOT setApplicationHiddenSettingAsUser. shell (uid=2000) can call it directly via binder.
+        // Previous interception mapped it to pm disable-user/pm enable, which made Hail
+        // getApplicationInfoOrNull(MATCH_UNINSTALLED_PACKAGES) return null for frozen apps and
+        // caused unfreeze to fail silently. Let it pass through to targetBinder.transact().
+
+        Parcel newData = Parcel.obtain();
+        try {
+            newData.appendFrom(data, data.dataPosition(), data.dataAvail());
+        } catch (Throwable tr) {
+            LOGGER.w(tr, "appendFrom");
+            return;
+        }
+        
+        long startTime = System.nanoTime();
+        try {
+            long id = Binder.clearCallingIdentity();
+            targetBinder.transact(targetCode, newData, reply, targetFlags);
+            Binder.restoreCallingIdentity(id);
+        } finally {
+            newData.recycle();
+            long durationNs = System.nanoTime() - startTime;
+            if (checkExtraFeatureEnabled("binder_profiler")) {
+                recordTransactionMetrics(clientRecord, descriptor, targetCode, durationNs);
+            }
+        }
+    }
+
+    /**
+     * System Health & Binder Profiler (Issue #211)
+     */
+    protected void recordTransactionMetrics(ClientRecord clientRecord, String descriptor, int code, long durationNs) {
+        String pkg = clientRecord != null ? clientRecord.packageName : "unknown";
+        LOGGER.i("PROFILER: pkg=%s desc=%s code=%d latency_ms=%.2f", pkg, descriptor, code, durationNs / 1000000.0f);
+    }
+
+    /**
+     * Shadow Binder (Issue #199)
+     * Allows intercepting and mocking system binder calls.
+     */
+    protected boolean handleShadowBinderTransaction(IBinder target, int code, Parcel data, Parcel reply, int flags) {
+        // To be implemented by subclasses if shadow binder is active
+        return false;
+    }
+
+    /**
+     * Binder Firewall (Issue #199)
+     * Checks if a binder transaction should be blocked based on UID and descriptor.
+     */
+    protected boolean isBinderCallBlocked(int uid, String descriptor, int code) {
+        // Example: Block apps from turning off Bluetooth or WiFi via Shizuku if they aren't authorized
+        if (descriptor == null) return false;
+        
+        // Stub for dynamic policy checking
+        return false;
+    }
+
+    @Override
+    public final int getVersion() {
+        enforceCallingPermission("getVersion");
+        return ShizukuApiConstants.SERVER_VERSION;
+    }
+
+    @Override
+    public final int getUid() {
+        enforceCallingPermission("getUid");
+        return Os.getuid();
+    }
+
+    @Override
+    public final int checkPermission(String permission) throws RemoteException {
+        enforceCallingPermission("checkPermission");
+        return Android17Compat.checkPermission(permission, Os.getuid());
+    }
+
+    @Override
+    public final String getSELinuxContext() {
+        enforceCallingPermission("getSELinuxContext");
+        return SELinux.getContext();
+    }
+
+    @Override
+    public final String getSystemProperty(String name, String defaultValue) {
+        enforceCallingPermission("getSystemProperty");
+
+        try {
+            return SystemProperties.get(name, defaultValue);
+        } catch (Throwable tr) {
+            throw new IllegalStateException(tr.getMessage());
+        }
+    }
+
+    @Override
+    public final void setSystemProperty(String name, String value) {
+        enforceCallingPermission("setSystemProperty");
+
+        try {
+            SystemProperties.set(name, value);
+        } catch (Throwable tr) {
+            throw new IllegalStateException(tr.getMessage());
+        }
+    }
+
+    @Override
+    public final int removeUserService(IShizukuServiceConnection conn, Bundle options) {
+        enforceCallingPermission("removeUserService");
+
+        return userServiceManager.removeUserService(conn, options);
+    }
+
+    @Override
+    public final int addUserService(IShizukuServiceConnection conn, Bundle options) {
+        enforceCallingPermission("addUserService");
+
+        int callingUid = Binder.getCallingUid();
+        int callingPid = Binder.getCallingPid();
+        int callingApiVersion;
+
+        ClientRecord clientRecord = clientManager.findClient(callingUid, callingPid);
+        if (clientRecord == null) {
+            callingApiVersion = ShizukuApiConstants.SERVER_VERSION;
+        } else {
+            callingApiVersion = clientRecord.apiVersion;
+        }
+        return userServiceManager.addUserService(conn, options, callingApiVersion);
+    }
+
+    @Override
+    public void attachUserService(IBinder binder, Bundle options) {
+        userServiceManager.attachUserService(binder, options);
+    }
+
+    @Override
+    public final boolean checkSelfPermission() {
+        int callingUid = Binder.getCallingUid();
+        int callingPid = Binder.getCallingPid();
+
+        if (callingUid == OsUtils.getUid() || callingPid == OsUtils.getPid()) {
+            return true;
+        }
+
+        return clientManager.requireClient(callingUid, callingPid).allowed;
+    }
+
+    @Override
+    public final void requestPermission(int requestCode) {
+        int callingUid = Binder.getCallingUid();
+        int callingPid = Binder.getCallingPid();
+        int userId = UserHandleCompat.getUserId(callingUid);
+
+        if (callingUid == OsUtils.getUid() || callingPid == OsUtils.getPid()) {
+            return;
+        }
+
+        ClientRecord clientRecord = clientManager.requireClient(callingUid, callingPid);
+
+        if (clientRecord.allowed) {
+            clientRecord.dispatchRequestPermissionResult(requestCode, true);
+            return;
+        }
+
+        ConfigPackageEntry entry = configManager.find(callingUid);
+        if (entry != null && entry.isDenied()) {
+            clientRecord.dispatchRequestPermissionResult(requestCode, false);
+            return;
+        }
+
+        showPermissionConfirmation(requestCode, clientRecord, callingUid, callingPid, userId);
+    }
+
+    public abstract void showPermissionConfirmation(
+            int requestCode, @NonNull ClientRecord clientRecord, int callingUid, int callingPid, int userId);
+
+    @Override
+    public final boolean shouldShowRequestPermissionRationale() {
+        int callingUid = Binder.getCallingUid();
+        int callingPid = Binder.getCallingPid();
+
+        if (callingUid == OsUtils.getUid() || callingPid == OsUtils.getPid()) {
+            return true;
+        }
+
+        clientManager.requireClient(callingUid, callingPid);
+
+        ConfigPackageEntry entry = configManager.find(callingUid);
+        return entry != null && entry.isDenied();
+    }
+
+    public IRemoteProcess newProcessInternal(String[] cmd, String[] env, String dir) {
+        enforceCallingPermission("newProcess");
+
+        LOGGER.d("newProcess: uid=%d, cmd=%s, env=%s, dir=%s", Binder.getCallingUid(), Arrays.toString(cmd), Arrays.toString(env), dir);
+
+        java.lang.Process process;
+        try {
+            process = Runtime.getRuntime().exec(cmd, env, dir != null ? new File(dir) : null);
+        } catch (IOException e) {
+            throw new IllegalStateException(e.getMessage());
+        }
+
+        ClientRecord clientRecord = clientManager.findClient(Binder.getCallingUid(), Binder.getCallingPid());
+        IBinder token = clientRecord != null ? clientRecord.client.asBinder() : null;
+
+        return new RemoteProcessHolder(process, token);
+    }
+
+    public boolean checkExtraFeatureEnabled(String key) {
+        return true;
+    }
+
+    @CallSuper
+    @Override
+    public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
+        data.setDataPosition(0);
+        android.util.Log.w("SX_DEBUG", "onTransact code=" + code + " callingUid=" + Binder.getCallingUid() + " callingPid=" + Binder.getCallingPid() + " dataSize=" + data.dataSize());
+        boolean isKnownDescriptor = false;
+        try {
+            data.enforceInterface("moe.shizuku.server.IShizukuService");
+            isKnownDescriptor = true;
+        } catch (SecurityException e) {
+            // Not a Shizuku interface transaction (e.g. rish uses rikka.rish.IRishService)
+        }
+
+        if (isKnownDescriptor) {
+            if (code == ShizukuApiConstants.BINDER_TRANSACTION_transact) {
+                transactRemote(data, reply, flags);
+                return true;
+            }
+
+            // v12 and below callers: handle manually to avoid descriptor mismatch in super.onTransact.
+            // Codes not in this switch fall through to the v13+ block below.
+            // Note: case 14 (v12-era attachApplication: IBinder + String) is intentionally absent —
+            // code 14 is now requestPermission(int) per current AIDL, and all pre-2020 v12 clients
+            // are no longer in circulation.
+            switch (code) {
+                case 2: // getVersion
+                    reply.writeNoException();
+                    reply.writeInt(getVersion());
+                    return true;
+                case 3: // getUid
+                    reply.writeNoException();
+                    reply.writeInt(getUid());
+                    return true;
+                case 4: // checkPermission
+                    reply.writeNoException();
+                    reply.writeInt(checkPermission(data.readString()));
+                    return true;
+                case 7: // newProcess
+                    String[] cmd = data.createStringArray();
+                    String[] env = data.createStringArray();
+                    String dir = data.readString();
+                    IRemoteProcess process = newProcess(cmd, env, dir);
+                    reply.writeNoException();
+                    reply.writeStrongBinder(process != null ? process.asBinder() : null);
+                    return true;
+                case 8: // getSELinuxContext (v12 and below AIDL) OR newProcess (official v13+ AIDL, codes shifted +1)
+                    // Official v13+ SDKs (e.g. Mibox) map newProcess to code 8; legacy clients map
+                    // getSELinuxContext to code 8. The parcel for getSELinuxContext carries only the
+                    // interface token (dataAvail() == 0 after enforceInterface), while newProcess
+                    // carries cmd/env/dir (dataAvail() > 0). Dispatch on that.
+                    if (data.dataAvail() > 0) {
+                        String[] cmd8 = data.createStringArray();
+                        String[] env8 = data.createStringArray();
+                        String dir8 = data.readString();
+                        IRemoteProcess process8 = newProcess(cmd8, env8, dir8);
+                        reply.writeNoException();
+                        reply.writeStrongBinder(process8 != null ? process8.asBinder() : null);
+                    } else {
+                        reply.writeNoException();
+                        reply.writeString(getSELinuxContext());
+                    }
+                    return true;
+                case 9: // getSystemProperty (repo AIDL) OR getSELinuxContext (official v13+ SDK, codes shifted +1)
+                    // getSystemProperty carries name/defaultValue (dataAvail() > 0); getSELinuxContext
+                    // has no arguments (dataAvail() == 0 after enforceInterface). Dispatch on that.
+                    if (data.dataAvail() > 0) {
+                        reply.writeNoException();
+                        reply.writeString(getSystemProperty(data.readString(), data.readString()));
+                    } else {
+                        reply.writeNoException();
+                        reply.writeString(getSELinuxContext());
+                    }
+                    return true;
+            }
+            // v13+ codes: requestPermission (14) and attachApplication (17 or 18 depending on client AIDL version).
+            // Hail and some newer clients use code=18 for attachApplication (their AIDL has an extra method
+            // between shouldShowRequestPermissionRationale and attachApplication), while ShizukuX's own AIDL
+            // uses code=17. Handle both to remain compatible.
+            if (code == 14 /* requestPermission */) {
+                requestPermission(data.readInt());
+                reply.writeNoException();
+                return true;
+            } else if (code == 17 || code == 18 /* attachApplication */) {
+                android.util.Log.w("SX_DEBUG", "code=" + code + " attachApplication dataPos=" + data.dataPosition());
+                IBinder binder = data.readStrongBinder();
+                Bundle args = data.readInt() != 0 ? Bundle.CREATOR.createFromParcel(data) : null;
+                attachApplication(IShizukuApplication.Stub.asInterface(binder), args);
+                reply.writeNoException();
+                return true;
+            }
+        }
+
+        // readInterfaceTokenCompat() above advanced data past the interface token.
+        // Reset to position 0 so rishService and super.onTransact() can call their
+        // own enforceInterface() from the correct position.
+        data.setDataPosition(0);
+        if (rishService.onTransact(code, data, reply, flags)) {
+            return true;
+        }
+        data.setDataPosition(0);
+        return super.onTransact(code, data, reply, flags);
+    }
+}

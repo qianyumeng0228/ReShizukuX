@@ -29,7 +29,9 @@ public class ShizukuShellLoader {
 
     private static final Logger LOGGER = Logger.getLogger("ShizukuShellLoader");
 
-    private static final String PLUS_APPLICATION_ID = "xyz.shizuku.extra.api";
+    // Portable is single-flavor (moe.shizuku.privileged.api). Both ids resolve to the same
+    // package; the dual-check in resolveManagerPackageName() is kept for robustness.
+    private static final String PLUS_APPLICATION_ID = "moe.shizuku.privileged.api";
     private static final String DROPIN_APPLICATION_ID = "moe.shizuku.privileged.api";
 
     private static String[] args;

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Shizuku &amp; Sui 演示</string>
+
+    <string name="btn_install_apks">安装 APK</string>
+    <string name="btn_abandon_sessions">放弃所有安装器会话</string>
+
+    <string name="status_shizuku_pre_v11">不支持 Shizuku pre-v11</string>
+    <string name="status_binder_received">已收到 Binder</string>
+    <string name="status_binder_dead">Binder 已断开</string>
+    <string name="status_using_sui">正在使用 Sui。</string>
+    <string name="status_using_default">正在使用 Shizuku，或未安装任何服务。</string>
+    <string name="status_waiting_binder">正在等待 Binder</string>
+    <string name="status_permission_denied">用户拒绝了权限</string>
+    <string name="status_permission_denied_rationale">用户拒绝了权限（shouldShowRequestPermissionRationale=true）</string>
+    <string name="status_requires_api_9">需要 Shizuku API 9</string>
+    <string name="status_requires_api_10">需要 Shizuku API 10</string>
+    <string name="status_requires_api_12">需要 Shizuku API 12</string>
+    <string name="status_on_service_connected">onServiceConnected：%1$s</string>
+    <string name="status_invalid_binder">收到无效 binder：%1$s</string>
+    <string name="status_on_service_disconnected">onServiceDisconnected：\n%1$s</string>
+    <string name="status_service_running">服务正在运行，版本 %1$d</string>
+    <string name="status_service_not_running">服务未在运行</string>
+    <string name="status_create_session">createSession: </string>
+    <string name="status_write">write: </string>
+    <string name="status_commit">commit: </string>
+    <string name="status_result_status">状态：</string>
+    <string name="status_abandon_sessions">abandonMySessions: </string>
+    <string name="status_abandoned">（已放弃）</string>
+</resources>

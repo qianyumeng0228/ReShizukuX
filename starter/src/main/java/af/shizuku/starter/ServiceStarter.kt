@@ -14,15 +14,13 @@ import java.util.*
 object ServiceStarter {
 
     private const val TAG = "ShizukuServiceStarter"
+    // Internal binder-extra key; must match ShizukuProvider / ShizukuManagerProvider /
+    // ShizukuService (manager branch). Kept as-is (not package-derived) for stability.
     private const val EXTRA_BINDER = "xyz.shizuku.extra.api.intent.extra.BINDER"
 
-    // Fallback only: used if a caller built the command line without --manager= (e.g. an
-    // out-of-date server binary). The real value is always passed explicitly below because this
-    // process is spawned fresh via app_process and can't see the server's runtime-resolved
-    // ServerConstants.MANAGER_APPLICATION_ID (which flips to the Drop-In id when that's the
-    // flavor actually installed) - hardcoding the Plus id here made every UserService start fail
-    // with "provider is null" on Drop-In-only installs (#371).
-    private const val DEFAULT_MANAGER_PACKAGE_NAME = "xyz.shizuku.extra.api"
+    // Fallback only: used if a caller built the command line without --manager=.
+    // Portable is single-flavor (moe.shizuku.privileged.api).
+    private const val DEFAULT_MANAGER_PACKAGE_NAME = "moe.shizuku.privileged.api"
 
     val DEBUG_ARGS: String by lazy {
         val sdk = Build.VERSION.SDK_INT

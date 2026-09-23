@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Debug-only manifest overrides. The debug build carries applicationIdSuffix ".debug"
-  (xyz.shizuku.extra.api.debug) so it installs ALONGSIDE the store build instead of replacing it.
-  Because it is a separate package, it must not redeclare the fixed-name permissions that the
-  store build already owns (xyz.shizuku.extra.permission.MANAGER and xyz.shizuku.extra.permission.API_V23);
+  (moe.shizuku.privileged.api.debug) so it installs ALONGSIDE the release build instead of
+  replacing it. Because it is a separate package, it must not redeclare the fixed-name
+  permissions that the release build already owns (xyz.shizuku.extra.permission.MANAGER,
+  xyz.shizuku.extra.permission.API_V23, and moe.shizuku.manager.permission.API_V23);
   redeclaring them fails install with INSTALL_FAILED_DUPLICATE_PERMISSION.
 
   (The Dhizuku provider authority is resolved from ${applicationId} in the main manifest as
@@ -18,6 +19,10 @@
 
     <permission
         android:name="xyz.shizuku.extra.permission.API_V23"
+        tools:node="remove" />
+
+    <permission
+        android:name="moe.shizuku.manager.permission.API_V23"
         tools:node="remove" />
 
     <application>

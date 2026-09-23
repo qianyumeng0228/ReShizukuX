@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Demo for Shizuku &amp; Sui</string>
+
+    <string name="btn_install_apks">Install apk(s)</string>
+    <string name="btn_abandon_sessions">Abandon all my installer sessions</string>
+
+    <string name="status_shizuku_pre_v11">Shizuku pre-v11 is not supported</string>
+    <string name="status_binder_received">Binder received</string>
+    <string name="status_binder_dead">Binder dead</string>
+    <string name="status_using_sui">Using Sui.</string>
+    <string name="status_using_default">Using Shizuku or nothing is installed.</string>
+    <string name="status_waiting_binder">Waiting for binder</string>
+    <string name="status_permission_denied">User denied permission</string>
+    <string name="status_permission_denied_rationale">User denied permission (shouldShowRequestPermissionRationale=true)</string>
+    <string name="status_requires_api_9">requires Shizuku API 9</string>
+    <string name="status_requires_api_10">requires Shizuku API 10</string>
+    <string name="status_requires_api_12">requires Shizuku API 12</string>
+    <string name="status_on_service_connected">onServiceConnected: %1$s</string>
+    <string name="status_invalid_binder">invalid binder for %1$s received</string>
+    <string name="status_on_service_disconnected">onServiceDisconnected: \n%1$s</string>
+    <string name="status_service_running">Service is running, version %1$d</string>
+    <string name="status_service_not_running">Service is not running</string>
+    <string name="status_create_session">createSession: </string>
+    <string name="status_write">write: </string>
+    <string name="status_commit">commit: </string>
+    <string name="status_result_status">status: </string>
+    <string name="status_abandon_sessions">abandonMySessions: </string>
+    <string name="status_abandoned"> (abandoned)</string>
+</resources>

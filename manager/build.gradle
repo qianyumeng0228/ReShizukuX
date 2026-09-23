@@ -17,9 +17,10 @@ plugins {
 android {
     namespace = "af.shizuku.manager"
     defaultConfig {
-        applicationId = "xyz.shizuku.extra.api"
+        applicationId = "moe.shizuku.privileged.api"
         versionCode rootProject.ext.versionCode
         versionName rootProject.ext.versionName
+        resValue "string", "app_name", "Shizuku"
         def sentryDsn = project.findProperty('SENTRY_DSN') ?: ''
         buildConfigField "String", "SENTRY_DSN", "\"${sentryDsn}\""
         manifestPlaceholders = [
@@ -59,24 +60,11 @@ android {
             enableV4Signing = true
         }
     }
-    flavorDimensions = ["distribution"]
-    productFlavors {
-        shizukux {
-            dimension = "distribution"
-            applicationId = "xyz.shizuku.extra.api"
-            resValue "string", "app_name", "ShizukuX"
-        }
-        dropin {
-            dimension = "distribution"
-            applicationId = "moe.shizuku.privileged.api"
-            resValue "string", "app_name", "Shizuku"
-        }
-    }
     buildTypes {
         debug {
             signingConfig = signingConfigs.sign
-            // Debug/test builds install alongside the store build instead of replacing it:
-            // xyz.shizuku.extra.api -> xyz.shizuku.extra.api.debug
+            // Debug/test builds install alongside the release build:
+            // moe.shizuku.privileged.api -> moe.shizuku.privileged.api.debug
             applicationIdSuffix = ".debug"
             // Dhizuku provider authority is resolved from ${applicationId} in the manifest.
         }
@@ -185,42 +173,10 @@ afterEvaluate {
     if (optimizeReleaseResources != null) {
         optimizeReleaseResources.finalizedBy(collapseReleaseResourceNames)
     }
-    
-    tasks.register("copyCompatApkRelease", Copy) {
-        dependsOn ":compat:assembleRelease"
-        // Use fileTree so we match both compat-release.apk (signed) and compat-release-unsigned.apk.
-        // The hardcoded filename was the root cause of the compat stub never being bundled on CI (#293).
-        from fileTree("${project(':compat').layout.buildDirectory.get().asFile}/outputs/apk/release") {
-            include "*.apk"
-        }
-        into "src/main/assets"
-        rename { "compat.apk" }
-    }
 
-    tasks.register("copyCompatApkDebug", Copy) {
-        dependsOn ":compat:assembleDebug"
-        from fileTree("${project(':compat').layout.buildDirectory.get().asFile}/outputs/apk/debug") {
-            include "*.apk"
-        }
-        into "src/main/assets"
-        rename { "compat.apk" }
-    }
-    
-    // Wire compat and shell for both the generic pre-build hooks (single-flavor builds)
-    // and the flavor-specific hooks produced when product flavors are configured.
-    tasks.findByName("preReleaseBuild")?.dependsOn("copyCompatApkRelease")
+    // Portable: single flavor, no Compat Hub. Only shell dex needs pre-build assembly.
     tasks.findByName("preReleaseBuild")?.dependsOn(":shell:assembleRelease")
-
-    tasks.findByName("preDebugBuild")?.dependsOn("copyCompatApkDebug")
     tasks.findByName("preDebugBuild")?.dependsOn(":shell:assembleDebug")
-
-    android.productFlavors.each { flavor ->
-        def name = flavor.name.capitalize()
-        tasks.findByName("pre${name}ReleaseBuild")?.dependsOn("copyCompatApkRelease")
-        tasks.findByName("pre${name}ReleaseBuild")?.dependsOn(":shell:assembleRelease")
-        tasks.findByName("pre${name}DebugBuild")?.dependsOn("copyCompatApkDebug")
-        tasks.findByName("pre${name}DebugBuild")?.dependsOn(":shell:assembleDebug")
-    }
 }
 
 

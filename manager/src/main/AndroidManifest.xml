@@ -58,11 +58,8 @@
         android:name="android.hardware.touchscreen"
         android:required="false" />
 
-    <!-- ${applicationId}-scoped: Extra and Dropin flavors share this manifest but have different
-         applicationIds, and a permission-group name is not allowed to be redeclared by a second
-         package - installing both side by side used to fail with error -126 ("attempting to
-         redeclare permission group... already owned by...") (#316). Unlike the permission below,
-         nothing outside this manifest references the group name by string, so scoping it is safe. -->
+    <!-- ${applicationId}-scoped permission group. Nothing outside this manifest references
+         the group name by string, so scoping it is safe. -->
     <permission-group
         android:name="${applicationId}.permission-group.API"
         android:description="@string/permission_group_description"
@@ -85,19 +82,21 @@
         android:permissionGroup="${applicationId}.permission-group.API"
         android:protectionLevel="dangerous" />
     
-    <!-- moe.shizuku.manager.permission.API_V23 is the permission every stock Shizuku-API client is
-         hardcoded to (ShizukuProvider.PERMISSION); the server OS-grants it on authorize
-         (updateFlagsForUid -> grantRuntimePermission), which silently fails unless some installed
-         package DEFINES it. Its DEFINITION is flavor-scoped because the flavors have opposite
-         constraints:
-           - shizukux (xyz.shizuku.extra.api) can be installed BESIDE stock Shizuku, which owns this
-             permission, so defining it here would fail install with -126 duplicate-permission (#316).
-             src/shizukux/AndroidManifest.xml removes it; the separate Compat Hub (mutually
-             exclusive with stock) is the definer for the ShizukuX flavor.
-           - dropin (moe.shizuku.privileged.api) IS the stock package-name replacement and is mutually
-             exclusive with stock, so src/dropin/AndroidManifest.xml DEFINES it natively (dropin
-             cannot host the Compat Hub — identical package name).
-         The manager itself uses the permission in both flavors: -->
+    <!-- Portable (single drop-in flavor): IS the stock-Shizuku package-name replacement,
+         so it must DEFINE moe.shizuku.manager.permission.API_V23 itself. Stock-only clients
+         request this exact name; on authorize the server OS-grants it (grantRuntimePermission),
+         which silently fails unless an installed package defines it. protectionLevel="dangerous"
+         mirrors stock Shizuku exactly. -->
+    <permission-group
+        android:name="moe.shizuku.manager.permission-group.API"
+        android:description="@string/permission_group_description"
+        android:label="@string/permission_group_label" />
+    <permission
+        android:name="moe.shizuku.manager.permission.API_V23"
+        android:description="@string/permission_description"
+        android:label="@string/permission_label"
+        android:permissionGroup="moe.shizuku.manager.permission-group.API"
+        android:protectionLevel="dangerous" />
     <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
 
     <application
@@ -468,17 +467,13 @@
                 tools:node="remove" />
         </provider>
 
-        <!-- Authority is ${applicationId}.shizuku ONLY here. A content-provider authority is
-             device-unique, so the coexist-with-stock Extra flavor (xyz.shizuku.extra.api) must NOT claim
-             the stock authority moe.shizuku.privileged.api — doing so makes it fail to install
-             (INSTALL_FAILED_CONFLICTING_PROVIDER, surfaced as "App not installed") whenever stock
-             Shizuku, the Drop-In, or an old moe.shizuku.privileged.api ShizukuX is present. The Drop-In
-             flavor re-adds the stock authority in src/dropin/AndroidManifest.xml (it IS that package,
-             so it's collision-safe); stock-client compat for the Extra flavor comes from the separate
-             Compat Hub. -->
+        <!-- Portable (drop-in): IS moe.shizuku.privileged.api (the stock replacement), so it
+             legitimately owns the stock content-provider authority moe.shizuku.privileged.api —
+             that's how stock-API clients resolve it. Collision-safe: mutually exclusive with
+             stock Shizuku (same package name). -->
         <provider
             android:name=".ShizukuManagerProvider"
-            android:authorities="${applicationId}.shizuku"
+            android:authorities="${applicationId}.shizuku;moe.shizuku.privileged.api"
             android:directBootAware="true"
             android:enabled="true"
             android:exported="true"
