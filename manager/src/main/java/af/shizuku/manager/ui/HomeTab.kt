@@ -41,7 +41,9 @@ import kotlinx.coroutines.launch
  * 启动过程中开关禁用，防止重复点击。
  */
 @Composable
-fun HomeTab() {
+fun HomeTab(
+    onPairingRequired: () -> Unit = {}
+) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -96,10 +98,14 @@ fun HomeTab() {
                     isWorking = false
                     currentStep = 0
                     stepTitle = ""
-                    if (!result.success) {
-                        errorMessage = result.error ?: "启动失败"
-                    } else {
-                        ShizukuStateMachine.update()
+                    when {
+                        result.success -> ShizukuStateMachine.update()
+                        result.pairingRequired -> {
+                            // No Root / never-paired ADB: hand off to the full Compose wizard.
+                            errorMessage = null
+                            onPairingRequired()
+                        }
+                        else -> errorMessage = result.error ?: "启动失败"
                     }
                 }
             }

@@ -98,9 +98,18 @@ object PortableStartOrchestrator {
                     Timber.tag(TAG).d("live ADB port $livePort, already paired")
                 }
                 wadbOn -> {
-                    // Wireless debugging on but adbd hasn't bound a reachable loopback port yet;
-                    // the worker's mDNS discovery will find it. Proceed.
-                    Timber.tag(TAG).d("adb_wifi_enabled on but no live loopback port yet")
+                    // Wireless debugging on but no reachable loopback port. On a never-paired
+                    // device the connect port would reject our key (adbd waits for pairing),
+                    // and AdbStartWorker would burn 20s before timing out with no guidance.
+                    // Send the user to the Compose pairing wizard instead — it handles mDNS
+                    // pairing-port discovery, code entry, and post-pairing server start.
+                    Timber.tag(TAG).d("wadb on but no live loopback port -> pairing required")
+                    return StartResult(
+                        success = false,
+                        method = method,
+                        error = "需要完成无线调试配对",
+                        pairingRequired = true
+                    )
                 }
                 else -> {
                     // Try to flip wireless debugging on directly (WRITE_SECURE_SETTINGS or DO).

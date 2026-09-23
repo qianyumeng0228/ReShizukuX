@@ -16,6 +16,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -54,6 +56,16 @@ private enum class PortableTab(
 @Composable
 private fun PortableApp() {
     var selected by rememberSaveable { mutableIntStateOf(0) }
+    // When true, the full-screen ADB pairing wizard replaces the four-tab scaffold.
+    var showPairingWizard by rememberSaveable { mutableStateOf(false) }
+
+    if (showPairingWizard) {
+        AdbPairingWizard(
+            onFinished = { showPairingWizard = false },
+            onCancel = { showPairingWizard = false }
+        )
+        return
+    }
 
     Scaffold(
         bottomBar = {
@@ -80,7 +92,7 @@ private fun PortableApp() {
                 .padding(innerPadding)
         ) {
             when (selected) {
-                0 -> HomeTab()
+                0 -> HomeTab(onPairingRequired = { showPairingWizard = true })
                 1 -> AppsTab()
                 2 -> AutomationTab()
                 else -> SettingsTab()
