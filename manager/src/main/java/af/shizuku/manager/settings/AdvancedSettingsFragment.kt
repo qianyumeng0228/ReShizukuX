@@ -178,6 +178,20 @@ class AdvancedSettingsFragment : BaseSettingsFragment() {
             }
         }
 
+        // Dual-process guard daemon. Toggling off stops the running :daemon immediately; toggling
+        // on takes effect on the next ON start (or the next Alarm re-arm while running under root).
+        findPreference<TwoStatePreference>("daemon_enabled")?.apply {
+            isChecked = ShizukuSettings.isDaemonEnabled()
+            setOnPreferenceChangeListener { _, newValue ->
+                val enable = newValue as Boolean
+                ShizukuSettings.setDaemonEnabled(enable)
+                if (!enable) {
+                    runCatching { af.shizuku.manager.service.ShizukuDaemonService.stop(context) }
+                }
+                true
+            }
+        }
+
         // The manifest's namespace (af.shizuku.manager) differs from the per-flavor applicationId
         // (context.packageName), so ".LauncherAlias" must resolve against the namespace, not the
         // package name, or ComponentName construction throws "Component class ... does not exist"

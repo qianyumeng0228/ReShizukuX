@@ -339,6 +339,15 @@
                     The watchdog service is opt-in and toggleable via settings, so users can choose to disable it at any time if not desired." />
         </service>
 
+        <!-- Dual-process guard daemon: lives in a dedicated ":daemon" process so it survives the
+             main process being frozen/killed by hostile ROMs. Plain Service (no foreground type):
+             it polls the server every 5s through the root shell; when it is itself reaped, the
+             15-min WatchdogAlarmReceiver re-arms it. -->
+        <service
+            android:name=".service.ShizukuDaemonService"
+            android:process=":daemon"
+            android:exported="false" />
+
         <receiver
             android:name=".widget.ShizukuWidgetProvider"
             android:exported="true"

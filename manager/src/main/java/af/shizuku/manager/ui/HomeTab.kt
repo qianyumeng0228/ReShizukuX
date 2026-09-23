@@ -68,7 +68,6 @@ fun HomeTab() {
     var currentStep by remember { mutableIntStateOf(0) }
     var stepTitle by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
-    var guardMode by remember { mutableStateOf<String?>(null) }
     var showStopConfirm by remember { mutableStateOf(false) }
 
     // Activation mode label, refreshed whenever the state settles to RUNNING/STOPPED.
@@ -100,7 +99,6 @@ fun HomeTab() {
                     if (!result.success) {
                         errorMessage = result.error ?: "启动失败"
                     } else {
-                        guardMode = result.guardMode
                         ShizukuStateMachine.update()
                     }
                 }
@@ -222,9 +220,15 @@ fun HomeTab() {
             text = "激活模式：$activationMode",
             style = MaterialTheme.typography.bodySmall
         )
-        // Guard mode line (degraded to Alarm in this phase).
+        // Guard mode line: root launch + daemon setting on => the :daemon process polls /proc and
+        // relaunches the server; otherwise degrade to the Alarm/foreground watchdog.
+        val guardLabel = when {
+            running && ShizukuSettings.isDaemonEnabled() &&
+                ShizukuSettings.getLastLaunchMode() == ShizukuSettings.LaunchMethod.ROOT -> "双进程"
+            else -> "Alarm 模式"
+        }
         Text(
-            text = "守护：${guardMode ?: "Alarm"} 模式",
+            text = "守护：$guardLabel",
             style = MaterialTheme.typography.bodySmall
         )
     }

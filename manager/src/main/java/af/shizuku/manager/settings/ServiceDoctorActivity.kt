@@ -257,16 +257,6 @@ class ServiceDoctorActivity : AppBarActivity() {
             tips.add("• " + getString(R.string.doctor_tip_phantom_process))
         }
 
-        // 11. Samsung chipset-specific notes (S22 Exynos/Snapdragon)
-        if (EnvironmentUtils.isSamsung()) {
-            val board = Build.HARDWARE.lowercase()
-            if (board.contains("exynos")) {
-                tips.add("• " + getString(R.string.doctor_tip_s22_ultra_exynos))
-            } else if (board.contains("qcom") || board.contains("snapdragon")) {
-                tips.add("• " + getString(R.string.doctor_tip_s22_ultra_snapdragon))
-            }
-        }
-
         checkListAdapter.submitList(checks)
         if (tips.isEmpty()) {
             tipsTextView.text = getString(R.string.doctor_system_well_configured)

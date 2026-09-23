@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import af.shizuku.manager.ShizukuSettings
+import af.shizuku.manager.service.ShizukuDaemonService
 import af.shizuku.manager.service.WatchdogService
 import af.shizuku.manager.utils.ShizukuStateMachine
 import timber.log.Timber
@@ -36,6 +37,15 @@ class WatchdogAlarmReceiver : BroadcastReceiver() {
         if (!WatchdogService.isRunning()) {
             Timber.tag(TAG).w("WatchdogService found dead by alarm re-arm; restarting")
             WatchdogService.start(context)
+        }
+        // Backstop for the :daemon guard: if it was reaped (hostile ROM freezer) but the server
+        // is supposed to be up under root, cold-start it again. The daemon self-stops on non-root
+        // / opt-out, so this only ever re-arms when it is actually warranted.
+        if (ShizukuSettings.isDaemonEnabled() &&
+            ShizukuSettings.getLastLaunchMode() == ShizukuSettings.LaunchMethod.ROOT
+        ) {
+            runCatching { ShizukuDaemonService.start(context) }
+                .onFailure { Timber.tag(TAG).w(it, "daemon re-arm failed") }
         }
         ShizukuStateMachine.update()
 

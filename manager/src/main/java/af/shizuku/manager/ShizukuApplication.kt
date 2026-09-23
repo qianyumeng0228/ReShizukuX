@@ -195,7 +195,7 @@ class ShizukuApplication : Application(), Configuration.Provider {
         // Initialize Starter with context
         af.shizuku.manager.starter.Starter.initialize(this)
 
-        if (ShizukuSettings.getWatchdog()) {
+        if (ShizukuSettings.getWatchdog() && !isDaemonProcess()) {
             WatchdogService.start(this)
             val userManagerWatchdog = getSystemService(Context.USER_SERVICE) as? UserManager
             if (userManagerWatchdog == null || userManagerWatchdog.isUserUnlocked) {
@@ -337,5 +337,21 @@ class ShizukuApplication : Application(), Configuration.Provider {
         }
 
         Timber.d("ShizukuX ${BuildConfig.VERSION_NAME} initialization complete")
+    }
+
+    /**
+     * True when this process is the dedicated ":daemon" guard process declared in the manifest.
+     * Application.onCreate runs for every process, so the auto-start of WatchdogService / Worker /
+     * Alarm must be skipped there — otherwise the :daemon process would spawn its own duplicate
+     * foreground watchdog and notification. minSdk 24 predates Application.getProcessName(), so
+     * read /proc/self/cmdline directly.
+     */
+    private fun isDaemonProcess(): Boolean {
+        return try {
+            val name = java.io.File("/proc/self/cmdline").readText().trimEnd('\u0000')
+            name.endsWith(":daemon")
+        } catch (e: Exception) {
+            false
+        }
     }
 }

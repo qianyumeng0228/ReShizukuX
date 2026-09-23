@@ -5,6 +5,7 @@ import android.provider.Settings
 import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.receiver.ShizukuReceiverStarter
 import af.shizuku.manager.receiver.WatchdogAlarmReceiver
+import af.shizuku.manager.service.ShizukuDaemonService
 import af.shizuku.manager.settings.DeviceOwnerHelper
 import af.shizuku.manager.utils.AdbPortProbe
 import af.shizuku.manager.utils.EnvironmentUtils
@@ -41,7 +42,8 @@ data class StartResult(
  * "正在执行第 N 步" indicator. Any step that fails returns a failed [StartResult] with a
  * human-readable error; the switch is re-enabled by the caller.
  *
- * Native dual-process daemon (Phase 8) is NOT implemented; step ⑨ degrades to Alarm.
+ * Native dual-process daemon: under ROOT launch step ⑨ starts [ShizukuDaemonService] in the
+ * dedicated ":daemon" process; other launch modes / opt-outs degrade to Alarm.
  */
 object PortableStartOrchestrator {
 
@@ -174,10 +176,19 @@ object PortableStartOrchestrator {
         // NetworkCallback is registered process-wide in ShizukuApplication.onCreate; nothing
         // extra to do here beyond ensuring the setting that gates it is on.
 
-        // ---------------------------------------------------------------- ⑨ dual-process guard (degraded)
+        // ---------------------------------------------------------------- ⑨ dual-process guard
         onStep?.invoke(9, "守护模式")
-        // Phase 8 native daemon NOT implemented; degrade to Alarm + foreground service.
-        val guardMode = "Alarm"
+        // Root launch + daemon setting on -> start the :daemon process that polls /proc and
+        // relaunches the server. Otherwise (ADB / Dhizuku / opt-out) degrade to Alarm.
+        val wantDaemon = ShizukuSettings.isDaemonEnabled() &&
+            method == ShizukuSettings.LaunchMethod.ROOT
+        val guardMode = if (wantDaemon) {
+            runCatching { ShizukuDaemonService.start(ctx) }
+                .onFailure { Timber.tag(TAG).w(it, "daemon start failed, degrading to Alarm") }
+            "Daemon"
+        } else {
+            "Alarm"
+        }
 
         // ---------------------------------------------------------------- ⑩ schedule 15-min alarm
         onStep?.invoke(10, "调度看门狗 Alarm")
@@ -220,6 +231,9 @@ object PortableStartOrchestrator {
         // Step 3: cancel the external 15-min alarm so it doesn't cold-start a restart.
         runCatching { WatchdogAlarmReceiver.cancel(ctx) }
             .onFailure { Timber.tag(TAG).w(it, "alarm cancel failed") }
+        // Stop the :daemon guard so it doesn't immediately relaunch the server we just killed.
+        runCatching { ShizukuDaemonService.stop(ctx) }
+            .onFailure { Timber.tag(TAG).w(it, "daemon stop failed") }
         // Let the state machine settle to STOPPED.
         delay(500)
         ShizukuStateMachine.update()

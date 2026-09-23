@@ -168,6 +168,10 @@ public class ShizukuSettings {
 
         // Portable keep-alive (ShizukuX additions)
         public static final String KEY_WIFI_DEBUG_REASSERT = "wifi_debug_reassert_enabled";
+
+        // Dual-process guard daemon (ShizukuX additions): a Service running in the ":daemon"
+        // process that polls /proc for shizuku_plus_server every 5s and relaunches it via root.
+        public static final String KEY_DAEMON_ENABLED = "daemon_enabled";
     }
 
     private static SharedPreferences sPreferences;
@@ -1219,6 +1223,26 @@ public class ShizukuSettings {
     public static void setWifiDebugReassertEnabled(boolean enable) {
         SharedPreferences p = getPreferences();
         if (p != null) p.edit().putBoolean(Keys.KEY_WIFI_DEBUG_REASSERT, enable).apply();
+    }
+
+    // ------------------------------------------------------------------
+    // Dual-process guard daemon
+    // ------------------------------------------------------------------
+
+    /**
+     * Whether the ":daemon" process Service should watch the privileged server and relaunch it.
+     * Default ON (portable build targets strong keep-alive). Only effective under ROOT launch:
+     * without a root shell the daemon cannot relaunch the native server, so it self-stops and the
+     * UI degrades to the Alarm watchdog.
+     */
+    public static boolean isDaemonEnabled() {
+        SharedPreferences p = getPreferences();
+        return p == null || p.getBoolean(Keys.KEY_DAEMON_ENABLED, true);
+    }
+
+    public static void setDaemonEnabled(boolean enable) {
+        SharedPreferences p = getPreferences();
+        if (p != null) p.edit().putBoolean(Keys.KEY_DAEMON_ENABLED, enable).apply();
     }
 
     // ------------------------------------------------------------------
