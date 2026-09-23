@@ -153,16 +153,6 @@ class ShizukuApplication : Application(), Configuration.Provider {
      */
     private fun initializeManagers() {
         ActivityLogManager.initialize(this, ActivityLogSettingsImpl())
-        af.shizuku.manager.database.ScriptSnippetManager.initialize(this)
-        af.shizuku.manager.plugin.ExtraFeatureRegistry.register(af.shizuku.manager.scripting.ScriptingFeatureModule)
-
-        // Run auto-run snippets each time the Shizuku service transitions to RUNNING.
-        CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
-            ShizukuStateMachine.asFlow()
-                .distinctUntilChanged()
-                .filter { it == ShizukuStateMachine.State.RUNNING }
-                .collect { af.shizuku.manager.database.ScriptSnippetManager.runAutoRunSnippets() }
-        }
 
         // Redeploy the SU bridge dex whenever the server comes up, not just on app self-update
         // (#423 fix, `9dba4bd3`, only covered ACTION_MY_PACKAGE_REPLACED). If the server wasn't

@@ -10,7 +10,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Process
-import android.text.method.LinkMovementMethod
 import timber.log.Timber
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -45,12 +44,9 @@ import af.shizuku.manager.home.showAccessibilityDialog
 import af.shizuku.manager.ktx.toHtml
 import af.shizuku.manager.management.AppsViewModel
 import af.shizuku.manager.settings.SettingsActivity
-import af.shizuku.manager.update.UpdateChecker
-import af.shizuku.manager.update.UpdateManager
 import af.shizuku.manager.utils.AppIconCache
 import af.shizuku.manager.utils.EnvironmentUtils
 import af.shizuku.manager.utils.HapticUtils
-import af.shizuku.manager.utils.ProjectLinks
 import af.shizuku.manager.utils.SettingsHelper
 import af.shizuku.manager.utils.SettingsPage
 import af.shizuku.manager.utils.ShizukuStateMachine
@@ -362,9 +358,6 @@ open class HomeActivity : AppActivity(), MavericksView {
 
         requestNotificationPermissionIfNeeded()
 
-        // Check for updates on app startup (if enabled)
-        checkForUpdates()
-
         // Responsive grid for large screens and DeX (#76) - single column on phones preserves
         // the original Shizuku look, 2 columns kicks in on tablets/landscape/DeX where a single
         // column of cards leaves most of the width empty.
@@ -623,100 +616,6 @@ open class HomeActivity : AppActivity(), MavericksView {
         HomeEditMode.removeCardCallback = null
         ShizukuStateMachine.removeListener(stateListener)
         super.onDestroy()
-    }
-
-
-    /**
-     * Check for updates on app startup and show popup dialog
-     */
-    private fun checkForUpdates() {
-        if (!ShizukuSettings.isAutoUpdateEnabled()) {
-            return
-        }
-
-        // Check if we've already checked today
-        val lastCheckTime = ShizukuSettings.getLastUpdateCheckTime()
-        val now = System.currentTimeMillis()
-        val oneDayInMillis = 24 * 60 * 60 * 1000L
-
-        if (now - lastCheckTime < oneDayInMillis) {
-            return
-        }
-
-        if (isFinishing || isDestroyed) return
-
-        // Check for updates silently in background
-        lifecycleScope.launch {
-            try {
-                val result = UpdateChecker.checkForUpdate(ShizukuSettings.getUpdateChannel())
-
-                when (result) {
-                    is UpdateChecker.CheckResult.UpdateAvailable -> {
-                        ShizukuSettings.setLastUpdateCheckTime(now)
-                        ShizukuSettings.setLastUpdateCheckFailed(false)
-                        if (!isFinishing && !isDestroyed) showUpdateAvailableDialog(result.info)
-                    }
-                    is UpdateChecker.CheckResult.UpToDate -> {
-                        ShizukuSettings.setLastUpdateCheckTime(now)
-                        ShizukuSettings.setLastUpdateCheckFailed(false)
-                    }
-                    is UpdateChecker.CheckResult.NetworkError -> {
-                        ShizukuSettings.setLastUpdateCheckFailed(true)
-                    }
-                }
-            } catch (e: Exception) {
-                Timber.tag("HomeActivity").e(e, "Unexpected error checking for update")
-                ShizukuSettings.setLastUpdateCheckFailed(true)
-            }
-        }
-    }
-
-    /**
-     * Show update available popup dialog
-     */
-    private fun showUpdateAvailableDialog(updateInfo: UpdateChecker.UpdateInfo) {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_update_available, null)
-        dialogView.findViewById<TextView>(R.id.update_version_name).text =
-            getString(R.string.update_version_name, updateInfo.versionName)
-        dialogView.findViewById<TextView>(R.id.update_published_date).text =
-            if (updateInfo.publishedAt.isNotEmpty())
-                getString(R.string.update_published_date, UpdateChecker.formatPublishedDate(updateInfo.publishedAt))
-            else ""
-        // updateInfo.releaseNotes is the raw GitHub release body (Markdown) - render it instead
-        // of dumping it as plain text, which showed literal "**", "###", "|...|" table syntax
-        // and bracketed links to users. Drop the "Recent Releases" rollup (table/links meant for
-        // the GitHub page, not a compact popup) the same way ChangelogDialogFragment does.
-        val notesBody = updateInfo.releaseNotes
-            .substringBefore("## 📦 Recent Releases")
-            .trim()
-            .ifEmpty { getString(R.string.update_no_release_notes) }
-        val releaseNotesView = dialogView.findViewById<TextView>(R.id.update_release_notes)
-        releaseNotesView.text = notesBody
-        releaseNotesView?.movementMethod = LinkMovementMethod.getInstance()
-
-        val openReleases = {
-            startActivity(
-                android.content.Intent(android.content.Intent.ACTION_VIEW,
-                    android.net.Uri.parse(ProjectLinks.RELEASES))
-                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            )
-        }
-
-        val builder = MaterialAlertDialogBuilder(this)
-            .setTitle(R.string.update_available_title)
-            .setView(dialogView)
-            .setNegativeButton(R.string.update_later, null)
-            .setNeutralButton(R.string.update_release_notes) { _, _ -> openReleases() }
-
-        if (updateInfo.requiresManualDownload) {
-            builder.setPositiveButton(R.string.update_view_on_github) { _, _ -> openReleases() }
-        } else {
-            builder.setPositiveButton(R.string.update_download) { _, _ ->
-                UpdateManager(this).downloadUpdate(updateInfo.downloadUrls, updateInfo.versionName)
-            }
-        }
-
-        builder.show()
     }
 
     companion object {

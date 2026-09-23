@@ -24,7 +24,6 @@ rikkax-layoutinflater = "1.3.0"
 rikkax-preference = "1.0.3"
 rikkax-recyclerview = "1.3.2"
 rikkax-lifecycle = "1.0.1"
-sentry = "8.40.0"
 libsu = "6.0.0"
 hiddenapibypass = "6.1"
 bouncycastle = "1.81"
@@ -39,17 +38,11 @@ timber = "5.0.1"
 coil = "3.4.0"
 koin = "4.0.2"
 serialization = "1.8.0"
-lottie = "6.6.2"
-markwon = "4.6.2"
 mavericks = "3.0.9"
 spotless = "6.25.0"
 kotestJunit5 = "5.9.1"
 robolectric = "4.14.1"
 coroutines-test = "1.10.2"
-aboutlibraries = "11.6.3"
-leakcanary = "2.14"
-glance = "1.1.1"
-biometric = "1.2.0-alpha05"
 androidx-test-core = "1.6.1"
 compose-bom = "2024.04.01"
 
@@ -76,9 +69,6 @@ androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscree
 androidx-transition = { group = "androidx.transition", name = "transition-ktx", version.ref = "transition" }
 androidx-dynamicanimation = { group = "androidx.dynamicanimation", name = "dynamicanimation", version.ref = "dynamicanimation" }
 androidx-interpolator = { group = "androidx.interpolator", name = "interpolator", version.ref = "interpolator" }
-androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
-androidx-glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glance" }
-androidx-biometric = { group = "androidx.biometric", name = "biometric-ktx", version.ref = "biometric" }
 androidx-core-remoteviews = { group = "androidx.core", name = "core-remoteviews", version = "1.0.0-alpha01" }
 
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
@@ -95,9 +85,6 @@ kotestJunit5 = { group = "io.kotest", name = "kotest-runner-junit5", version.ref
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines-test" }
 
-aboutlibraries-core = { group = "com.mikepenz", name = "aboutlibraries-core", version.ref = "aboutlibraries" }
-aboutlibraries-ui = { group = "com.mikepenz", name = "aboutlibraries-compose-m3", version.ref = "aboutlibraries" }
-
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 coil = { group = "io.coil-kt.coil3", name = "coil", version.ref = "coil" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
@@ -105,9 +92,6 @@ coil-network = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", versi
 
 koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
 kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
-lottie = { group = "com.airbnb.android", name = "lottie", version.ref = "lottie" }
-markwon-core = { group = "io.noties.markwon", name = "core", version.ref = "markwon" }
-leakcanary = { group = "com.squareup.leakcanary", name = "leakcanary-android", version.ref = "leakcanary" }
 
 rikkax-appcompat = { group = "dev.rikka.rikkax.appcompat", name = "appcompat", version.ref = "rikkax-appcompat" }
 rikkax-compatibility = { group = "dev.rikka.rikkax.compatibility", name = "compatibility", version = "2.0.0" }
@@ -132,10 +116,6 @@ libsu-core = { group = "com.github.topjohnwu.libsu", name = "core", version.ref 
 hiddenapibypass = { group = "org.lsposed.hiddenapibypass", name = "hiddenapibypass", version.ref = "hiddenapibypass" }
 bouncycastle-bcpkix = { group = "org.bouncycastle", name = "bcpkix-jdk18on", version.ref = "bouncycastle" }
 appiconloader = { group = "me.zhanghai.android.appiconloader", name = "appiconloader", version.ref = "appiconloader" }
-sentry-android-core = { group = "io.sentry", name = "sentry-android-core", version.ref = "sentry" }
-sentry-android-fragment = { group = "io.sentry", name = "sentry-android-fragment", version.ref = "sentry" }
-sentry-android-timber = { group = "io.sentry", name = "sentry-android-timber", version.ref = "sentry" }
-sentry-android-okhttp = { group = "io.sentry", name = "sentry-okhttp", version.ref = "sentry" }
 boringssl = { group = "io.github.vvb2060.ndk", name = "boringssl", version.ref = "boringssl" }
 libcxx = { group = "org.lsposed.libcxx", name = "libcxx", version.ref = "libcxx" }
 
@@ -153,7 +133,5 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 autoresconfig = { id = "dev.rikka.tools.autoresconfig", version = "1.2.2" }
 materialthemebuilder = { id = "dev.rikka.tools.materialthemebuilder", version = "1.5.1" }
 refine = { id = "dev.rikka.tools.refine", version = "4.4.0" }
-sentry = { id = "io.sentry.android.gradle", version = "6.2.0" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
-aboutlibraries = { id = "com.mikepenz.aboutlibraries.plugin", version.ref = "aboutlibraries" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

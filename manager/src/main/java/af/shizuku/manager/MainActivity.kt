@@ -3,7 +3,6 @@ package af.shizuku.manager
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.widget.Toast
 import timber.log.Timber
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
@@ -12,11 +11,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import af.shizuku.manager.R
-import af.shizuku.manager.home.ChangelogDialogFragment
 import af.shizuku.manager.home.HomeActivity
 import af.shizuku.manager.migration.MigrationHelper
-import af.shizuku.manager.onboarding.OnboardingActivity
-import af.shizuku.manager.update.UpdateChecker
 import af.shizuku.manager.utils.ShizukuStateMachine
 
 class MainActivity : HomeActivity() {
@@ -31,21 +27,6 @@ class MainActivity : HomeActivity() {
                 if (ShizukuSettings.isVectorEnabled()) {
                     showCrashReportDialog()
                 }
-            }
-
-            Timber.d("Checking onboarding status")
-
-            // Auto-restore settings if a force-update backup exists
-            checkAndRestoreBackup()
-
-            // Show what's new after an update. This needs its own last-seen key so it
-            // doesn't depend on the (now removed) Sentry-quota version bump.
-            checkAndShowChangelog()
-
-            // Background sniff: keep the cached update content of the *installed* version in sync
-            // with upstream (the maintainer may have edited the release notes after shipping).
-            lifecycleScope.launch {
-                UpdateChecker.syncCachedUpdateContentIfNeeded(this@MainActivity)
             }
 
             Timber.d("MainActivity onCreate complete")
@@ -66,67 +47,6 @@ class MainActivity : HomeActivity() {
         } catch (e: Exception) {
             Timber.e(e, "Error in onStart")
             throw e
-        }
-    }
-
-    private fun checkAndRestoreBackup() {
-        lifecycleScope.launch(Dispatchers.IO) {
-            val backupFile = af.shizuku.manager.update.UpdateInstaller.getBackupFile(this@MainActivity)
-            if (backupFile != null && backupFile.exists()) {
-                try {
-                    val json = backupFile.readText()
-                    if (af.shizuku.manager.utils.SettingsBackupManager.import(this@MainActivity, json)) {
-                        Timber.i("Successfully auto-restored settings from force-update backup")
-                        backupFile.delete()
-                        // Notify user or refresh UI if needed
-                        withContext(Dispatchers.Main) {
-                            Toast.makeText(this@MainActivity, R.string.migration_success_message, Toast.LENGTH_LONG).show()
-                        }
-                    }
-                } catch (e: Exception) {
-                    Timber.e(e, "Failed to auto-restore settings")
-                }
-            }
-        }
-    }
-
-    /**
-     * Shows "What's New" once per version bump, using the real GitHub release notes for the
-     * exact version just installed (not "latest" — a newer build may already be out by the
-     * time the user opens the app).
-     */
-    private fun checkAndShowChangelog() {
-        val currentCode = try { packageManager.getPackageInfo(packageName, 0).versionCode } catch (e: Exception) { 0 }
-        if (currentCode <= ShizukuSettings.getLastSeenChangelogVersion()) return
-
-        val versionPart = Regex("""\d+\.\d+\.\d+\.[kr]\d+""").find(BuildConfig.VERSION_NAME)?.value
-        if (versionPart == null) {
-            // Can't build a release tag from this build's version string — mark seen so we
-            // don't retry every launch, and skip the dialog rather than showing a broken one.
-            ShizukuSettings.setLastSeenChangelogVersion(currentCode)
-            return
-        }
-        val tagName = "v$versionPart"
-
-        lifecycleScope.launch {
-            val notes = try {
-                UpdateChecker.fetchReleaseNotesForTag(tagName)
-            } catch (e: Exception) {
-                Timber.tag("MainActivity").w(e, "Failed to fetch changelog for $tagName")
-                null
-            }
-
-            // Mark seen regardless of fetch success — an offline user shouldn't be re-prompted
-            // on every cold start; the dialog's fallback message covers that case once.
-            ShizukuSettings.setLastSeenChangelogVersion(currentCode)
-
-            if (isFinishing || isDestroyed) return@launch
-            try {
-                ChangelogDialogFragment.newInstance(notes, tagName)
-                    .show(supportFragmentManager, ChangelogDialogFragment.TAG)
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to show changelog dialog")
-            }
         }
     }
 

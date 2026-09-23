@@ -114,11 +114,6 @@ class AdvancedSettingsFragment : BaseSettingsFragment() {
             true
         }
 
-        findPreference<Preference>("scripting")?.setOnPreferenceClickListener {
-            startActivity(Intent(context, af.shizuku.manager.scripting.ScriptingActivity::class.java))
-            true
-        }
-
         findPreference<TwoStatePreference>(KEY_LEGACY_PAIRING)?.apply {
             isVisible = !EnvironmentUtils.isTelevision()
         }        // Auto pairing: mirrors the pairing-assistant accessibility service. Turning it on
