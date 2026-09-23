@@ -173,6 +173,10 @@ class AdbStartWorker(context: Context, params: WorkerParameters) : CoroutineWork
             // (and mDNS fallback) hits it immediately.
             ShizukuSettings.setLastPort(port)
             Starter.waitForBinder()
+            // Record launch mode so HomeTab "activation mode" reflects the ADB path even
+            // when the server was auto-started by this background worker (NetworkCallback /
+            // boot), not via the manual switch / StarterActivity.
+            ShizukuSettings.setLastLaunchMode(ShizukuSettings.LaunchMethod.ADB)
             ActivityLogManager.log("Shizuku", applicationContext.packageName, "Service started via background ADB worker on port $port")
 
             val nm = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
