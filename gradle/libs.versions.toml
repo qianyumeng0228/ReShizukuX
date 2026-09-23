@@ -1,0 +1,159 @@
+[versions]
+mockk = "1.13.13"
+agp = "8.11.1"
+kotlin = "2.2.20"
+coreKtx = "1.15.0"
+appcompat = "1.7.0"
+material = "1.14.0"
+coroutines = "1.10.2"
+lifecycle = "2.9.4"
+fragment = "1.8.7"
+recyclerview = "1.4.0"
+preference = "1.2.1"
+browser = "1.8.0"
+work = "2.10.4"
+transition = "1.5.1"
+dynamicanimation = "1.1.0-alpha03"
+interpolator = "1.0.0"
+rikkax-appcompat = "1.6.1"
+rikkax-material = "2.7.2"
+rikkax-core = "1.4.1"
+rikkax-html = "1.1.2"
+rikkax-insets = "1.3.0"
+rikkax-layoutinflater = "1.3.0"
+rikkax-preference = "1.0.3"
+rikkax-recyclerview = "1.3.2"
+rikkax-lifecycle = "1.0.1"
+sentry = "8.40.0"
+libsu = "6.0.0"
+hiddenapibypass = "6.1"
+bouncycastle = "1.81"
+appiconloader = "1.5.0"
+boringssl = "20250114"
+libcxx = "27.0.12077973"
+hidden-api = "4.4.0"
+refine = "4.4.0"
+room = "2.6.1"
+ksp = "2.2.20-2.0.2"
+timber = "5.0.1"
+coil = "3.4.0"
+koin = "4.0.2"
+serialization = "1.8.0"
+lottie = "6.6.2"
+markwon = "4.6.2"
+mavericks = "3.0.9"
+spotless = "6.25.0"
+kotestJunit5 = "5.9.1"
+robolectric = "4.14.1"
+coroutines-test = "1.10.2"
+aboutlibraries = "11.6.3"
+leakcanary = "2.14"
+glance = "1.1.1"
+biometric = "1.2.0-alpha05"
+androidx-test-core = "1.6.1"
+compose-bom = "2024.04.01"
+
+[libraries]
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "mockk" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-annotation = { group = "androidx.annotation", name = "annotation", version = "1.9.1" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-livedata-ktx = { group = "androidx.lifecycle", name = "lifecycle-livedata-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
+androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragment" }
+androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
+androidx-preference-ktx = { group = "androidx.preference", name = "preference-ktx", version.ref = "preference" }
+androidx-browser = { group = "androidx.browser", name = "browser", version.ref = "browser" }
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
+androidx-work-test = { group = "androidx.work", name = "work-testing", version.ref = "work" }
+androidx-activity-ktx = { group = "androidx.activity", name = "activity-ktx", version = "1.10.0" }
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version = "1.0.1" }
+androidx-transition = { group = "androidx.transition", name = "transition-ktx", version.ref = "transition" }
+androidx-dynamicanimation = { group = "androidx.dynamicanimation", name = "dynamicanimation", version.ref = "dynamicanimation" }
+androidx-interpolator = { group = "androidx.interpolator", name = "interpolator", version.ref = "interpolator" }
+androidx-glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
+androidx-glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glance" }
+androidx-biometric = { group = "androidx.biometric", name = "biometric-ktx", version.ref = "biometric" }
+androidx-core-remoteviews = { group = "androidx.core", name = "core-remoteviews", version = "1.0.0-alpha01" }
+
+compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
+compose-ui = { group = "androidx.compose.ui", name = "ui" }
+compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version = "1.10.0" }
+
+mavericks = { group = "com.airbnb.android", name = "mavericks", version.ref = "mavericks" }
+mavericks-testing = { group = "com.airbnb.android", name = "mavericks-testing", version.ref = "mavericks" }
+kotestJunit5 = { group = "io.kotest", name = "kotest-runner-junit5", version.ref = "kotestJunit5" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines-test" }
+
+aboutlibraries-core = { group = "com.mikepenz", name = "aboutlibraries-core", version.ref = "aboutlibraries" }
+aboutlibraries-ui = { group = "com.mikepenz", name = "aboutlibraries-compose-m3", version.ref = "aboutlibraries" }
+
+timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
+coil = { group = "io.coil-kt.coil3", name = "coil", version.ref = "coil" }
+coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
+coil-network = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
+
+koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "serialization" }
+lottie = { group = "com.airbnb.android", name = "lottie", version.ref = "lottie" }
+markwon-core = { group = "io.noties.markwon", name = "core", version.ref = "markwon" }
+leakcanary = { group = "com.squareup.leakcanary", name = "leakcanary-android", version.ref = "leakcanary" }
+
+rikkax-appcompat = { group = "dev.rikka.rikkax.appcompat", name = "appcompat", version.ref = "rikkax-appcompat" }
+rikkax-compatibility = { group = "dev.rikka.rikkax.compatibility", name = "compatibility", version = "2.0.0" }
+rikkax-core = { group = "dev.rikka.rikkax.core", name = "core-ktx", version.ref = "rikkax-core" }
+rikkax-material = { group = "dev.rikka.rikkax.material", name = "material", version.ref = "rikkax-material" }
+rikkax-material-preference = { group = "dev.rikka.rikkax.material", name = "material-preference", version = "2.0.0" }
+rikkax-html-ktx = { group = "dev.rikka.rikkax.html", name = "html-ktx", version.ref = "rikkax-html" }
+rikkax-insets = { group = "dev.rikka.rikkax.insets", name = "insets", version.ref = "rikkax-insets" }
+rikkax-layoutinflater = { group = "dev.rikka.rikkax.layoutinflater", name = "layoutinflater", version.ref = "rikkax-layoutinflater" }
+rikkax-simplemenu-preference = { group = "dev.rikka.rikkax.preference", name = "simplemenu-preference", version.ref = "rikkax-preference" }
+rikkax-recyclerview-adapter = { group = "dev.rikka.rikkax.recyclerview", name = "recyclerview-adapter", version = "1.3.0" }
+rikkax-recyclerview-ktx = { group = "dev.rikka.rikkax.recyclerview", name = "recyclerview-ktx", version.ref = "rikkax-recyclerview" }
+rikkax-lifecycle-resource = { group = "dev.rikka.rikkax.lifecycle", name = "lifecycle-resource-livedata", version.ref = "rikkax-lifecycle" }
+
+hidden-compat = { group = "dev.rikka.hidden", name = "compat", version.ref = "hidden-api" }
+hidden-stub = { group = "dev.rikka.hidden", name = "stub", version.ref = "hidden-api" }
+refine-runtime = { group = "dev.rikka.tools.refine", name = "runtime", version.ref = "refine" }
+refine-annotation = { group = "dev.rikka.tools.refine", name = "annotation", version.ref = "refine" }
+refine-annotation-processor = { group = "dev.rikka.tools.refine", name = "annotation-processor", version.ref = "refine" }
+
+libsu-core = { group = "com.github.topjohnwu.libsu", name = "core", version.ref = "libsu" }
+hiddenapibypass = { group = "org.lsposed.hiddenapibypass", name = "hiddenapibypass", version.ref = "hiddenapibypass" }
+bouncycastle-bcpkix = { group = "org.bouncycastle", name = "bcpkix-jdk18on", version.ref = "bouncycastle" }
+appiconloader = { group = "me.zhanghai.android.appiconloader", name = "appiconloader", version.ref = "appiconloader" }
+sentry-android-core = { group = "io.sentry", name = "sentry-android-core", version.ref = "sentry" }
+sentry-android-fragment = { group = "io.sentry", name = "sentry-android-fragment", version.ref = "sentry" }
+sentry-android-timber = { group = "io.sentry", name = "sentry-android-timber", version.ref = "sentry" }
+sentry-android-okhttp = { group = "io.sentry", name = "sentry-okhttp", version.ref = "sentry" }
+boringssl = { group = "io.github.vvb2060.ndk", name = "boringssl", version.ref = "boringssl" }
+libcxx = { group = "org.lsposed.libcxx", name = "libcxx", version.ref = "libcxx" }
+
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
+
+androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidx-test-core" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+autoresconfig = { id = "dev.rikka.tools.autoresconfig", version = "1.2.2" }
+materialthemebuilder = { id = "dev.rikka.tools.materialthemebuilder", version = "1.5.1" }
+refine = { id = "dev.rikka.tools.refine", version = "4.4.0" }
+sentry = { id = "io.sentry.android.gradle", version = "6.2.0" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+aboutlibraries = { id = "com.mikepenz.aboutlibraries.plugin", version.ref = "aboutlibraries" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

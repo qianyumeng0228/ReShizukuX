@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <af.shizuku.manager.settings.CollapsiblePreferenceCategory
+        android:key="category_diagnostics"
+        android:title="@string/settings_diagnostics_category_title"
+        android:defaultValue="true">
+
+        <Preference
+            android:key="service_doctor"
+            android:title="@string/home_service_doctor_title"
+            android:summary="@string/home_service_doctor_summary"
+            android:icon="@drawable/ic_medical_services_24" />
+
+        <SwitchPreferenceCompat
+            android:key="diagnostics_enabled"
+            android:title="@string/settings_diagnostics_toggle_title"
+            android:summary="@string/settings_diagnostics_toggle_summary"
+            android:icon="@drawable/ic_warning_24"
+            android:defaultValue="true" />
+
+        <SwitchPreferenceCompat
+            android:key="enable_activity_log"
+            android:title="@string/settings_enable_activity_log"
+            android:summary="@string/settings_enable_activity_log_summary"
+            android:icon="@drawable/ic_history_24"
+            android:defaultValue="true" />
+
+        <Preference
+            android:key="export_diagnostics"
+            android:title="@string/settings_export_diagnostics"
+            android:summary="@string/settings_export_diagnostics_summary"
+            android:icon="@drawable/ic_science_24" />
+
+        <Preference
+            android:key="activity_log"
+            android:title="@string/settings_activity_log"
+            android:icon="@drawable/ic_history_24"
+            android:dependency="enable_activity_log" />
+
+        <Preference
+            android:key="update_app_database"
+            android:title="@string/settings_update_app_database"
+            android:summary="@string/settings_update_app_database_summary"
+            android:icon="@drawable/ic_autorenew" />
+
+        <Preference
+            android:key="scripting"
+            android:title="@string/scripting_title"
+            android:summary="@string/scripting_summary"
+            android:icon="@drawable/ic_code_24" />
+
+    </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
+
+    <af.shizuku.manager.settings.CollapsiblePreferenceCategory
+        android:key="category_adb_tools"
+        android:title="@string/settings_adb_tools_category_title"
+        android:defaultValue="false">
+
+        <SwitchPreferenceCompat
+            android:key="stealth_mode"
+            android:title="@string/settings_stealth_mode"
+            android:summary="@string/settings_stealth_mode_summary"
+            android:icon="@drawable/ic_visibility_off_24"
+            android:defaultValue="false" />
+
+        <SwitchPreferenceCompat
+            android:key="hide_from_recents"
+            android:title="@string/settings_hide_from_recents"
+            android:summary="@string/settings_hide_from_recents_summary"
+            android:icon="@drawable/ic_visibility_off_24"
+            android:defaultValue="false" />
+
+        <SwitchPreferenceCompat
+            android:key="legacy_pairing"
+            android:summary="@string/settings_legacy_pairing_summary"
+            android:title="@string/settings_legacy_pairing"
+            android:icon="@drawable/ic_numeric_1_circle_outline_24" />
+
+        <SwitchPreferenceCompat
+            android:key="auto_pairing"
+            android:summary="@string/settings_auto_pairing_summary"
+            android:title="@string/settings_auto_pairing"
+            android:icon="@drawable/ic_numeric_2_circle_outline_24" />
+
+        <Preference
+            android:key="reset_adb_keys"
+            android:title="@string/settings_reset_adb_keys"
+            android:summary="@string/settings_reset_adb_keys_summary"
+            android:icon="@drawable/ic_autorenew" />
+
+    </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
+
+    <af.shizuku.manager.settings.CollapsiblePreferenceCategory
+        android:key="category_help"
+        android:title="@string/settings_help_recovery_category_title"
+        android:defaultValue="false">
+
+        <Preference
+            android:key="help"
+            android:title="@string/settings_help"
+            android:icon="@drawable/ic_help_outline_24" />
+
+        <Preference
+            android:key="report_bug"
+            android:title="@string/settings_report_bug"
+            android:icon="@drawable/ic_warning_24" />
+
+    </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
+
+</PreferenceScreen>

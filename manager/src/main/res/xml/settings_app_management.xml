@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <af.shizuku.manager.settings.CollapsiblePreferenceCategory
+        android:key="category_swipe"
+        android:title="@string/settings_swipe_gestures_category_title"
+        android:defaultValue="true">
+
+        <rikka.preference.SimpleMenuPreference
+            android:key="swipe_right_action"
+            android:title="@string/settings_swipe_right"
+            android:entries="@array/swipe_actions"
+            android:entryValues="@array/swipe_actions_values"
+            android:defaultValue="open_app"
+            android:summary="%s"
+            android:icon="@drawable/ic_swipe_24" />
+
+        <rikka.preference.SimpleMenuPreference
+            android:key="swipe_left_action"
+            android:title="@string/settings_swipe_left"
+            android:entries="@array/swipe_actions"
+            android:entryValues="@array/swipe_actions_values"
+            android:defaultValue="app_info"
+            android:summary="%s"
+            android:icon="@drawable/ic_swipe_24" />
+
+    </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
+
+    <af.shizuku.manager.settings.CollapsiblePreferenceCategory
+        android:key="category_long_press"
+        android:title="@string/settings_long_press_actions_category_title"
+        android:defaultValue="true">
+
+        <Preference
+            android:key="lp_category_info"
+            style="?preferenceInformationStyle"
+            android:summary="@string/settings_lp_category_summary" />
+
+        <SwitchPreferenceCompat
+            android:key="lp_open_app"
+            android:title="@string/settings_lp_open_app"
+            android:defaultValue="true"
+            android:icon="@drawable/ic_outline_play_arrow_24" />
+
+        <SwitchPreferenceCompat
+            android:key="lp_app_info"
+            android:title="@string/settings_lp_app_info"
+            android:defaultValue="true"
+            android:icon="@drawable/ic_outline_info_24" />
+
+        <SwitchPreferenceCompat
+            android:key="lp_toggle_permission"
+            android:title="@string/settings_lp_toggle_permission"
+            android:defaultValue="true"
+            android:icon="@drawable/ic_shield_24" />
+
+        <SwitchPreferenceCompat
+            android:key="lp_hide_from_list"
+            android:title="@string/settings_lp_hide_from_list"
+            android:defaultValue="true"
+            android:icon="@drawable/ic_visibility_24" />
+
+    </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
+
+    <af.shizuku.manager.settings.CollapsiblePreferenceCategory
+        android:key="category_verified_install"
+        android:title="@string/settings_verified_installation_category_title"
+        android:defaultValue="false">
+
+        <SwitchPreferenceCompat
+            android:key="verify_apk_local"
+            android:title="@string/verify_local_signature_title"
+            android:summary="@string/verify_local_signature_summary"
+            android:defaultValue="true"
+            android:icon="@drawable/ic_shield_24" />
+
+        <SwitchPreferenceCompat
+            android:key="verify_apk_fdroid"
+            android:title="@string/verify_fdroid_index_title"
+            android:summary="@string/verify_fdroid_index_summary"
+            android:defaultValue="true"
+            android:icon="@drawable/ic_folder_24" />
+
+        <SwitchPreferenceCompat
+            android:key="verify_apk_virustotal"
+            android:title="@string/verify_virustotal_scan_title"
+            android:summary="@string/verify_virustotal_scan_summary"
+            android:defaultValue="false"
+            android:icon="@drawable/ic_update_24" />
+
+        <Preference
+            android:key="virustotal_api_key_manage"
+            android:title="@string/verify_virustotal_key_title"
+            android:summary="@string/verify_api_key_hint"
+            android:icon="@drawable/ic_code_24"
+            android:dependency="verify_apk_virustotal" />
+
+        <SwitchPreferenceCompat
+            android:key="verify_apk_pithus"
+            android:title="@string/verify_pithus_threat_intel_title"
+            android:summary="@string/verify_pithus_threat_intel_summary"
+            android:defaultValue="false"
+            android:icon="@drawable/ic_admin_panel_settings_24" />
+
+        <Preference
+            android:key="pithus_api_key_manage"
+            android:title="@string/verify_pithus_key_title"
+            android:summary="@string/verify_api_key_hint"
+            android:icon="@drawable/ic_code_24"
+            android:dependency="verify_apk_pithus" />
+
+    </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
+
+</PreferenceScreen>

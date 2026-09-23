@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <af.shizuku.manager.settings.CollapsiblePreferenceCategory
+        android:key="category_adb_connection"
+        android:title="@string/settings_adb_connection_category_title"
+        android:defaultValue="true">
+
+        <SwitchPreferenceCompat
+            android:key="adb_proxy_enabled"
+            android:title="@string/settings_adb_proxy"
+            android:summary="@string/settings_adb_proxy_summary"
+            android:icon="@drawable/ic_wadb_24"
+            android:defaultValue="false" />
+
+        <SwitchPreferenceCompat
+            android:key="on_device_adb_tcp"
+            android:title="@string/settings_on_device_adb_tcp"
+            android:summary="@string/settings_on_device_adb_tcp_summary"
+            android:icon="@drawable/ic_adb_24"
+            android:defaultValue="false" />
+
+        <SwitchPreferenceCompat
+            android:key="force_start_wadb"
+            android:title="@string/settings_force_start_wadb"
+            android:summary="@string/settings_force_start_wadb_summary"
+            android:icon="@drawable/ic_server_restart"
+            android:defaultValue="false" />
+
+    </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
+
+    <af.shizuku.manager.settings.CollapsiblePreferenceCategory
+        android:key="category_stock_shizuku_compat"
+        android:title="@string/settings_stock_shizuku_compatibility_category_title"
+        android:defaultValue="true">
+
+        <SwitchPreferenceCompat
+            android:key="companion_fallback"
+            android:title="@string/settings_companion_fallback"
+            android:summary="@string/settings_companion_fallback_summary"
+            android:icon="@drawable/ic_medical_services_24"
+            android:defaultValue="true" />
+
+        <Preference
+            android:key="launch_stock_shizuku"
+            android:title="@string/home_companion_open"
+            android:summary="@string/home_companion_description"
+            android:icon="@drawable/ic_baseline_link_24" />
+
+    </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
+
+    <af.shizuku.manager.settings.CollapsiblePreferenceCategory
+        android:key="category_su_bridge"
+        android:title="@string/settings_su_bridge_configuration_category_title"
+        android:defaultValue="true">
+
+        <SwitchPreferenceCompat
+            android:key="su_bridge_enabled"
+            android:title="@string/settings_fake_su"
+            android:summary="@string/settings_fake_su_summary"
+            android:icon="@drawable/ic_root_24"
+            android:defaultValue="false" />
+
+        <Preference
+            android:key="root_compatibility_hub"
+            android:title="@string/su_bridge_hub_title"
+            android:summary="@string/su_bridge_hub_summary"
+            android:icon="@drawable/ic_admin_panel_settings_24" />
+
+        <EditTextPreference
+            android:key="custom_su_path"
+        android:title="@string/settings_custom_su_path_title"
+        android:summary="@string/settings_custom_su_path_summary"
+            android:dependency="su_bridge_enabled"
+            android:icon="@drawable/ic_terminal_24"
+            app:iconSpaceReserved="true"
+            android:singleLine="true" />
+
+        <EditTextPreference
+            android:key="custom_root_su_path"
+        android:title="@string/settings_custom_root_su_path_title"
+        android:summary="@string/settings_custom_root_su_path_summary"
+            android:icon="@drawable/ic_root_24"
+            app:iconSpaceReserved="true"
+            android:singleLine="true" />
+
+    </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
+
+    <af.shizuku.manager.settings.CollapsiblePreferenceCategory
+        android:key="category_root_modules"
+        android:title="@string/settings_rootless_bridges_category_title"
+        android:defaultValue="true">
+
+        <af.shizuku.manager.settings.ExtraFeaturePreference
+            android:key="root_build_prop_redirect_enabled"
+        android:title="@string/settings_build_prop_redirection_title"
+        android:summary="@string/settings_build_prop_redirection_summary"
+            android:icon="@drawable/ic_settings_suggest_24"
+            android:defaultValue="false"
+            app:infoTitle="@string/settings_build_prop_redirection_explainer_title"
+            app:infoDetail="@string/settings_build_prop_redirection_explainer_detail" />
+
+        <af.shizuku.manager.settings.ExtraFeaturePreference
+            android:key="root_auto_grant_enabled"
+            android:title="@string/settings_root_auto_grant"
+            android:summary="@string/settings_root_auto_grant_summary"
+            android:icon="@drawable/ic_admin_panel_settings_24"
+            android:defaultValue="false"
+            app:infoTitle="@string/help_root_auto_grant_title"
+            app:infoDetail="@string/help_root_auto_grant_detail" />
+
+        <af.shizuku.manager.settings.ExtraFeaturePreference
+            android:key="root_file_interceptor_enabled"
+            android:title="@string/settings_root_file_interceptor"
+            android:summary="@string/settings_root_file_interceptor_summary"
+            android:icon="@drawable/ic_folder_24"
+            android:defaultValue="false"
+            app:infoTitle="@string/help_root_file_interceptor_title"
+            app:infoDetail="@string/help_root_file_interceptor_detail" />
+
+    </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
+
+    <af.shizuku.manager.settings.CollapsiblePreferenceCategory
+        android:key="category_ghost_bridge"
+        android:title="@string/settings_mocking_simulation_category_title"
+        android:defaultValue="false">
+
+        <af.shizuku.manager.settings.ExtraFeaturePreference
+            android:key="root_iptables_mocking_enabled"
+        android:title="@string/settings_firewall_success_mocking_title"
+        android:summary="@string/settings_firewall_success_mocking_summary"
+            android:icon="@drawable/ic_shield_24"
+            android:defaultValue="false"
+            app:infoTitle="@string/settings_firewall_mocking_explainer_title"
+            app:infoDetail="@string/settings_firewall_mocking_explainer_detail" />
+
+        <af.shizuku.manager.settings.ExtraFeaturePreference
+            android:key="root_magisk_mocking_enabled"
+            android:title="@string/settings_root_magisk_mocking"
+            android:summary="@string/settings_root_magisk_mocking_summary"
+            android:icon="@drawable/ic_settings_suggest_24"
+            android:defaultValue="false"
+            app:infoTitle="@string/help_root_magisk_title"
+            app:infoDetail="@string/help_root_magisk_detail" />
+
+        <af.shizuku.manager.settings.ExtraFeaturePreference
+            android:key="root_busybox_mocking_enabled"
+            android:title="@string/settings_root_busybox_mocking"
+            android:summary="@string/settings_root_busybox_mocking_summary"
+            android:icon="@drawable/ic_terminal_24"
+            android:defaultValue="false"
+            app:infoTitle="@string/help_root_busybox_title"
+            app:infoDetail="@string/help_root_busybox_detail" />
+
+        <af.shizuku.manager.settings.ExtraFeaturePreference
+            android:key="overlay_fs_proxy_enabled"
+        android:title="@string/settings_overlayfs_ghosting_title"
+        android:summary="@string/settings_overlayfs_ghosting_summary"
+            android:icon="@drawable/ic_folder_24"
+            android:defaultValue="false" />
+
+        <af.shizuku.manager.settings.ExtraFeaturePreference
+            android:key="root_kernel_ghosting_enabled"
+        android:title="@string/settings_kernel_driver_ghosting_title"
+        android:summary="@string/settings_kernel_driver_ghosting_summary"
+            android:icon="@drawable/ic_settings_suggest_24"
+            android:defaultValue="false" />
+
+        <af.shizuku.manager.settings.ExtraFeaturePreference
+            android:key="root_partition_ghosting_enabled"
+        android:title="@string/settings_partition_flash_ghosting_title"
+        android:summary="@string/settings_partition_flash_ghosting_summary"
+            android:icon="@drawable/ic_admin_panel_settings_24"
+            android:defaultValue="false" />
+
+        <af.shizuku.manager.settings.ExtraFeaturePreference
+            android:key="root_power_ghosting_enabled"
+        android:title="@string/settings_power_state_ghosting_title"
+        android:summary="@string/settings_power_state_ghosting_summary"
+            android:icon="@drawable/ic_server_restart"
+            android:defaultValue="false" />
+
+    </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
+
+    <af.shizuku.manager.settings.CollapsiblePreferenceCategory
+        android:key="category_unlocked_bootloader"
+        android:title="@string/settings_bootloader_integration_category_title"
+        android:defaultValue="false">
+
+        <af.shizuku.manager.settings.ExtraFeaturePreference
+            android:key="bootloader_flash_ota_enabled"
+        android:title="@string/settings_systemless_ota_flashing_title"
+        android:summary="@string/settings_systemless_ota_flashing_summary"
+            android:icon="@drawable/ic_update_24"
+            android:defaultValue="false" />
+
+        <af.shizuku.manager.settings.ExtraFeaturePreference
+            android:key="bootloader_fastbootd_reboot_enabled"
+        android:title="@string/settings_fastbootd_transition_title"
+        android:summary="@string/settings_fastbootd_transition_summary"
+            android:icon="@drawable/ic_server_restart"
+            android:defaultValue="false" />
+
+    </af.shizuku.manager.settings.CollapsiblePreferenceCategory>
+
+</PreferenceScreen>

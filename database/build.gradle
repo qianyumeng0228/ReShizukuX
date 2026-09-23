@@ -1,0 +1,57 @@
+plugins {
+    id "com.android.library"
+    id "com.google.devtools.ksp"
+    id "org.jetbrains.kotlin.plugin.serialization" version "2.2.20"
+}
+
+android {
+    namespace = "af.shizuku.manager.database"
+    compileSdk = 35
+
+    defaultConfig {
+        minSdk = 24
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled = false
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+        unitTests.all {
+            useJUnitPlatform()
+        }
+    }
+}
+
+dependencies {
+    api libs.room.runtime
+    api libs.room.ktx
+    ksp libs.room.compiler
+
+    implementation project(":common")
+    implementation project(":api")
+    
+    implementation libs.androidx.core.ktx
+    implementation libs.timber
+    implementation libs.kotlinx.coroutines.core
+    implementation libs.kotlinx.serialization.json
+
+    testImplementation libs.kotestJunit5
+    testImplementation libs.robolectric
+    testImplementation libs.kotlinx.coroutines.test
+    testImplementation libs.androidx.test.core
+    testImplementation libs.room.testing
+}

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Base.AppTheme.Light" parent="Theme.Material3Expressive.Light.Shizuku">
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="o_mr1">shortEdges</item>
+
+        <item name="android:forceDarkAllowed">false</item>
+
+        <item name="preferenceTheme">@style/AppTheme.PreferenceThemeOverlay</item>
+
+        <item name="appColorPrimary">@color/app_color_light</item>
+
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+
+        <item name="android:windowAllowEnterTransitionOverlap">true</item>
+        <item name="android:windowAllowReturnTransitionOverlap">true</item>
+        <item name="android:windowActivityTransitions">true</item>
+    </style>
+
+    <style name="Theme.Light" parent="Base.AppTheme.Light" />
+
+    <style name="Base.AppTheme" parent="Theme.Material3Expressive.Dark.Shizuku">
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="o_mr1">shortEdges</item>
+
+        <item name="android:forceDarkAllowed">false</item>
+
+        <item name="preferenceTheme">@style/AppTheme.PreferenceThemeOverlay</item>
+        
+        <item name="appColorPrimary">@color/app_color_dark</item>
+
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+
+        <item name="android:windowAllowEnterTransitionOverlap">true</item>
+        <item name="android:windowAllowReturnTransitionOverlap">true</item>
+        <item name="android:windowActivityTransitions">true</item>
+    </style>
+
+    <style name="Theme" parent="Base.AppTheme" />
+
+    <style name="AppTheme.PreferenceThemeOverlay" parent="@style/PreferenceThemeOverlay.Rikka.Material3">
+        <item name="switchPreferenceCompatStyle">@style/Preference.SwitchPreferenceCompat.M3Expressive</item>
+        <item name="switchPreferenceStyle">@style/Preference.SwitchPreferenceCompat.M3Expressive</item>
+        <item name="preferenceCategoryStyle">@style/Preference.Category.M3Expressive</item>
+    </style>
+
+    <style name="Preference.SwitchPreferenceCompat.M3Expressive" parent="@style/Preference.SwitchPreferenceCompat.Material">
+        <item name="android:widgetLayout">@layout/preference_widget_material_switch</item>
+    </style>
+    
+    <style name="Preference.Category.M3Expressive" parent="@style/Preference.Category.Material">
+        <item name="allowDividerAbove">true</item>
+        <item name="allowDividerBelow">false</item>
+        <item name="android:layout">@layout/collapsible_preference_category_card</item>
+    </style>
+
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">?android:attr/colorBackground</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground_base</item>
+        <item name="postSplashScreenTheme">@style/Theme.Light</item>
+    </style>
+
+</resources>

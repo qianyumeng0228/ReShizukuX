@@ -1,0 +1,361 @@
+import java.nio.file.Paths
+import org.gradle.process.ExecOperations
+import com.android.build.gradle.internal.tasks.CompileArtProfileTask
+
+plugins {
+    id "com.android.application"
+    id "org.jetbrains.kotlin.plugin.compose" version "2.2.20"
+    id "dev.rikka.tools.refine"
+    id "dev.rikka.tools.autoresconfig"
+    id "dev.rikka.tools.materialthemebuilder"
+    id "io.sentry.android.gradle"
+    id "org.jetbrains.kotlin.plugin.serialization" version "2.2.20"
+    id "com.diffplug.spotless"
+    id "com.mikepenz.aboutlibraries.plugin"
+}
+
+android {
+    namespace = "af.shizuku.manager"
+    defaultConfig {
+        applicationId = "xyz.shizuku.extra.api"
+        versionCode rootProject.ext.versionCode
+        versionName rootProject.ext.versionName
+        def sentryDsn = project.findProperty('SENTRY_DSN') ?: ''
+        buildConfigField "String", "SENTRY_DSN", "\"${sentryDsn}\""
+        manifestPlaceholders = [
+            sentryDsn: sentryDsn,
+            // Dhizuku content-provider authority is defined directly in AndroidManifest.xml
+            // as ${applicationId}.dhizuku_server.provider - the exact authority the official
+            // Dhizuku client SDK resolves from the device-owner package name (see
+            // DhizukuVariables.getProviderAuthorityName). Keeping it package-scoped means the
+            // debug build (applicationIdSuffix ".debug") and every flavor resolve correctly
+            // with no provider conflict against an installed standalone Dhizuku.
+        ]
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
+        multiDexKeepProguard file("multidex-keep.pro")
+        externalNativeBuild {
+            cmake {
+                arguments = ["-DANDROID_STL=none", "-DANDROID_LD=lld", "-Wl,-z,max-page-size=16384"]
+            }
+        }
+    }
+    buildFeatures {
+        buildConfig = true
+        resValues = true
+        viewBinding = true
+        prefab = true
+        aidl = true
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "2.2.20"
+    }
+    signingConfigs {
+        sign {
+            enableV1Signing = true
+            enableV2Signing = true
+            enableV3Signing = true
+            enableV4Signing = true
+        }
+    }
+    flavorDimensions = ["distribution"]
+    productFlavors {
+        shizukux {
+            dimension = "distribution"
+            applicationId = "xyz.shizuku.extra.api"
+            resValue "string", "app_name", "ShizukuX"
+        }
+        dropin {
+            dimension = "distribution"
+            applicationId = "moe.shizuku.privileged.api"
+            resValue "string", "app_name", "Shizuku"
+        }
+    }
+    buildTypes {
+        debug {
+            signingConfig = signingConfigs.sign
+            // Debug/test builds install alongside the store build instead of replacing it:
+            // xyz.shizuku.extra.api -> xyz.shizuku.extra.api.debug
+            applicationIdSuffix = ".debug"
+            // Dhizuku provider authority is resolved from ${applicationId} in the manifest.
+        }
+        release {
+            signingConfig = signingConfigs.sign
+            minifyEnabled = true
+            shrinkResources = true
+            vcsInfo.include = false
+            proguardFiles = ["proguard-rules.pro"]
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/jni/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
+
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+        resources {
+            excludes += ["**"]
+        }
+    }
+    dependenciesInfo {
+        includeInApk = false
+    }
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
+    sourceSets {
+        main {
+            aidl.srcDirs = ["src/main/aidl"]
+        }
+    }
+}
+
+spotless {
+    kotlin {
+        target "**/*.kt"
+        ktlint("1.3.1")
+        trimTrailingWhitespace()
+        indentWithSpaces()
+        endWithNewline()
+    }
+}
+
+aboutLibraries {
+    registerAndroidTasks = true
+}
+
+autoResConfig {
+    generatedClassFullName = "af.shizuku.manager.ShizukuLocales"
+    generateRes = false
+    generatedArrayFirstItem = "SYSTEM"
+    generateLocaleConfig = true
+}
+
+materialThemeBuilder {
+    themes {
+        shizuku {
+            // 初音未来 teal-cyan (Miku-style accent) - replaced the stock indigo #3F51B5
+            primaryColor = "#00A9A5"
+            lightThemeFormat = "Theme.Material3Expressive.Light.%s"
+            lightThemeParent = "Theme.Material3Expressive.Light"
+            darkThemeFormat = "Theme.Material3Expressive.Dark.%s"
+            darkThemeParent = "Theme.Material3Expressive.Dark"
+        }
+        dynamic_colors_overlay {
+            dynamicColors = true
+            lightThemeFormat = "ThemeOverlay.Material3.DynamicColors.Light.Shizuku"
+            lightThemeParent = "ThemeOverlay.Material3.DynamicColors.Light"
+            darkThemeFormat = "ThemeOverlay.Material3.DynamicColors.Dark.Shizuku"
+            darkThemeParent = "ThemeOverlay.Material3.DynamicColors.Dark"
+        }
+    }
+    generatePalette = true
+    generateTextColors = true
+}
+
+def collapseReleaseResourceNames = tasks.register("collapseReleaseResourceNames") {
+    def aapt2 = Paths.get(project.android.sdkDirectory.path, "build-tools", project.android.buildToolsVersion, "aapt2")
+    def zip = Paths.get(project.buildDir.path, "intermediates",
+        "optimized_processed_res", "release", "optimizeReleaseResources", "resources-release-optimize.ap_")
+    doLast {
+        def optimized = new File("${zip}.opt")
+        def execOps = services.get(ExecOperations)
+        execOps.exec {
+            commandLine aapt2.toFile(), "optimize", "--collapse-resource-names",
+                "--resources-config-path", "aapt2-resources.cfg",
+                "-o", optimized, zip.toFile()
+            ignoreExitValue = false
+        }
+        if (optimized.exists()) {
+            delete(zip.toFile())
+            optimized.renameTo(zip.toFile())
+        }
+    }
+}
+
+afterEvaluate {
+    def optimizeReleaseResources = tasks.findByName("optimizeReleaseResources")
+    if (optimizeReleaseResources != null) {
+        optimizeReleaseResources.finalizedBy(collapseReleaseResourceNames)
+    }
+    
+    tasks.register("copyCompatApkRelease", Copy) {
+        dependsOn ":compat:assembleRelease"
+        // Use fileTree so we match both compat-release.apk (signed) and compat-release-unsigned.apk.
+        // The hardcoded filename was the root cause of the compat stub never being bundled on CI (#293).
+        from fileTree("${project(':compat').layout.buildDirectory.get().asFile}/outputs/apk/release") {
+            include "*.apk"
+        }
+        into "src/main/assets"
+        rename { "compat.apk" }
+    }
+
+    tasks.register("copyCompatApkDebug", Copy) {
+        dependsOn ":compat:assembleDebug"
+        from fileTree("${project(':compat').layout.buildDirectory.get().asFile}/outputs/apk/debug") {
+            include "*.apk"
+        }
+        into "src/main/assets"
+        rename { "compat.apk" }
+    }
+    
+    // Wire compat and shell for both the generic pre-build hooks (single-flavor builds)
+    // and the flavor-specific hooks produced when product flavors are configured.
+    tasks.findByName("preReleaseBuild")?.dependsOn("copyCompatApkRelease")
+    tasks.findByName("preReleaseBuild")?.dependsOn(":shell:assembleRelease")
+
+    tasks.findByName("preDebugBuild")?.dependsOn("copyCompatApkDebug")
+    tasks.findByName("preDebugBuild")?.dependsOn(":shell:assembleDebug")
+
+    android.productFlavors.each { flavor ->
+        def name = flavor.name.capitalize()
+        tasks.findByName("pre${name}ReleaseBuild")?.dependsOn("copyCompatApkRelease")
+        tasks.findByName("pre${name}ReleaseBuild")?.dependsOn(":shell:assembleRelease")
+        tasks.findByName("pre${name}DebugBuild")?.dependsOn("copyCompatApkDebug")
+        tasks.findByName("pre${name}DebugBuild")?.dependsOn(":shell:assembleDebug")
+    }
+}
+
+
+tasks.withType(CompileArtProfileTask.class).configureEach {
+    enabled = false
+}
+configurations.configureEach {
+    exclude group: "androidx.appcompat", module: "appcompat"
+    exclude group: "androidx.profileinstaller", module: "profileinstaller"
+}
+
+dependencies {
+    implementation libs.kotlinx.coroutines.core
+    implementation libs.kotlinx.coroutines.android
+    implementation libs.mavericks
+
+    implementation project(":server")
+    implementation project(":rish")
+    implementation project(":starter")
+    implementation project(":api")
+    implementation project(":provider")
+    implementation project(":database")
+    implementation project(":common")
+    api project(":core:ui")
+
+    implementation libs.hidden.compat
+    compileOnly libs.hidden.stub
+
+    implementation libs.androidx.browser
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.fragment.ktx
+    implementation libs.androidx.recyclerview
+    implementation libs.androidx.lifecycle.viewmodel.ktx
+    implementation libs.androidx.lifecycle.livedata.ktx
+    implementation libs.androidx.lifecycle.runtime.ktx
+    implementation libs.androidx.preference.ktx
+    implementation libs.androidx.work.runtime.ktx
+    implementation libs.androidx.activity.ktx
+    implementation libs.androidx.core.splashscreen
+    implementation libs.androidx.transition
+    implementation libs.androidx.dynamicanimation
+    implementation libs.androidx.interpolator
+    implementation libs.androidx.glance.appwidget
+    implementation libs.androidx.biometric
+    implementation libs.androidx.core.remoteviews
+
+    implementation libs.timber
+    implementation libs.coil
+    implementation libs.coil.network
+
+    implementation libs.koin.android
+    implementation libs.kotlinx.serialization.json
+    implementation libs.lottie
+    implementation libs.markwon.core
+    debugImplementation libs.leakcanary
+
+    implementation libs.material
+
+    implementation libs.libsu.core
+    
+    implementation libs.aboutlibraries.core
+    implementation libs.rikkax.appcompat
+    implementation libs.rikkax.compatibility
+    implementation libs.rikkax.core
+    implementation libs.rikkax.material
+    implementation libs.rikkax.material.preference
+    implementation libs.rikkax.html.ktx
+    implementation libs.rikkax.recyclerview.adapter
+    implementation libs.rikkax.recyclerview.ktx
+    implementation libs.rikkax.insets
+    implementation libs.rikkax.layoutinflater
+    implementation libs.rikkax.simplemenu.preference
+    implementation libs.rikkax.lifecycle.resource
+
+    implementation libs.boringssl
+
+    implementation libs.libcxx
+    implementation libs.hiddenapibypass
+
+    implementation libs.bouncycastle.bcpkix
+
+    implementation libs.appiconloader
+
+    implementation libs.sentry.android.core
+    implementation libs.sentry.android.fragment
+    implementation libs.sentry.android.timber
+    implementation libs.sentry.android.okhttp
+
+    testImplementation libs.kotestJunit5
+    testImplementation libs.mockk
+    testImplementation libs.robolectric
+    testImplementation libs.kotlinx.coroutines.test
+    testImplementation libs.androidx.work.test
+    testImplementation libs.mavericks.testing
+    testImplementation libs.androidx.test.core
+    testImplementation "junit:junit:4.13.2"
+    androidTestImplementation "androidx.test.ext:junit:1.2.1"
+    androidTestImplementation "androidx.test:runner:1.6.2"
+    androidTestImplementation "androidx.test:rules:1.6.1"
+}
+
+android {
+    testOptions {
+        unitTests.all {
+            useJUnitPlatform()
+        }
+    }
+}
+
+sentry {
+    org = "af-developments"
+    projectName = "shizukuplus"
+    def sentryToken = System.getenv("SENTRY_AUTH_TOKEN") ?: project.findProperty("SENTRY_AUTH_TOKEN")
+    authToken = sentryToken ?: ""
+    
+    if (sentryToken == null || sentryToken.isEmpty()) {
+        uploadNativeSymbols = false
+        includeNativeSources = false
+        includeSourceContext = false
+        autoUploadProguardMapping = provider { false }
+    } else {
+        uploadNativeSymbols = true
+        includeNativeSources = true
+        includeSourceContext = true
+        autoUploadProguardMapping = provider { true }
+    }
+    
+    // Track releases with git commit info
+    ignoredBuildTypes = ["debug"]
+
+    // Project uses Glance (compose-based widgets) but not full compose-ui.
+    // Disable Sentry's compose bytecode instrumentation to avoid R8 missing-class errors.
+    tracingInstrumentation {
+        enabled = false
+    }
+}
+
+apply from: rootProject.file("signing.gradle")

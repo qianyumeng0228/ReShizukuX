@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="AppTheme" parent="Theme.Light" />
+
+    <style name="Card">
+        <item name="android:duplicateParentState">true</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="Card.Small" parent="Card">
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+
+    <style name="Card.Large" parent="Card">
+        <item name="android:orientation">vertical</item>
+        <item name="android:showDividers">middle</item>
+        <item name="android:divider">@drawable/spacing_list_item_vertical</item>
+    </style>
+
+    <style name="CardButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:backgroundTint">?colorSecondaryContainer</item>
+        <item name="android:textColor">?colorOnSecondaryContainer</item>
+        <item name="iconTint">?colorOnSecondaryContainer</item>
+        <item name="iconPadding">12dp</item>
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Material3.Corner.Full</item>
+    </style>
+
+    <style name="CardTitle">
+        <item name="android:textAppearance">?textAppearanceHeadlineSmall</item>
+        <item name="android:textColor">?colorOnSurface</item>
+        <item name="android:lineSpacingExtra">1sp</item>
+    </style>
+
+    <style name="CardSummary">
+        <item name="android:textAppearance">?textAppearanceLabelLarge</item>
+        <item name="android:textColor">?colorOnSurfaceVariant</item>
+        <item name="android:lineSpacingExtra">1sp</item>
+    </style>
+
+    <style name="CardSummary.Brief" parent="CardSummary">
+        <item name="android:layout_marginTop">4dp</item>
+    </style>
+
+    <style name="CardIcon">
+        <item name="android:layout_width">48dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:background">@drawable/shape_droplet_background</item>
+        <item name="android:tint">?colorOnSecondaryContainer</item>
+        <item name="android:tintMode">src_in</item>
+        <item name="android:backgroundTint">?colorSecondaryContainer</item>
+        <item name="android:backgroundTintMode">src_in</item>
+    </style>
+
+    <style name="CardIcon.Droplet" parent="CardIcon">
+        <item name="android:tint">?colorOnTertiaryContainer</item>
+        <item name="android:backgroundTint">?colorTertiaryContainer</item>
+    </style>
+
+    <style name="GrantPermissions" parent="Theme.Material3Expressive.Dark.Shizuku">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:colorBackground">?colorBackgroundFloating</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+        
+        <!-- M3E 2026: Dialog Shapes -->
+        <item name="dialogCornerRadius">@dimen/m3e_spacing_extra_large</item>
+    </style>
+
+    <style name="TerminalTutorialText">
+        <item name="android:textAppearance">?textAppearanceBodyMedium</item>
+        <item name="android:minHeight">32dp</item>
+        <item name="android:gravity">center_vertical</item>
+    </style>
+
+    <style name="DialogCard" parent="@style/Widget.Material3.CardView.Filled">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:checkable">true</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:clipChildren">false</item>
+        <item name="android:clipToPadding">false</item>
+        <item name="shapeAppearanceOverlay">?attr/shapeAppearanceCornerExtraLarge</item>
+        <item name="contentPadding">@dimen/card_content_padding</item>
+        <item name="cardBackgroundColor">?colorSurfaceContainerHigh</item>
+        <item name="cardElevation">0dp</item>
+    </style>
+
+    <style name="StaticCopyTextInput" parent="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="android:textColorHint">?colorOnSurfaceVariant</item>
+        <item name="boxStrokeColor">@color/text_input_static_box_stroke_color</item>
+        <item name="boxStrokeWidthFocused">1dp</item>
+        <item name="endIconMode">custom</item>
+        <item name="endIconDrawable">@drawable/ic_copy</item>
+        <item name="hintTextColor">?colorOnSurfaceVariant</item>
+        <item name="prefixTextColor">?colorOnSurfaceVariant</item>
+        <item name="shapeAppearanceOverlay">?attr/shapeAppearanceCornerMedium</item>
+    </style>
+
+    <style name="GrantPermissionsButtons">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">24dp</item>
+        <item name="android:layout_marginEnd">24dp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:padding">16dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">?attr/colorOnPrimaryContainer</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:gravity">center</item>
+        <!-- M3E 2026: Rounded Buttons -->
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.Material3.Corner.Full</item>
+    </style>
+
+    <style name="GrantPermissionsButtons.Top">
+        <item name="android:background">@drawable/grant_permissions_buttons_top</item>
+        <item name="android:layout_marginBottom">2dp</item>
+    </style>
+
+    <style name="GrantPermissionsButtons.Bottom">
+        <item name="android:background">@drawable/grant_permissions_buttons_bottom</item>
+        <item name="android:layout_marginTop">2dp</item>
+    </style>
+
+    <style name="Theme.App.DialogHost" parent="Theme.Material3Expressive.Dark.Shizuku">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+    <style name="Preference.Rikka.Material3.Empty" parent="@style/Preference.Rikka.Material3">
+        <item name="layout">@layout/preference_empty</item>
+    </style>
+
+    <!--
+        One UI preference theme overlay — applied when oneui_theme_enabled is on.
+        The rikka library already defaults category titles to ?colorPrimary (which is Samsung
+        Blue in ThemeOverlay.OneUI) and item padding to 24dp/16dp via listPreferredItemPadding*.
+        This overlay layers bolder, slightly-spaced category text on top to complete the look.
+    -->
+    <style name="AppTheme.PreferenceThemeOverlay.OneUI" parent="@style/AppTheme.PreferenceThemeOverlay">
+        <item name="preferenceCategoryTitleTextAppearance">@style/TextAppearance.OneUI.CategoryTitle</item>
+    </style>
+
+    <style name="TextAppearance.OneUI.CategoryTitle" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.04</item>
+    </style>
+
+</resources>

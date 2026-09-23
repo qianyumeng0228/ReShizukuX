@@ -1,0 +1,73 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenLocal()
+        mavenCentral()
+        maven {
+            url = "https://plugins.gradle.org/m2/"
+        }
+    }
+    plugins {
+        id "com.android.application" version "9.0.0"
+        id "com.android.library" version "9.0.0"
+        id "com.google.devtools.ksp" version "2.3.6"
+        id "dev.rikka.tools.autoresconfig" version "1.2.2"
+        id "dev.rikka.tools.materialthemebuilder" version "1.5.1"
+        id "dev.rikka.tools.refine" version "4.4.0"
+        id "io.sentry.android.gradle" version "6.2.0" apply false
+        id "com.diffplug.spotless" version "6.25.0"
+        id "com.mikepenz.aboutlibraries.plugin" version "11.6.3"
+    }
+
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenLocal()
+        mavenCentral()
+        maven {
+            url = "https://jitpack.io"
+            content {
+                includeGroup("com.github.topjohnwu.libsu")
+            }
+        }
+    }
+}
+
+include ":server", ":starter", ":shell", ":manager", ":common", ":database", ":compat", ":app-process"
+include ":core:ui"
+project(":core:ui").projectDir = file("core/ui")
+
+def root = "api"
+
+def propFile = file("local.properties")
+def props = new Properties()
+
+if (propFile.canRead()) {
+    props.load(new FileInputStream(propFile))
+
+    if (props != null) {
+        if (props["api.useLocal"].equals("true")) {
+            root = props["api.dir"]
+        }
+    }
+}
+
+include ":aidl"
+project(":aidl").projectDir = file("$root${File.separator}aidl")
+
+include ":rish"
+project(":rish").projectDir = file("$root${File.separator}rish")
+
+include ":shared"
+project(":shared").projectDir = file("$root${File.separator}shared")
+
+include ":api"
+project(":api").projectDir = file("$root${File.separator}api")
+
+include ":provider"
+project(":provider").projectDir = file("$root${File.separator}provider")
+
+include ":server-shared"
+project(":server-shared").projectDir = file("$root${File.separator}server-shared")

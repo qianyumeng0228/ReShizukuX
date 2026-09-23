@@ -1,0 +1,42 @@
+*.iml
+.gradle
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+/.idea
+/manager/signing.properties
+/out
+/signing.properties
+/.kotlin
+/sentry.properties
+/.gemini/
+/.mcp.json
+/.claude/settings.local.json
+/**/build/
+CLAUDE.md
+GEMINI.md
+/.ai/history/
+.jules-key
+jules-mcp.sh
+
+# Local MCP config
+.jules-key
+jules-mcp.sh
+
+# Downloaded CI/build logs
+build_error*.log
+build_app.log
+build_failure.log
+check.log
+smoke-test.log
+ktlint
+
+# build outputs
+release/
+release_k2003/
+
+release_k2004/

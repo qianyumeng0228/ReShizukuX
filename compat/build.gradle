@@ -1,0 +1,32 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'moe.shizuku.privileged.api'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "moe.shizuku.privileged.api"
+        minSdk 21
+        targetSdk 34
+        versionCode rootProject.ext.versionCode
+        versionName rootProject.ext.versionName + "-compat"
+    }
+
+    signingConfigs {
+        sign {}
+    }
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.sign
+        }
+        release {
+            signingConfig signingConfigs.sign
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+apply from: rootProject.file("signing.gradle")

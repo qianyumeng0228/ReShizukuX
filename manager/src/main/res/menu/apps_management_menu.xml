@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_sort"
+        android:title="@string/app_management_action_sort"
+        app:showAsAction="never">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/sort_name"
+                    android:title="@string/app_management_sort_a_to_z" />
+                <item
+                    android:id="@+id/sort_last_installed"
+                    android:title="@string/app_management_sort_last_installed" />
+                <item
+                    android:id="@+id/sort_last_updated"
+                    android:title="@string/app_management_sort_last_updated" />
+            </group>
+        </menu>
+    </item>
+
+    <item
+        android:id="@+id/action_hidden_apps"
+        android:title="@string/app_management_action_hidden_apps"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_root_compat"
+        android:title="@string/su_bridge_title"
+        app:showAsAction="never" />
+
+</menu>

@@ -1,0 +1,424 @@
+package af.shizuku.manager.update
+
+import android.util.Xml
+import timber.log.Timber
+import io.sentry.Sentry
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import java.io.IOException
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
+import javax.net.ssl.SSLException
+import kotlinx.coroutines.withContext
+import af.shizuku.manager.BuildConfig
+import af.shizuku.manager.utils.ProjectLinks
+import org.json.JSONArray
+import org.json.JSONObject
+import org.xmlpull.v1.XmlPullParser
+import java.net.HttpURLConnection
+import java.net.URL
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
+
+object UpdateChecker {
+
+    private const val TAG = "UpdateChecker"
+    private const val RELEASES_URL = ProjectLinks.API_RELEASES
+    private const val LATEST_URL = "$RELEASES_URL/latest"
+    // Fallback: GitHub's Atom feed is served from github.com CDN — different IP range
+    // than api.github.com, so routing issues specific to that host don't affect it.
+    private const val ATOM_URL = ProjectLinks.RELEASES_ATOM
+    private const val CONNECT_TIMEOUT_MS = 5_000
+    private const val READ_TIMEOUT_MS = 8_000
+    private const val RETRY_DELAY_MS = 2_000L
+
+    data class UpdateInfo(
+        val versionName: String,
+        val versionCode: Int,
+        val releaseNotes: String,
+        val downloadUrls: List<String>,
+        val publishedAt: String,
+        val isPrerelease: Boolean,
+        // True when only the Atom fallback succeeded — no direct APK URL available.
+        val requiresManualDownload: Boolean = false
+    )
+
+    sealed class CheckResult {
+        data class UpdateAvailable(val info: UpdateInfo) : CheckResult()
+        object UpToDate : CheckResult()
+        object NetworkError : CheckResult()
+    }
+
+    /**
+     * Check for an update, with retry + Atom feed fallback.
+     *
+     * Strategy:
+     *   1. Try GitHub API (up to 2 attempts, 2 s apart)
+     *   2. For Stable, if both fail with a network error, fall back to the GitHub
+     *      Atom feed (can detect an update exists but can't supply a download URL
+     *      - user is directed to GitHub Releases manually). Pre-release channels
+     *      only use the Releases API because the Atom feed has no reliable
+     *      prerelease flag.
+     *   3. If the allowed strategy for the selected channel fails -> NetworkError
+     */
+    suspend fun checkForUpdate(channel: String = "stable"): CheckResult = withContext(Dispatchers.IO) {
+        val transaction = Sentry.startTransaction("UpdateCheck", "check_for_update")
+        Sentry.getSpan()?.setTag("channel", channel)
+
+        try {
+            for (attempt in 0 until 2) {
+                if (attempt > 0) delay(RETRY_DELAY_MS)
+                val span = transaction.startChild("github_api", "attempt_$attempt")
+                try {
+                    val result = checkViaApi(channel)
+                    span.finish(io.sentry.SpanStatus.OK)
+                    return@withContext result
+                } catch (e: Exception) {
+                    span.throwable = e
+                    span.finish(io.sentry.SpanStatus.INTERNAL_ERROR)
+                    if (e.isNetworkError()) {
+                        Timber.tag(TAG).w("Update check attempt ${attempt + 1} failed (network): ${e.message}")
+                    } else {
+                        Sentry.captureException(e)
+                        return@withContext CheckResult.NetworkError
+                    }
+                }
+            }
+
+            if (isPrereleaseChannel(channel)) {
+                Timber.tag(TAG).w("API unreachable after 2 attempts; skipping Atom fallback for pre-release channel")
+                return@withContext CheckResult.NetworkError
+            }
+
+            Timber.tag(TAG).w("API unreachable after 2 attempts, trying Atom feed fallback")
+            val fallbackSpan = transaction.startChild("atom_feed", "fallback")
+            try {
+                val fallback = checkViaAtomFeed()
+                fallbackSpan.finish(io.sentry.SpanStatus.OK)
+                if (fallback != null) return@withContext CheckResult.UpdateAvailable(fallback)
+            } catch (e: Exception) {
+                fallbackSpan.throwable = e
+                fallbackSpan.finish(io.sentry.SpanStatus.INTERNAL_ERROR)
+                Timber.tag(TAG).w(e, "Atom feed fallback also failed")
+            }
+
+            CheckResult.NetworkError
+        } finally {
+            transaction.finish()
+        }
+    }
+
+    private fun checkViaApi(channel: String): CheckResult {
+        val json: JSONObject = if (isPrereleaseChannel(channel)) {
+            val arr = fetchJson("$RELEASES_URL?per_page=10") as? JSONArray
+                ?: return CheckResult.UpToDate
+            (0 until arr.length())
+                .map { arr.getJSONObject(it) }
+                .firstOrNull {
+                    it.optBoolean("prerelease", false) && !it.optBoolean("draft", false)
+                }
+                ?: return CheckResult.UpToDate
+        } else {
+            fetchJson(LATEST_URL) as? JSONObject ?: return CheckResult.UpToDate
+        }
+
+        val tagName = json.getString("tag_name")
+        val versionName = tagName.removePrefix("v")
+        val isPrerelease = json.optBoolean("prerelease", false)
+        val releaseNotes = json.optString("body", "")
+        val publishedAt = json.optString("published_at", "")
+
+        val assets = json.getJSONArray("assets")
+        val isDropIn = BuildConfig.APPLICATION_ID == "moe.shizuku.privileged.api"
+        val apkAssets = (0 until assets.length())
+            .map { assets.getJSONObject(it) }
+            .filter { it.getString("name").endsWith(".apk", ignoreCase = true) }
+
+        // 资产名规则（与 GitHub Release 实际上传文件名一致）：
+        //   manager-dropin-release.apk（Drop-In） / manager-shizukux-release.apk（标准版） / compat-release.apk（Compat-Hub）
+        // gh CLI 的 #label 只是 display label，不改资产文件名，所以匹配按实际文件名来。
+        val targetAsset = if (isDropIn) {
+            apkAssets.firstOrNull {
+                val name = it.getString("name")
+                name.contains("dropin", ignoreCase = true)
+            }
+        } else {
+            apkAssets.firstOrNull {
+                val name = it.getString("name")
+                !name.contains("dropin", ignoreCase = true)
+                        && !name.contains("compat", ignoreCase = true)
+            }
+        } ?: apkAssets.firstOrNull()
+
+        // Build multi-source download URL list (ordered by priority).
+        // UpdateManager will probe each mirror and use the first reachable one.
+        // Priority: Cloudflare CDN → GitHub direct → Tencent COS (last resort).
+        val assetName = targetAsset?.getString("name") ?: return CheckResult.UpToDate
+        val githubUrl = targetAsset.optString("browser_download_url")
+        val downloadUrls = buildList {
+            add("${ProjectLinks.MIRROR_CF}/$assetName")
+            if (githubUrl.isNotBlank()) add(githubUrl)
+            add("${ProjectLinks.MIRROR_COS}/$assetName")
+        }
+
+        val versionCode = parseVersionCode(versionName)
+
+        return if (isNewerVersion(versionName, BuildConfig.VERSION_NAME)) {
+            Timber.tag(TAG).d("Update available: $versionName (channel=$channel, current=${BuildConfig.VERSION_NAME})")
+            CheckResult.UpdateAvailable(
+                UpdateInfo(versionName, versionCode, releaseNotes, downloadUrls, publishedAt, isPrerelease)
+            )
+        } else {
+            Timber.tag(TAG).d("Already on latest ($channel): ${BuildConfig.VERSION_NAME}")
+            CheckResult.UpToDate
+        }
+    }
+
+    /**
+     * Fetches the release notes body for a specific tag (e.g. "v13.6.0.r2162") — used by the
+     * in-app changelog dialog to show what changed in the version the user just updated to,
+     * as opposed to [checkForUpdate]'s "latest" which may have moved on by the time they open
+     * the app. Returns null on any failure (offline, tag not found, etc.) so callers can fall
+     * back to a generic message instead of failing the whole dialog.
+     */
+    suspend fun fetchReleaseNotesForTag(tag: String): String? = withContext(Dispatchers.IO) {
+        try {
+            val json = fetchJson("$RELEASES_URL/tags/$tag") as? JSONObject ?: return@withContext null
+            json.optString("body", "").takeIf { it.isNotBlank() }
+        } catch (e: Exception) {
+            Timber.tag(TAG).w(e, "Failed to fetch release notes for tag $tag")
+            null
+        }
+    }
+
+    /**
+     * Reads GitHub's public Atom feed as a last-resort fallback.
+     * Served from github.com CDN — a different network path than api.github.com.
+     * Can tell us whether an update exists but cannot provide a direct APK URL.
+     */
+    private fun checkViaAtomFeed(): UpdateInfo? {
+        val connection = (URL(ATOM_URL).openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = CONNECT_TIMEOUT_MS
+            readTimeout = READ_TIMEOUT_MS
+            setRequestProperty("User-Agent", "ShizukuX/${BuildConfig.VERSION_NAME}")
+        }
+        try {
+            if (connection.responseCode != HttpURLConnection.HTTP_OK) return null
+
+            val parser = Xml.newPullParser()
+            parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
+            parser.setInput(connection.inputStream, null)
+
+            var eventType = parser.eventType
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                if (eventType == XmlPullParser.START_TAG && parser.name == "link") {
+                    val href = parser.getAttributeValue(null, "href") ?: ""
+                    if (href.contains("/releases/tag/")) {
+                        val tagName = href.substringAfterLast("/releases/tag/")
+                        val versionName = tagName.removePrefix("v")
+                        val versionCode = parseVersionCode(versionName)
+                        if (isNewerVersion(versionName, BuildConfig.VERSION_NAME)) {
+                            Timber.tag(TAG).d("Atom fallback: update available $versionName")
+                            return UpdateInfo(
+                                versionName = versionName,
+                                versionCode = versionCode,
+                                releaseNotes = "",
+                                downloadUrls = emptyList(),
+                                publishedAt = "",
+                                isPrerelease = versionName.contains("beta", ignoreCase = true)
+                                        || versionName.contains("alpha", ignoreCase = true),
+                                requiresManualDownload = true
+                            )
+                        }
+                        return null // First release entry checked — already up to date
+                    }
+                }
+                eventType = parser.next()
+            }
+            return null
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    private fun Exception.isNetworkError(): Boolean =
+        this is UnknownHostException || this is SocketTimeoutException ||
+        this is ConnectException || this is SSLException || this is IOException
+
+    private fun isPrereleaseChannel(channel: String): Boolean =
+        channel.equals("dev", ignoreCase = true) || channel.equals("beta", ignoreCase = true)
+
+    private fun fetchJson(urlString: String): Any? {
+        val connection = (URL(urlString).openConnection() as HttpURLConnection).apply {
+            requestMethod = "GET"
+            connectTimeout = CONNECT_TIMEOUT_MS
+            readTimeout = READ_TIMEOUT_MS
+            setRequestProperty("Accept", "application/vnd.github.v3+json")
+            setRequestProperty("User-Agent", "ShizukuX/${BuildConfig.VERSION_NAME}")
+        }
+        try {
+            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+                Timber.tag(TAG).w("HTTP ${connection.responseCode} from $urlString")
+                return null
+            }
+            val body = connection.inputStream.bufferedReader().use { it.readText() }
+            return if (body.trimStart().startsWith("[")) JSONArray(body) else JSONObject(body)
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    /** Extracts the build number from "13.6.0.r1488" → 1488, or "13.6.0.k2007" → 2007 */
+    fun parseVersionCode(versionName: String): Int = try {
+        """\.\b[kr](\d+)\b""".toRegex().find(versionName)?.groupValues?.get(1)?.toIntOrNull() ?: 0
+    } catch (e: Exception) {
+        0
+    }
+
+    /**
+     * Parses a version stamp for *ordered* comparison: "13.7.0.k2002" →
+     * VersionStamp(13, 7, 0, 'k', 2002). Comparison is decided by the numeric mainline
+     * triple FIRST and only then by the k/r suffix, so a newer mainline (13.7.0) is never
+     * reported as older than an old mainline (13.6.0.k2014) just because its suffix digit
+     * happens to be smaller — the historical "downgrade" bug where users on 13.7.0 were
+     * offered 13.6.0 as an update. Within the same mainline, k/k and r/r compare by digit;
+     * a mixed k-vs-r pair is resolved by channel preference (stable r supersedes dev k)
+     * because r and k counters are independent (13.6.0.r2002 was re-tagged from
+     * 13.6.0.k2014 with the same versionCode). Falls back to the old digit-only comparison
+     * when the triple cannot be parsed (e.g. plain "13.6.0").
+     */
+    private fun isNewerVersion(versionName: String, currentVersionName: String): Boolean {
+        val candidate = parseVersionStamp(versionName)
+        val current = parseVersionStamp(currentVersionName)
+        if (candidate != null && current != null) {
+            return candidate > current
+        }
+        return parseVersionCode(versionName) > parseVersionCode(currentVersionName)
+    }
+
+    private data class VersionStamp(
+        val major: Int,
+        val minor: Int,
+        val patch: Int,
+        val suffixType: Char?,
+        val suffix: Int
+    ) : Comparable<VersionStamp> {
+        override fun compareTo(other: VersionStamp): Int {
+            compareValues(major, other.major).let { if (it != 0) return it }
+            compareValues(minor, other.minor).let { if (it != 0) return it }
+            compareValues(patch, other.patch).let { if (it != 0) return it }
+            val mine = suffixType
+            val theirs = other.suffixType
+            if (mine == null && theirs == null) return 0
+            if (mine == null) return -1
+            if (theirs == null) return 1
+            if (mine == theirs) return suffix.compareTo(other.suffix)
+            // Mixed k/r on the same mainline: a released build supersedes a dev build
+            // regardless of the (independent) counters.
+            return if (mine.equals('r', ignoreCase = true)) 1 else -1
+        }
+    }
+
+    private fun parseVersionStamp(versionName: String): VersionStamp? = try {
+        val triple = Regex("""(\d+)\.(\d+)\.(\d+)""").find(versionName) ?: return null
+        val (major, minor, patch) = triple.destructured
+        val suffix = Regex("""\.([kr])(\d+)""", RegexOption.IGNORE_CASE).find(versionName)
+        VersionStamp(
+            major.toInt(),
+            minor.toInt(),
+            patch.toInt(),
+            suffix?.groupValues?.get(1)?.firstOrNull(),
+            suffix?.groupValues?.get(2)?.toIntOrNull() ?: 0
+        )
+    } catch (e: Exception) {
+        null
+    }
+
+    // ------------------------------------------------------------------------------------
+    // Per-installed-version update content cache.
+    // The About screen shows the release notes of the version actually installed (not the
+    // latest release, which may have moved on). Notes are cached locally per version; a
+    // background sync periodically re-checks the upstream release body for that exact tag and
+    // refreshes the cache when it differs (e.g. the maintainer edited the notes after release).
+    // ------------------------------------------------------------------------------------
+    private const val CACHE_PREF_NAME = "update_content_cache"
+    private const val CACHE_KEY_VERSION = "cached_version"
+    private const val CACHE_KEY_CONTENT = "cached_content"
+    private const val CACHE_KEY_TIME = "cached_time"
+    private const val CACHE_REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000L // 6 h
+
+    data class CachedUpdateContent(val version: String, val content: String, val cachedAt: Long)
+
+    /** Extracts the installed version segment, e.g. "ShizukuX 13.6.0.k2007" → "13.6.0.k2007". */
+    fun currentVersionPart(): String? =
+        Regex("""\d+\.\d+\.\d+\.[kr]\d+""").find(BuildConfig.VERSION_NAME)?.value
+
+    /** The GitHub Release tag for the installed version, e.g. "v13.6.0.k2007". */
+    fun currentVersionTag(): String? = currentVersionPart()?.let { "v$it" }
+
+    private fun cachePrefs(context: android.content.Context) =
+        context.getSharedPreferences(CACHE_PREF_NAME, android.content.Context.MODE_PRIVATE)
+
+    fun getCachedUpdateContent(context: android.content.Context): CachedUpdateContent? {
+        val p = cachePrefs(context)
+        val version = p.getString(CACHE_KEY_VERSION, null) ?: return null
+        val content = p.getString(CACHE_KEY_CONTENT, null) ?: return null
+        return CachedUpdateContent(version, content, p.getLong(CACHE_KEY_TIME, 0))
+    }
+
+    fun saveCachedUpdateContent(context: android.content.Context, version: String, content: String) {
+        cachePrefs(context).edit()
+            .putString(CACHE_KEY_VERSION, version)
+            .putString(CACHE_KEY_CONTENT, content)
+            .putLong(CACHE_KEY_TIME, System.currentTimeMillis())
+            .apply()
+    }
+
+    /**
+     * Background sniff: re-fetch the upstream release notes for the *installed* version and sync
+     * the local cache when they differ. Does nothing while the cache is fresh (same version, less
+     * than [CACHE_REFRESH_INTERVAL_MS] old).
+     */
+    suspend fun syncCachedUpdateContentIfNeeded(context: android.content.Context) {
+        val version = currentVersionPart() ?: return
+        val cached = getCachedUpdateContent(context)
+        if (cached != null && cached.version == version &&
+            System.currentTimeMillis() - cached.cachedAt < CACHE_REFRESH_INTERVAL_MS) return
+        val fresh = fetchReleaseNotesForTag(currentVersionTag() ?: return) ?: return
+        if (cached?.content != fresh) {
+            saveCachedUpdateContent(context, version, fresh)
+            Timber.tag(TAG).d("Synced cached update content for $version")
+        }
+    }
+
+    /**
+     * Returns the update content to show for the *installed* version: the fresh cache when
+     * available, otherwise fetches upstream and refreshes the cache (falling back to an old cache
+     * of the same version if the network is unavailable).
+     */
+    suspend fun getUpdateContentForCurrentVersion(context: android.content.Context): String? {
+        val version = currentVersionPart() ?: return null
+        val cached = getCachedUpdateContent(context)
+        if (cached != null && cached.version == version &&
+            System.currentTimeMillis() - cached.cachedAt < CACHE_REFRESH_INTERVAL_MS) {
+            return cached.content
+        }
+        val fresh = fetchReleaseNotesForTag(currentVersionTag() ?: return null)
+        val content = fresh?.takeIf { it.isNotBlank() }
+            ?: cached?.takeIf { it.version == version }?.content
+        if (fresh != null) saveCachedUpdateContent(context, version, fresh)
+        return content
+    }
+
+    fun formatPublishedDate(dateString: String): String = try {
+        val input = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
+            .apply { timeZone = TimeZone.getTimeZone("UTC") }
+        SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(input.parse(dateString) as Date)
+    } catch (e: Exception) {
+        dateString
+    }
+}

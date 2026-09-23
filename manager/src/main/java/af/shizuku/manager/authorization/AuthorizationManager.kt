@@ -1,0 +1,150 @@
+package af.shizuku.manager.authorization
+
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
+import android.os.Parcel
+import af.shizuku.manager.BuildConfig
+import af.shizuku.manager.Manifest
+import af.shizuku.manager.utils.Logger.LOGGER
+import af.shizuku.manager.utils.ShizukuSystemApis
+import rikka.shizuku.server.ServerConstants
+import rikka.parcelablelist.ParcelableListSlice
+import rikka.shizuku.Shizuku
+import java.util.*
+
+object AuthorizationManager {
+
+    private const val FLAG_ALLOWED = 1 shl 1
+    private const val FLAG_DENIED = 1 shl 2
+    private const val MASK_PERMISSION = FLAG_ALLOWED or FLAG_DENIED
+
+    private fun getApplications(userId: Int): List<PackageInfo> {
+        val data = Parcel.obtain()
+        val reply = Parcel.obtain()
+        return try {
+            data.writeInterfaceToken("moe.shizuku.server.IShizukuService")
+            data.writeInt(userId)
+            val binder = Shizuku.getBinder()
+                ?: throw IllegalStateException("Shizuku binder not available")
+            try {
+                binder.transact(ServerConstants.BINDER_TRANSACTION_getApplications, data, reply, 0)
+            } catch (e: Throwable) {
+                throw RuntimeException(e)
+            }
+            reply.readException()
+            @Suppress("UNCHECKED_CAST")
+            (ParcelableListSlice.CREATOR.createFromParcel(reply) as ParcelableListSlice<PackageInfo>).list
+                ?: emptyList()
+        } finally {
+            reply.recycle()
+            data.recycle()
+        }
+    }
+
+    fun getPackages(): List<PackageInfo> {
+        val packages: MutableList<PackageInfo> = ArrayList()
+        try {
+            if (Shizuku.isPreV11() || (Shizuku.getVersion() == 11 && Shizuku.getServerPatchVersion() < 3)) {
+                val allPackages: MutableList<PackageInfo> = ArrayList()
+                for (user in ShizukuSystemApis.getUsers(useCache = false)) {
+                    try {
+                        allPackages.addAll(ShizukuSystemApis.getInstalledPackages((PackageManager.GET_META_DATA or PackageManager.GET_PERMISSIONS or PackageManager.MATCH_ALL).toLong(), user.id))
+                    } catch (e: Throwable) {
+                        LOGGER.w(e, "getInstalledPackages")
+                    }
+                }
+                for (pi in allPackages) {
+                    if (BuildConfig.APPLICATION_ID == pi.packageName) continue
+                    val perms = pi.requestedPermissions
+                    if (perms?.contains(Manifest.permission.API_V23) != true &&
+                        perms?.contains(ServerConstants.PERMISSION_LEGACY) != true &&
+                        perms?.contains(ServerConstants.PERMISSION_ORIGINAL) != true) continue
+                    packages.add(pi)
+                }
+            } else {
+                packages.addAll(getApplications(-1))
+            }
+        } catch (e: Throwable) {
+            LOGGER.w(e, "getPackages failed, possibly due to ghost stock server")
+        }
+
+        // 外部中转授权（Scene）目标：即使未声明 Shizuku 权限，只要已通过「外部中转授权」
+        // 写入授权 flags，也显示在已授权应用列表中。
+        try {
+            val scenePkg = "com.omarea.vtools"
+            if (packages.none { it.packageName == scenePkg }) {
+                outer@ for (user in ShizukuSystemApis.getUsers(useCache = false)) {
+                    try {
+                        val pkgs = ShizukuSystemApis.getInstalledPackages(PackageManager.MATCH_ALL.toLong(), user.id)
+                        val pi = pkgs.firstOrNull { it.packageName == scenePkg } ?: continue
+                        val uid = pi.applicationInfo?.uid ?: continue
+                        if (granted(scenePkg, uid)) {
+                            packages.add(pi)
+                        }
+                        break@outer
+                    } catch (e: Throwable) {
+                        continue
+                    }
+                }
+            }
+        } catch (e: Throwable) {
+            LOGGER.w(e, "attach Scene package to list failed")
+        }
+        return packages
+    }
+
+    fun isPlusApiSupported(pi: PackageInfo): Boolean {
+        return pi.applicationInfo?.metaData?.getBoolean("xyz.shizuku.extra.API") == true
+    }
+
+    fun granted(packageName: String, uid: Int): Boolean {
+        return try {
+            // Retry pingBinder up to 3x with 200 ms back-off: a momentary binder drop
+            // (common right after a consent-action broadcast wakes the process) used to
+            // cause granted() to return false and re-prompt the user on every new rish
+            // invocation even though AuthorizationManager.grant() had already stored the
+            // grant for that UID (#398).
+            var binderAlive = Shizuku.pingBinder()
+            if (!binderAlive) {
+                repeat(3) {
+                    if (!binderAlive) {
+                        Thread.sleep(200)
+                        binderAlive = Shizuku.pingBinder()
+                    }
+                }
+            }
+            if (!binderAlive) return false
+            if (Shizuku.isPreV11()) {
+                ShizukuSystemApis.checkPermission(Manifest.permission.API_V23, packageName, uid / 100000) == PackageManager.PERMISSION_GRANTED
+            } else {
+                (Shizuku.getFlagsForUid(uid, MASK_PERMISSION) and FLAG_ALLOWED) == FLAG_ALLOWED
+            }
+        } catch (e: Throwable) {
+            false
+        }
+    }
+
+    fun grant(packageName: String, uid: Int) {
+        try {
+            if (Shizuku.isPreV11()) {
+                ShizukuSystemApis.grantRuntimePermission(packageName, Manifest.permission.API_V23, uid / 100000)
+            } else {
+                Shizuku.updateFlagsForUid(uid, MASK_PERMISSION, FLAG_ALLOWED)
+            }
+        } catch (e: Throwable) {
+            // Ignore error from incompatible server
+        }
+    }
+
+    fun revoke(packageName: String, uid: Int) {
+        try {
+            if (Shizuku.isPreV11()) {
+                ShizukuSystemApis.revokeRuntimePermission(packageName, Manifest.permission.API_V23, uid / 100000)
+            } else {
+                Shizuku.updateFlagsForUid(uid, MASK_PERMISSION, 0)
+            }
+        } catch (e: Throwable) {
+            // Ignore error from incompatible server
+        }
+    }
+}

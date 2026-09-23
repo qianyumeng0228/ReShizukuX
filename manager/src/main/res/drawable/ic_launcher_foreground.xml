@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ShizukuX branded launcher foreground: full-bleed ShizukuX artwork
+     (deep-blue square + white fox + purple X). Replaces upstream Shizuku
+     cat+hexagon art and the legacy '+' badge. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@mipmap/ic_launcher_foreground_base" />
+</layer-list>

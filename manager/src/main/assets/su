@@ -1,0 +1,44 @@
+#!/system/bin/sh
+
+# ShizukuX SU Bridge (su wrapper)
+# Allows legacy root apps to function via ShizukuX privileges.
+# Drop-in replacement for /system/bin/su for apps that support custom paths.
+
+BASEDIR=$(dirname "$0")
+
+# Do NOT hardcode RISH_APPLICATION_ID here. rish must authenticate as the *calling* app (the one
+# that ran this su), because the ShizukuX server rejects a package that doesn't belong to the
+# calling UID. rish derives the calling app's package from the process tree when it's unset, so a
+# hardcoded value here (previously af.shizuku.plus.api) would break the bridge for every app except
+# ShizukuX itself. Leave it unset and let rish resolve it — unless the caller already exported one.
+
+# Parse su-style arguments so more apps' invocation styles work:
+#   su                      -> interactive shell
+#   su -c "cmd"             -> run cmd
+#   su -c cmd arg1 arg2     -> run "cmd arg1 arg2" (everything after -c, not just the first token)
+#   su root -c "cmd" / su 0 -c "cmd" / su <user> -c "cmd"  -> user specifier ignored (rish is shell-level)
+#   su --mount-master -c "cmd" / su -s /bin/sh -c "cmd"    -> Magisk-style flags ignored
+COMMAND=""
+HAS_COMMAND=0
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -c|--command|--)
+            shift
+            COMMAND="$*"      # everything after -c is the command (real su semantics)
+            HAS_COMMAND=1
+            break
+            ;;
+        *)
+            # Positional user specifier (root/0/<name>) or a flag we can't map (-mm, -p, -s ...):
+            # skip it. rish always runs at Shizuku's shell/ADB privilege regardless.
+            shift
+            ;;
+    esac
+done
+
+if [ "$HAS_COMMAND" = "1" ] && [ -n "$COMMAND" ]; then
+    exec sh "$BASEDIR/rish" -c "$COMMAND"
+else
+    # No command (e.g. `su`, `su root`) -> interactive rish shell.
+    exec sh "$BASEDIR/rish"
+fi

@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="ThemeOverlay"/>
+    <style name="ThemeOverlay.Accent" parent=""/>
+
+    <style name="ThemeOverlay.Black">
+        <item name="android:colorPrimary">@android:color/black</item>
+        <item name="android:colorPrimaryDark">@android:color/black</item>
+        <item name="android:colorBackground">@android:color/black</item>
+        <item name="colorSurface">@android:color/black</item>
+        <item name="colorSurfaceContainerLow">?colorSurfaceContainerLowest</item>
+        <!-- Cards/settings groups use colorSurfaceContainerHigh (see home_item_container.xml,
+             M3ECardItemDecoration) - dial it down one tone step so AMOLED cards stay close to
+             true black instead of inheriting the base theme's full-contrast High tone. -->
+        <item name="colorSurfaceContainerHigh">?colorSurfaceContainer</item>
+        <!-- shape_edit_control_background.xml (home-card edit-mode drag/remove chip) uses
+             Highest - same one-step-down treatment. This resolves through the High remap above
+             (Android's ?attr resolution is against the fully merged theme, not each item's
+             pre-overlay value), so Highest ties with High/Container here, same as Low already
+             ties with Lowest above. That's fine for this chip specifically: both icons inside it
+             (ic_drag_handle, ic_close_24) are tinted independently via colorControlNormal/
+             colorError, not derived from this background, so they stay visible even if the
+             chip's own background blends into the card behind it. -->
+        <item name="colorSurfaceContainerHighest">?colorSurfaceContainerHigh</item>
+    </style>
+
+    <style name="ThemeOverlay.DynamicColors.Light" parent="ThemeOverlay.Material3.DynamicColors.Light.Shizuku"/>
+
+    <style name="ThemeOverlay.DynamicColors.Dark" parent="ThemeOverlay.Material3.DynamicColors.Dark.Shizuku"/>
+
+    <!-- Violet Accent Overlay -->
+    <style name="ThemeOverlay.Accent.Violet">
+        <item name="colorPrimary">#7B1FA2</item>
+        <item name="colorPrimaryContainer">#F3E5F5</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorOnPrimaryContainer">#4A148C</item>
+    </style>
+    <style name="ThemeOverlay.Accent.Violet.Dark">
+        <item name="colorPrimary">#E040FB</item>
+        <item name="colorPrimaryContainer">#4A148C</item>
+        <item name="colorOnPrimary">#000000</item>
+        <item name="colorOnPrimaryContainer">#F3E5F5</item>
+    </style>
+
+    <!-- Green Accent Overlay -->
+    <style name="ThemeOverlay.Accent.Green">
+        <item name="colorPrimary">#00796B</item>
+        <item name="colorPrimaryContainer">#E0F2F1</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorOnPrimaryContainer">#004D40</item>
+    </style>
+    <style name="ThemeOverlay.Accent.Green.Dark">
+        <item name="colorPrimary">#64FFDA</item>
+        <item name="colorPrimaryContainer">#004D40</item>
+        <item name="colorOnPrimary">#000000</item>
+        <item name="colorOnPrimaryContainer">#E0F2F1</item>
+    </style>
+
+    <!-- Crimson Accent Overlay -->
+    <style name="ThemeOverlay.Accent.Crimson">
+        <item name="colorPrimary">#C2185B</item>
+        <item name="colorPrimaryContainer">#FCE4EC</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorOnPrimaryContainer">#880E4F</item>
+    </style>
+    <style name="ThemeOverlay.Accent.Crimson.Dark">
+        <item name="colorPrimary">#FF4081</item>
+        <item name="colorPrimaryContainer">#880E4F</item>
+        <item name="colorOnPrimary">#000000</item>
+        <item name="colorOnPrimaryContainer">#FCE4EC</item>
+    </style>
+
+    <!-- Ocean Accent Overlay -->
+    <style name="ThemeOverlay.Accent.Ocean">
+        <item name="colorPrimary">#0288D1</item>
+        <item name="colorPrimaryContainer">#E1F5FE</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorOnPrimaryContainer">#01579B</item>
+    </style>
+    <style name="ThemeOverlay.Accent.Ocean.Dark">
+        <item name="colorPrimary">#40C4FF</item>
+        <item name="colorPrimaryContainer">#01579B</item>
+        <item name="colorOnPrimary">#000000</item>
+        <item name="colorOnPrimaryContainer">#E1F5FE</item>
+    </style>
+
+    <!--
+        Shape Style overlays (settings key "shape_style", gated on "expressive_shapes").
+        "zen" (the default) applies neither - it keeps whatever corner scale the base
+        Theme.Material3Expressive.* theme already provides, preserving today's look.
+        Standard Material 3 corner-radius scale reference: xs=4dp, s=8dp, m=12dp, l=16dp, xl=28dp.
+    -->
+    <style name="ShapeAppearance.Modern.Corner.ExtraSmall" parent="ShapeAppearance.Material3.Corner.ExtraSmall">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">4dp</item>
+    </style>
+    <style name="ShapeAppearance.Modern.Corner.Small" parent="ShapeAppearance.Material3.Corner.Small">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+    <style name="ShapeAppearance.Modern.Corner.Medium" parent="ShapeAppearance.Material3.Corner.Medium">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+    <style name="ShapeAppearance.Modern.Corner.Large" parent="ShapeAppearance.Material3.Corner.Large">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+    <style name="ShapeAppearance.Modern.Corner.ExtraLarge" parent="ShapeAppearance.Material3.Corner.ExtraLarge">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">28dp</item>
+    </style>
+    <style name="ThemeOverlay.Shape" parent=""/>
+
+    <style name="ThemeOverlay.Shape.Modern">
+        <item name="shapeAppearanceCornerExtraSmall">@style/ShapeAppearance.Modern.Corner.ExtraSmall</item>
+        <item name="shapeAppearanceCornerSmall">@style/ShapeAppearance.Modern.Corner.Small</item>
+        <item name="shapeAppearanceCornerMedium">@style/ShapeAppearance.Modern.Corner.Medium</item>
+        <item name="shapeAppearanceCornerLarge">@style/ShapeAppearance.Modern.Corner.Large</item>
+        <item name="shapeAppearanceCornerExtraLarge">@style/ShapeAppearance.Modern.Corner.ExtraLarge</item>
+    </style>
+
+    <!-- Classic (Material 2): flatter, boxier corners, no "Full"/pill shapes. -->
+    <style name="ShapeAppearance.Classic.Corner.ExtraSmall" parent="ShapeAppearance.Material3.Corner.ExtraSmall">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">0dp</item>
+    </style>
+    <style name="ShapeAppearance.Classic.Corner.Small" parent="ShapeAppearance.Material3.Corner.Small">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">4dp</item>
+    </style>
+    <style name="ShapeAppearance.Classic.Corner.Medium" parent="ShapeAppearance.Material3.Corner.Medium">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">4dp</item>
+    </style>
+    <style name="ShapeAppearance.Classic.Corner.Large" parent="ShapeAppearance.Material3.Corner.Large">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+    <style name="ShapeAppearance.Classic.Corner.ExtraLarge" parent="ShapeAppearance.Material3.Corner.ExtraLarge">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+    <style name="ThemeOverlay.Shape.Classic">
+        <item name="shapeAppearanceCornerExtraSmall">@style/ShapeAppearance.Classic.Corner.ExtraSmall</item>
+        <item name="shapeAppearanceCornerSmall">@style/ShapeAppearance.Classic.Corner.Small</item>
+        <item name="shapeAppearanceCornerMedium">@style/ShapeAppearance.Classic.Corner.Medium</item>
+        <item name="shapeAppearanceCornerLarge">@style/ShapeAppearance.Classic.Corner.Large</item>
+        <item name="shapeAppearanceCornerExtraLarge">@style/ShapeAppearance.Classic.Corner.ExtraLarge</item>
+    </style>
+
+    <!-- Organic (Squircle): generously rounded, continuous-looking corners throughout. -->
+    <style name="ShapeAppearance.Squircle.Corner.ExtraSmall" parent="ShapeAppearance.Material3.Corner.ExtraSmall">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+    <style name="ShapeAppearance.Squircle.Corner.Small" parent="ShapeAppearance.Material3.Corner.Small">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">16dp</item>
+    </style>
+    <style name="ShapeAppearance.Squircle.Corner.Medium" parent="ShapeAppearance.Material3.Corner.Medium">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">20dp</item>
+    </style>
+    <style name="ShapeAppearance.Squircle.Corner.Large" parent="ShapeAppearance.Material3.Corner.Large">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">28dp</item>
+    </style>
+    <style name="ShapeAppearance.Squircle.Corner.ExtraLarge" parent="ShapeAppearance.Material3.Corner.ExtraLarge">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">36dp</item>
+    </style>
+    <style name="ThemeOverlay.Shape.Squircle">
+        <item name="shapeAppearanceCornerExtraSmall">@style/ShapeAppearance.Squircle.Corner.ExtraSmall</item>
+        <item name="shapeAppearanceCornerSmall">@style/ShapeAppearance.Squircle.Corner.Small</item>
+        <item name="shapeAppearanceCornerMedium">@style/ShapeAppearance.Squircle.Corner.Medium</item>
+        <item name="shapeAppearanceCornerLarge">@style/ShapeAppearance.Squircle.Corner.Large</item>
+        <item name="shapeAppearanceCornerExtraLarge">@style/ShapeAppearance.Squircle.Corner.ExtraLarge</item>
+    </style>
+
+    <!-- Cut (Angular): M3 Expressive's "Embrace Tension" principle (mixing sharp/angular forms
+         with soft/rounded ones) via the CUT corner family (a stable, non-experimental
+         ShapeAppearance attribute) instead of ROUNDED - a genuinely different silhouette from the
+         other three styles, not just a different radius on the same rounded-rect shape. Google's
+         actual M3 Expressive polygon shape library (MaterialShapes - cookie/sunny/clover/pill,
+         see androidx.compose.material3.MaterialShapes) can't be adopted here: it's a Compose-only
+         Canvas/RoundedPolygon renderer with no equivalent in the ShapeAppearanceModel/
+         MaterialCardView system this app's (mostly XML View-based) UI uses, and it's still
+         @ExperimentalMaterial3ExpressiveApi (material3 1.5.0-alpha) besides. -->
+    <style name="ShapeAppearance.Cut.Corner.ExtraSmall" parent="ShapeAppearance.Material3.Corner.ExtraSmall">
+        <item name="cornerFamily">cut</item>
+        <item name="cornerSize">4dp</item>
+    </style>
+    <style name="ShapeAppearance.Cut.Corner.Small" parent="ShapeAppearance.Material3.Corner.Small">
+        <item name="cornerFamily">cut</item>
+        <item name="cornerSize">8dp</item>
+    </style>
+    <style name="ShapeAppearance.Cut.Corner.Medium" parent="ShapeAppearance.Material3.Corner.Medium">
+        <item name="cornerFamily">cut</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+    <style name="ShapeAppearance.Cut.Corner.Large" parent="ShapeAppearance.Material3.Corner.Large">
+        <item name="cornerFamily">cut</item>
+        <item name="cornerSize">18dp</item>
+    </style>
+    <style name="ShapeAppearance.Cut.Corner.ExtraLarge" parent="ShapeAppearance.Material3.Corner.ExtraLarge">
+        <item name="cornerFamily">cut</item>
+        <item name="cornerSize">28dp</item>
+    </style>
+    <style name="ThemeOverlay.Shape.Cut">
+        <item name="shapeAppearanceCornerExtraSmall">@style/ShapeAppearance.Cut.Corner.ExtraSmall</item>
+        <item name="shapeAppearanceCornerSmall">@style/ShapeAppearance.Cut.Corner.Small</item>
+        <item name="shapeAppearanceCornerMedium">@style/ShapeAppearance.Cut.Corner.Medium</item>
+        <item name="shapeAppearanceCornerLarge">@style/ShapeAppearance.Cut.Corner.Large</item>
+        <item name="shapeAppearanceCornerExtraLarge">@style/ShapeAppearance.Cut.Corner.ExtraLarge</item>
+    </style>
+
+    <!--
+        Expressive Shapes toggle (settings key "expressive_shapes"), when turned OFF: flattens
+        the app back to plain Material3 (non-Expressive) corner treatment regardless of shape_style,
+        since shape_style's own preference entry is disabled/irrelevant while this is off.
+    -->
+    <style name="ThemeOverlay.Shapes.Standard" parent="ThemeOverlay.Shape.Modern"/>
+
+    <!--
+        One UI style theme overlay (settings key "oneui_theme_enabled").
+        Deliberately structure-only, not color: extra-large rounded corners, heavier typography,
+        and One UI-style preference padding - the app's existing dynamic-color/custom-accent
+        toggle already covers color (and on One UI 4.1+ that toggle already tracks the device's
+        real Monet/wallpaper color, since Samsung's dynamic theming is built on the same
+        system_accent1/2/3 tokens). A separate fixed "Galaxy Blue" override here would fight that
+        instead of composing with it, so this overlay sets no color attrs at all.
+    -->
+    <style name="ShapeAppearance.OneUI.Corner.ExtraSmall" parent="ShapeAppearance.Material3.Corner.ExtraSmall">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">6dp</item>
+    </style>
+    <style name="ShapeAppearance.OneUI.Corner.Small" parent="ShapeAppearance.Material3.Corner.Small">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">12dp</item>
+    </style>
+    <style name="ShapeAppearance.OneUI.Corner.Medium" parent="ShapeAppearance.Material3.Corner.Medium">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">18dp</item>
+    </style>
+    <style name="ShapeAppearance.OneUI.Corner.Large" parent="ShapeAppearance.Material3.Corner.Large">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">26dp</item>
+    </style>
+    <style name="ShapeAppearance.OneUI.Corner.ExtraLarge" parent="ShapeAppearance.Material3.Corner.ExtraLarge">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">36dp</item>
+    </style>
+
+    <style name="ThemeOverlay.OneUI" parent="">
+        <!-- One UI signature extra-large corners -->
+        <item name="shapeAppearanceCornerExtraSmall">@style/ShapeAppearance.OneUI.Corner.ExtraSmall</item>
+        <item name="shapeAppearanceCornerSmall">@style/ShapeAppearance.OneUI.Corner.Small</item>
+        <item name="shapeAppearanceCornerMedium">@style/ShapeAppearance.OneUI.Corner.Medium</item>
+        <item name="shapeAppearanceCornerLarge">@style/ShapeAppearance.OneUI.Corner.Large</item>
+        <item name="shapeAppearanceCornerExtraLarge">@style/ShapeAppearance.OneUI.Corner.ExtraLarge</item>
+        <!-- Bolder headline typography (One UI "SamsungOne" look) -->
+        <item name="textAppearanceHeadlineLarge">@style/TextAppearance.OneUI.HeadlineLarge</item>
+        <item name="textAppearanceTitleLarge">@style/TextAppearance.OneUI.TitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/TextAppearance.OneUI.TitleMedium</item>
+        <!-- Preference screens: bold category headers + One UI item padding. The rikka library
+             already sets listPreferredItemPadding* to 24dp/16dp and category title color to
+             ?colorPrimary (whatever that resolves to - dynamic/accent/default), so those are
+             free; only the text style (size/weight/spacing) is set here. -->
+        <item name="preferenceTheme">@style/AppTheme.PreferenceThemeOverlay.OneUI</item>
+        <!-- Explicit padding assertion (rikka's ThemeOverlay.Rikka.Material3.Preference
+             sets these but isn't guaranteed to be applied when we apply at overlay level) -->
+        <item name="android:listPreferredItemPaddingStart">24dp</item>
+        <item name="android:listPreferredItemPaddingEnd">16dp</item>
+    </style>
+
+    <style name="TextAppearance.OneUI.HeadlineLarge" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="android:textSize">38sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+    <style name="TextAppearance.OneUI.TitleLarge" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:textSize">26sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+    <style name="TextAppearance.OneUI.TitleMedium" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:textSize">17sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+</resources>

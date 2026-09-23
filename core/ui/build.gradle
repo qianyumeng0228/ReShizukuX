@@ -1,0 +1,47 @@
+plugins {
+    id "com.android.library"
+    id "org.jetbrains.kotlin.plugin.compose" version "2.2.20"
+}
+
+android {
+    namespace = "af.shizuku.core.ui"
+    compileSdk = 35
+
+    defaultConfig {
+        minSdk = 24
+    }
+
+    buildFeatures {
+        viewBinding = true
+        compose = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "2.2.20"
+    }
+}
+
+dependencies {
+    implementation project(":common")
+    
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.appcompat
+    implementation libs.androidx.fragment.ktx
+    implementation libs.material
+    implementation libs.timber
+    
+    api libs.rikkax.core
+    api libs.rikkax.material
+    api libs.rikkax.appcompat
+    api libs.rikkax.layoutinflater
+    api libs.rikkax.compatibility
+
+    api platform(libs.compose.bom)
+    api libs.compose.ui
+    api libs.compose.ui.graphics
+    api libs.compose.ui.tooling.preview
+    api libs.compose.material3
+    api libs.androidx.activity.compose
+    api libs.coil.compose
+    debugApi libs.compose.ui.tooling
+}

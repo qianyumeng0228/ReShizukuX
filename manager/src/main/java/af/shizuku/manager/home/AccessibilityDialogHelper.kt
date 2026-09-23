@@ -1,0 +1,152 @@
+package af.shizuku.manager.home
+
+import android.Manifest.permission.WRITE_SECURE_SETTINGS
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import android.provider.Settings
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.TextUtils
+import android.text.style.TypefaceSpan
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import rikka.core.content.asActivity
+import timber.log.Timber
+import af.shizuku.manager.R
+import af.shizuku.manager.adb.AdbPairingAccessibilityService
+import af.shizuku.manager.utils.SettingsHelper
+import af.shizuku.manager.utils.SettingsPage
+
+fun Context.showAccessibilityDialog() {
+    // The accessibility dialogs are MaterialAlertDialogBuilders, which require an Activity
+    // theme (Material's ThemeEnforcement checks the AppCompat isLightTheme attribute).
+    // Building them with an application/plain context crashes with "The style on this component
+    // requires your app theme to be Theme.AppCompat" (observed on k2012: 一键启动 → 启用).
+    // Resolve the host Activity first and refuse to show when none is available.
+    val host = asActivity<android.app.Activity>() ?: return
+    host.run {
+        val hasWriteSecureSettings = (checkSelfPermission(WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED)
+
+        val installer = packageManager.getInstallerPackageName(packageName)
+        val isInstalledByPlayOrAdb = (installer == "com.android.vending") || (installer == null)
+        val hasAccessRestrictedSettings = isInstalledByPlayOrAdb || Build.VERSION.SDK_INT > Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+
+        if (isAccessibilityEnabled()) {
+            showNavigateDialog()
+        } else if (hasWriteSecureSettings) {
+            if (enableAccessibilityService()) return
+            showPermissionDialog()
+        } else if (!hasAccessRestrictedSettings) {
+            showPermissionDialog()
+        } else {
+            showEnableDialog()
+        }
+    }
+}
+
+private fun Context.showPermissionDialog() {
+    val permissionName = "ACCESS_RESTRICTED_SETTINGS"
+    val permissionCommand = "adb shell cmd appops set $packageName $permissionName allow"
+    val styledPermissionCommand =
+        SpannableString(permissionCommand).apply {
+            setSpan(TypefaceSpan("monospace"), 0, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+
+    MaterialAlertDialogBuilder(this)
+        .setTitle(android.R.string.dialog_alert_title)
+        .setMessage(
+            TextUtils.expandTemplate(
+                getString(R.string.dialog_adb_pairing_accessibility_permission_template),
+                permissionName,
+                styledPermissionCommand,
+            ),
+        ).setPositiveButton(R.string.action_continue) { _, _ -> showEnableDialog() }
+        .setNegativeButton(android.R.string.cancel, null)
+        .show()
+}
+
+private fun Context.showEnableDialog() {
+    MaterialAlertDialogBuilder(this)
+        .setTitle(R.string.dialog_adb_pairing_title)
+        .setMessage(R.string.dialog_adb_pairing_accessibility_enable)
+        .setPositiveButton(R.string.enable) { _, _ ->
+            SettingsPage.Accessibility.launch(this)
+        }.setNegativeButton(android.R.string.cancel, null)
+        .show()
+}
+
+private fun Context.showNavigateDialog() {
+    MaterialAlertDialogBuilder(this)
+        .setTitle(R.string.dialog_adb_pairing_title)
+        .setMessage(R.string.dialog_adb_pairing_accessibility_navigate)
+        .setPositiveButton(R.string.development_settings) { _, _ ->
+            SettingsPage.Developer.HighlightWirelessDebugging.launch(this)
+        }.setNegativeButton(android.R.string.cancel, null)
+        .show()
+}
+
+private fun Context.getEnabledAccessibilityServices(): List<String>? {
+    val enabledServices =
+        Settings.Secure.getString(
+            contentResolver,
+            Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+        )
+    return enabledServices?.split(":")
+}
+
+private fun Context.isAccessibilityEnabled(): Boolean {
+    val accessibilityServiceName = "$packageName/${AdbPairingAccessibilityService::class.java.canonicalName}"
+    return getEnabledAccessibilityServices()?.any { it.equals(accessibilityServiceName) } ?: false
+}
+
+private fun Context.enableAccessibilityService(): Boolean {
+    if (isAccessibilityEnabled()) return true
+
+    val accessibilityServiceName = "$packageName/${AdbPairingAccessibilityService::class.java.canonicalName}"
+    val enabledServices = getEnabledAccessibilityServices()
+    val newServices =
+        if (enabledServices.isNullOrEmpty()) {
+            accessibilityServiceName
+        } else {
+            enabledServices.joinToString(":") + ":$accessibilityServiceName"
+        }
+
+    Settings.Secure.putString(
+        contentResolver,
+        Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+        newServices,
+    )
+
+    return isAccessibilityEnabled()
+}
+
+/** Public entry: turn the pairing assistant (accessibility service) on directly. */
+fun Context.enablePairingAssistant(): Boolean {
+    // enableAccessibilityService() writes Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, which
+    // requires WRITE_SECURE_SETTINGS. Without it the write throws SecurityException on the
+    // caller's thread — observed as a hard crash (点击"配对"→"启用") on non-rooted
+    // Android 17 / HyperOS where the permission was never granted via adb (k2010, pairing-crash).
+    // Return false so callers fall back to showAccessibilityDialog(), which has its own
+    // permission-gated flow instead of crashing.
+    if (checkSelfPermission(WRITE_SECURE_SETTINGS) != PackageManager.PERMISSION_GRANTED) return false
+    return try {
+        enableAccessibilityService()
+    } catch (e: Throwable) {
+        Timber.w(e, "enablePairingAssistant: failed to enable accessibility service")
+        false
+    }
+}
+
+/** Remove the pairing assistant from the enabled accessibility services. */
+fun Context.disablePairingAssistant() {
+    runCatching {
+        val accessibilityServiceName = "$packageName/${AdbPairingAccessibilityService::class.java.canonicalName}"
+        val enabledServices = getEnabledAccessibilityServices()
+        if (enabledServices.isNullOrEmpty()) return
+        val newServices = enabledServices.filterNot { it.equals(accessibilityServiceName) }.joinToString(":")
+        Settings.Secure.putString(contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, newServices)
+    }
+}
+
+/** Whether the pairing assistant accessibility service is currently enabled. */
+fun Context.isPairingAssistantEnabled(): Boolean = isAccessibilityEnabled()

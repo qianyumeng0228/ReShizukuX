@@ -1,0 +1,222 @@
+package af.shizuku.manager.receiver
+
+import android.Manifest.permission.WRITE_SECURE_SETTINGS
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import timber.log.Timber
+import androidx.core.app.NotificationCompat
+import com.topjohnwu.superuser.Shell
+import io.sentry.Sentry
+import io.sentry.Breadcrumb
+import af.shizuku.manager.R
+import af.shizuku.manager.AppConstants
+import af.shizuku.manager.ShizukuSettings
+import af.shizuku.manager.ShizukuSettings.LaunchMethod
+import af.shizuku.manager.starter.Starter
+import af.shizuku.manager.utils.EnvironmentUtils
+import af.shizuku.manager.utils.ProjectLinks
+import af.shizuku.manager.utils.SettingsPage
+import af.shizuku.manager.utils.ShizukuStateMachine
+import af.shizuku.common.util.UserHandleCompat
+import af.shizuku.manager.worker.AdbStartWorker
+import rikka.shizuku.Shizuku
+
+object ShizukuReceiverStarter {
+
+    const val NOTIFICATION_ID = 1447
+    private const val CHANNEL_ID = "AdbStartWorker"
+
+    enum class WorkerState {
+        AWAITING_WIFI,
+        AWAITING_RETRY,
+        AWAITING_DISCOVERY,
+        RUNNING,
+        STOPPED
+    }
+
+    fun start(context: Context, forceStart: Boolean = false) {
+        if ((UserHandleCompat.myUserId() > 0 || ShizukuStateMachine.isRunning()) && !forceStart) return
+
+        if (ShizukuSettings.getLastLaunchMode() == LaunchMethod.ROOT) {
+            rootStart(context)
+        } else if (ShizukuSettings.getLastLaunchMode() == LaunchMethod.ADB) {
+            if (context.checkSelfPermission(WRITE_SECURE_SETTINGS) == PackageManager.PERMISSION_GRANTED) {
+                AdbStartWorker.enqueue(context)
+                val initialState = if (EnvironmentUtils.getAdbTcpPort() > 0 && !EnvironmentUtils.isWifiRequired())
+                    WorkerState.RUNNING else WorkerState.AWAITING_WIFI
+                updateNotification(context, initialState)
+            } else {
+                showPermissionErrorNotification(context)
+            }
+        } else {
+            Timber.tag(AppConstants.TAG).w("Background start not supported")
+        }
+    }
+
+    /** Symmetric with [start]: stops a running service. Shared by the manual STOP broadcast
+     *  receiver and the Tasker/Locale plugin's fire receiver. */
+    fun stop() {
+        if (!ShizukuStateMachine.isRunning()) return
+        ShizukuStateMachine.set(ShizukuStateMachine.State.STOPPING)
+        killServerProcess()
+        runCatching { Shizuku.exit() }
+            .onFailure { Timber.tag(AppConstants.TAG).w(it, "Shizuku.exit failed") }
+    }
+
+    /**
+     * Terminate the long-lived privileged server process itself (not just this client's binder
+     * connection). `Shizuku.exit()` alone only disconnects the local binder; the server keeps
+     * running and the next binder reconnection instantly flips the state machine back to RUNNING,
+     * which made "Stop" look like it stopped for a few seconds and then self-healed. Running the
+     * kill through the privileged process API ensures it works for both adb and root launches.
+     */
+    fun killServerProcess() {
+        runCatching {
+            af.shizuku.manager.database.ShizukuProcessUtils.runPrivilegedCapture(
+                arrayOf("pkill", "-f", "shizuku_plus_server")
+            )
+        }.onFailure { Timber.tag(AppConstants.TAG).w(it, "pkill shizuku_plus_server failed") }
+    }
+
+    fun buildNotification(context: Context, msg: String? = null): Notification {
+        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                context.getString(R.string.wadb_notification_title),
+                NotificationManager.IMPORTANCE_LOW
+            )
+            nm.createNotificationChannel(channel)
+        }
+
+        val cancelIntent = Intent(context, NotifCancelReceiver::class.java)
+        val cancelPendingIntent = PendingIntent.getBroadcast(
+            context, 0, cancelIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val attemptNowIntent = Intent(context, NotifAttemptReceiver::class.java)
+        val attemptNowPendingIntent = PendingIntent.getBroadcast(
+            context, 0, attemptNowIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val restoreIntent = Intent(context, NotifRestoreReceiver::class.java)
+        val restorePendingIntent = PendingIntent.getBroadcast(
+            context, 0, restoreIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val wifiIntent = SettingsPage.InternetPanel.buildIntent(context)
+        val wifiPendingIntent = PendingIntent.getActivity(
+            context, 0, wifiIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val nb = NotificationCompat.Builder(context, CHANNEL_ID)
+
+        if (msg != null) nb.setContentText(msg)
+
+        return nb
+            .setSmallIcon(R.drawable.ic_notification_icon)
+            .setContentTitle(context.getString(R.string.wadb_notification_title))
+            .setOngoing(true)
+            .setSilent(true)
+            .addAction(R.drawable.ic_notification_server_restart, context.getString(R.string.wadb_notification_attempt_now), attemptNowPendingIntent)
+            .addAction(R.drawable.ic_notification_close_24, context.getString(android.R.string.cancel), cancelPendingIntent)
+            .setDeleteIntent(restorePendingIntent)
+            .setContentIntent(wifiPendingIntent)
+            .build()
+    }
+
+    fun updateNotification(context: Context, state: WorkerState) {
+        if (state == WorkerState.STOPPED) return
+        val msgId = when (state) {
+            WorkerState.AWAITING_WIFI -> R.string.wadb_notification_wifi_required
+            WorkerState.AWAITING_RETRY -> R.string.wadb_notification_retry
+            WorkerState.AWAITING_DISCOVERY -> R.string.wadb_notification_discovery_timeout
+            else -> null
+        }
+        val msg = if (msgId != null) context.getString(msgId) else null
+        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        nm.notify(NOTIFICATION_ID, buildNotification(context, msg))
+    }
+
+    private fun rootStart(context: Context) {
+        Sentry.addBreadcrumb(Breadcrumb("Background Root start initiated").apply { category = "shizuku.starter" })
+        if (!Shell.getShell().isRoot) {
+            Sentry.addBreadcrumb(Breadcrumb("Background Root start failed - no root").apply {
+                category = "shizuku.starter"
+                level = io.sentry.SentryLevel.WARNING
+            })
+            //NotificationHelper.notify(context, AppConstants.NOTIFICATION_ID_STATUS, AppConstants.NOTIFICATION_CHANNEL_STATUS, R.string.notification_service_start_no_root)
+            Shell.getCachedShell()?.close()
+            return
+        }
+
+        try {
+            ShizukuStateMachine.set(ShizukuStateMachine.State.STARTING)
+            val result = Shell.cmd(Starter.internalCommand).exec()
+            if (!result.isSuccess) {
+                // libsu doesn't throw on a non-zero exit. Without this check the state machine is
+                // left in STARTING, which update() preserves indefinitely while the binder is dead —
+                // so the watchdog (which only reacts to CRASHED) never retries and the UI shows a
+                // perpetual "Starting…".
+                Sentry.addBreadcrumb(Breadcrumb("Background Root start failed: starter exited ${result.code}").apply {
+                    category = "shizuku.starter"
+                    level = io.sentry.SentryLevel.ERROR
+                })
+                Timber.tag(AppConstants.TAG).e("Root starter exited with code ${result.code}")
+                recoverFromFailedStart()
+            }
+        } catch (e: Exception) {
+            Sentry.addBreadcrumb(Breadcrumb("Background Root start failed: ${e.message}").apply {
+                category = "shizuku.starter"
+                level = io.sentry.SentryLevel.ERROR
+            })
+            Timber.tag(AppConstants.TAG).e(e, "Failed to start Shizuku with root")
+            recoverFromFailedStart()
+        }
+    }
+
+    /** Clears a stuck STARTING state after a failed start attempt, then re-detects: if a previous
+     *  server instance is actually still alive, update() flips the state back to RUNNING. */
+    private fun recoverFromFailedStart() {
+        ShizukuStateMachine.set(ShizukuStateMachine.State.STOPPED)
+        ShizukuStateMachine.update()
+    }
+
+    private fun showPermissionErrorNotification(context: Context) {
+        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                context.getString(R.string.wadb_notification_title),
+                NotificationManager.IMPORTANCE_LOW
+            )
+            nm.createNotificationChannel(channel)
+        }
+
+        val webpageIntent = Intent(Intent.ACTION_VIEW, Uri.parse(ProjectLinks.HELP_BOOT))
+        val pendingWebpageIntent = PendingIntent.getActivity(
+            context, 0, webpageIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val msg = context.getString(R.string.wadb_permission_error_notification_content)
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification_icon)
+            .setContentTitle(context.getString(R.string.wadb_permission_error_notification_title))
+            .setContentText(msg)
+            .setSilent(true)
+            .setContentIntent(pendingWebpageIntent)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(msg))
+            .build()
+
+        nm.notify(NOTIFICATION_ID, notification)
+    }
+}

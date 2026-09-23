@@ -1,0 +1,2634 @@
+package rikka.shizuku.server;
+
+import static android.Manifest.permission.WRITE_SECURE_SETTINGS;
+import static rikka.shizuku.ShizukuApiConstants.ATTACH_APPLICATION_API_VERSION;
+import static rikka.shizuku.ShizukuApiConstants.ATTACH_APPLICATION_PACKAGE_NAME;
+import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_PERMISSION_GRANTED;
+import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_SERVER_PATCH_VERSION;
+import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_SERVER_SECONTEXT;
+import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_SERVER_UID;
+import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_SERVER_VERSION;
+import static rikka.shizuku.ShizukuApiConstants.BIND_APPLICATION_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE;
+import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_ALLOWED;
+import static rikka.shizuku.ShizukuApiConstants.REQUEST_PERMISSION_REPLY_IS_ONETIME;
+import static rikka.shizuku.server.ServerConstants.MANAGER_APPLICATION_ID;
+import static rikka.shizuku.server.ServerConstants.PERMISSION;
+
+import android.content.Context;
+import android.content.IContentProvider;
+import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.UserInfo;
+import android.ddm.DdmHandleAppName;
+import android.os.Binder;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Looper;
+import android.os.Parcel;
+import android.os.RemoteException;
+import android.os.ServiceManager;
+import android.util.Log;
+import org.json.JSONObject;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
+
+import kotlin.collections.ArraysKt;
+import af.shizuku.api.BinderContainer;
+import rikka.core.util.BuildUtils;
+import af.shizuku.common.util.OsUtils;
+import moe.shizuku.server.IRemoteProcess;
+import moe.shizuku.server.IShizukuApplication;
+import af.shizuku.server.IVirtualMachineManager;
+import af.shizuku.server.IStorageProxy;
+import af.shizuku.server.IAICoreExtra;
+import af.shizuku.server.IWindowManagerExtra;
+import af.shizuku.server.IContinuityBridge;
+import af.shizuku.server.IOverlayManagerExtra;
+import af.shizuku.server.INetworkGovernorExtra;
+import af.shizuku.server.IActivityManagerExtra;
+import af.shizuku.server.IStatusBarGovernorExtra;
+import af.shizuku.server.IPackageGovernorExtra;
+import af.shizuku.server.IDisplayTunerExtra;
+import af.shizuku.server.IAppInspector;
+import af.shizuku.server.IPrivilegedDataSource;
+import af.shizuku.server.IBackupRestoreExtra;
+import af.shizuku.server.IApkPatcher;
+import rikka.hidden.compat.ActivityManagerApis;
+import rikka.hidden.compat.DeviceIdleControllerApis;
+import rikka.hidden.compat.PackageManagerApis;
+import rikka.hidden.compat.PermissionManagerApis;
+import af.shizuku.common.compat.Android17Compat;
+import af.shizuku.common.compat.InstalledPackagesCompat;
+import rikka.hidden.compat.UserManagerApis;
+import rikka.parcelablelist.ParcelableListSlice;
+import rikka.rish.RishConfig;
+import rikka.shizuku.ShizukuApiConstants;
+import rikka.shizuku.server.api.IContentProviderUtils;
+import rikka.shizuku.server.util.HandlerUtil;
+import rikka.shizuku.server.util.Logger;
+import af.shizuku.common.util.UserHandleCompat;
+import rikka.shizuku.server.ClientManager;
+import rikka.shizuku.server.ClientRecord;
+
+public class ShizukuService extends Service<ShizukuUserServiceManager, ShizukuClientManager, ShizukuConfigManager> {
+
+    public static void main(String[] args) {
+        DdmHandleAppName.setAppName("shizuku_plus_server", 0);
+        RishConfig.setLibraryPath(System.getProperty("shizuku.library.path"));
+
+        Looper.prepareMainLooper();
+        new ShizukuService();
+        Looper.loop();
+    }
+
+    private static void waitSystemService(String name) {
+        while (ServiceManager.getService(name) == null) {
+            try {
+                LOGGER.i("service " + name + " is not started, waiting...");
+                ServiceManager.class.getMethod("waitForService", String.class).invoke(null, name);
+            } catch (Exception e) {
+                LOGGER.w(e.getMessage(), e);
+            }
+        }
+    }
+
+    public static ApplicationInfo getManagerApplicationInfo() {
+        // Self-resolution first: the manager is the app that embeds this server, so when the
+        // server runs from an app whose applicationId differs from the compiled-in defaults
+        // (e.g. a debug/test build with applicationIdSuffix = ".debug"), the only way to find
+        // itself is to derive the package from the APK the server was launched from
+        // (-Djava.class.path, set by the native starter). Guarded so it never changes behaviour
+        // for the stock Plus / Drop-In builds: the derived package only wins when it is a real
+        // installed package AND differs from both default ids (in the normal builds it equals
+        // MANAGER_APPLICATION_ID, so this branch is skipped entirely).
+        try {
+            String self = deriveSelfManagerApplicationId();
+            if (self != null
+                    && !self.equals(MANAGER_APPLICATION_ID)
+                    && !self.equals(ServerConstants.DROPIN_APPLICATION_ID)) {
+                ApplicationInfo selfAi = Android17Compat.getApplicationInfo(self, 0, 0);
+                if (selfAi != null) {
+                    MANAGER_APPLICATION_ID = self;
+                    return selfAi;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+
+        ApplicationInfo ai = Android17Compat.getApplicationInfo(MANAGER_APPLICATION_ID, 0, 0);
+        if (ai != null) return ai;
+
+        // MANAGER_APPLICATION_ID defaults to the Plus flavor's id. On a Drop-In-only install that
+        // lookup finds nothing, so fall back to the Drop-In id and, if found, correct the constant
+        // so every other usage in this class (binder sending, permission grants, isManager checks,
+        // the request-permission broadcast, ...) resolves to whichever flavor is actually running.
+        ApplicationInfo dropinAi = Android17Compat.getApplicationInfo(ServerConstants.DROPIN_APPLICATION_ID, 0, 0);
+        if (dropinAi != null) {
+            MANAGER_APPLICATION_ID = ServerConstants.DROPIN_APPLICATION_ID;
+            return dropinAi;
+        }
+        return null;
+    }
+
+    /**
+     * Derives the package name of the app this server process was launched from. The native
+     * starter (manager/src/main/jni/starter.cpp) launches app_process with
+     * {@code -Djava.class.path=<manager.apk>} (and {@code -Dshizuku.library.path=<apk dir>/lib/<abi>}),
+     * so the APK path is available from the classpath. From a path such as
+     * {@code /data/app/~~xx/xyz.shizuku.extra.api.debug-abc/base.apk} the package is the parent
+     * directory name with everything after the last '-' stripped. Returns null when it cannot be
+     * derived reliably.
+     */
+    private static String deriveSelfManagerApplicationId() {
+        String cp = System.getProperty("java.class.path");
+        if (cp == null || cp.isEmpty()) cp = System.getenv("CLASSPATH");
+        if (cp == null || cp.isEmpty()) return null;
+        String apk = cp.split(":")[0];
+        if (apk == null || apk.isEmpty() || !apk.endsWith(".apk")) return null;
+        int slash = apk.lastIndexOf('/');
+        int slashBack = apk.lastIndexOf('\\');
+        int dirEnd = Math.max(slash, slashBack);
+        if (dirEnd < 0) return null;
+        String dirName = apk.substring(0, dirEnd);
+        int parentSlash = dirName.lastIndexOf('/');
+        int parentSlashBack = dirName.lastIndexOf('\\');
+        int parentStart = Math.max(parentSlash, parentSlashBack) + 1;
+        String seg = dirName.substring(parentStart);
+        int dash = seg.lastIndexOf('-');
+        if (dash <= 0) return null;
+        String pkg = seg.substring(0, dash);
+        if (pkg.indexOf('.') < 0 || pkg.contains("/") || pkg.contains("\\")) return null;
+        return pkg;
+    }
+
+    @SuppressWarnings({"FieldCanBeLocal"})
+    private final Handler mainHandler = rikka.shizuku.server.ktx.HandlerKt.getMainHandler();
+    //private final Context systemContext = HiddenApiBridge.getSystemContext();
+    private final ShizukuClientManager clientManager;
+    private static final List<String> serverLogs = java.util.Collections.synchronizedList(new java.util.ArrayList<>());
+    private static final int MAX_SERVER_LOGS = 100;
+    private final ShizukuConfigManager configManager;
+    private volatile int managerAppId;
+    // uid of the OTHER manager flavor (Plus vs Drop-In), if it's also installed; -1 if not. See
+    // isManagerAppId() - both flavors are the same signed codebase, so trusting either is safe.
+    private volatile int secondaryManagerAppId;
+    // uptimeMillis of the last on-demand manager-appId re-resolve (throttle; see checkCallerManagerPermission).
+    private volatile long lastManagerAppIdRefresh;
+    private final VirtualMachineManagerImpl virtualMachineManager = new VirtualMachineManagerImpl();
+    private final StorageProxyImpl storageProxy = new StorageProxyImpl();
+    private final AICorePlusImpl aiCoreExtra;
+    private final WindowManagerPlusImpl windowManagerExtra = new WindowManagerPlusImpl();
+    private final ContinuityBridgeImpl continuityBridge = new ContinuityBridgeImpl();
+    private final OverlayManagerPlusImpl overlayManagerExtra = new OverlayManagerPlusImpl();
+    private final NetworkGovernorPlusImpl networkGovernorExtra = new NetworkGovernorPlusImpl();
+    private final ActivityManagerPlusImpl activityManagerExtra = new ActivityManagerPlusImpl();
+    private final StatusBarGovernorExtraImpl statusBarGovernorExtra = new StatusBarGovernorExtraImpl();
+    private final PackageGovernorExtraImpl packageGovernorExtra = new PackageGovernorExtraImpl();
+    private final DisplayTunerExtraImpl displayTunerExtra = new DisplayTunerExtraImpl();
+    private final AppInspectorImpl appInspector = new AppInspectorImpl();
+    private final PrivilegedDataSourceImpl privilegedDataSource = new PrivilegedDataSourceImpl();
+    private final BackupRestoreExtraImpl backupRestoreExtra = new BackupRestoreExtraImpl();
+    private final ApkPatcherImpl apkPatcher = new ApkPatcherImpl();
+
+    private void grantRuntimePermissionRobust(String packageName, String permName, int userId) throws Throwable {
+        Android17Compat.grantRuntimePermission(packageName, permName, userId);
+    }
+
+    // Re-grants the OS-level runtime permission for every already-authorized app on each server
+    // start. Prior to the 741df2f4 fix (2026-07-19), grantRuntimePermission silently failed because
+    // no installed package defined moe.shizuku.manager.permission.API_V23 — so apps authorized
+    // before that date have a ConfigManager entry but no OS grant. This is idempotent (re-granting
+    // an already-granted permission is a no-op), so it's safe to run unconditionally on startup.
+    private void migratePermissionGrants() {
+        List<Integer> allowedUids = configManager.getAllowedUids();
+        if (allowedUids.isEmpty()) return;
+        LOGGER.i("migratePermissionGrants: checking %d authorized UIDs", allowedUids.size());
+        int migrated = 0;
+        for (int uid : allowedUids) {
+            int userId = UserHandleCompat.getUserId(uid);
+            for (String packageName : PackageManagerApis.getPackagesForUidNoThrow(uid)) {
+                PackageInfo pi = Android17Compat.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS, userId);
+                if (pi == null || pi.requestedPermissions == null) continue;
+
+                String permToGrant = null;
+                if (ArraysKt.contains(pi.requestedPermissions, PERMISSION)) {
+                    permToGrant = PERMISSION;
+                } else if (ArraysKt.contains(pi.requestedPermissions, ServerConstants.PERMISSION_ORIGINAL)) {
+                    permToGrant = ServerConstants.PERMISSION_ORIGINAL;
+                } else if (ArraysKt.contains(pi.requestedPermissions, ServerConstants.PERMISSION_LEGACY)) {
+                    permToGrant = ServerConstants.PERMISSION_LEGACY;
+                }
+                if (permToGrant == null) continue;
+
+                try {
+                    Android17Compat.grantRuntimePermission(packageName, permToGrant, userId);
+                    migrated++;
+                } catch (Throwable e) {
+                    LOGGER.w(e, "migratePermissionGrants: grant failed for %s (%s)", packageName, permToGrant);
+                }
+            }
+        }
+        LOGGER.i("migratePermissionGrants: granted/refreshed %d permission(s)", migrated);
+    }
+
+    private void revokeRuntimePermissionRobust(String packageName, String permName, int userId) throws Throwable {
+        try {
+            PermissionManagerApis.revokeRuntimePermission(packageName, permName, userId);
+        } catch (Throwable e) {
+            if (Build.VERSION.SDK_INT >= 34) {
+                try {
+                    Object permissionManager = ServiceManager.getService("permissionmgr");
+                    Object iPermissionManager = Class.forName("android.permission.IPermissionManager$Stub")
+                            .getMethod("asInterface", IBinder.class)
+                            .invoke(null, permissionManager);
+                    for (java.lang.reflect.Method m : iPermissionManager.getClass().getMethods()) {
+                        if (m.getName().equals("revokeRuntimePermission")) {
+                            Class<?>[] params = m.getParameterTypes();
+                            if (params.length == 3) {
+                                m.invoke(iPermissionManager, packageName, permName, userId);
+                                return;
+                            } else if (params.length == 4) {
+                                if (params[2] == String.class) {
+                                    m.invoke(iPermissionManager, packageName, permName, "default:0", userId);
+                                } else if (params[2] == int.class) {
+                                    m.invoke(iPermissionManager, packageName, permName, 0, userId);
+                                } else {
+                                    m.invoke(iPermissionManager, packageName, permName, null, userId);
+                                }
+                                return;
+                            } else if (params.length == 5) {
+                                // Sometimes it has a reason string too
+                                if (params[2] == String.class) {
+                                    m.invoke(iPermissionManager, packageName, permName, "default:0", userId, "Shizuku");
+                                } else if (params[2] == int.class) {
+                                    m.invoke(iPermissionManager, packageName, permName, 0, userId, "Shizuku");
+                                }
+                                return;
+                            }
+                        }
+                    }
+                } catch (Throwable refE) {
+                    LOGGER.w("revokeRuntimePermission reflection fallback failed", refE);
+                }
+            }
+            throw new Exception("revokeRuntimePermission failed", e);
+        }
+    }
+
+    private void disablePhantomProcessKiller() {
+        try {
+            if (Build.VERSION.SDK_INT >= 32) { // Android 12L+ (also affects Android 12 which is 31)
+                // Disable monitor (Android 13+)
+                Runtime.getRuntime().exec(new String[]{"sh", "-c", "settings put global settings_enable_monitor_phantom_procs false"}).waitFor();
+                
+                // Disable device_config sync (Android 12+)
+                Runtime.getRuntime().exec(new String[]{"sh", "-c", "/system/bin/device_config set_sync_disabled_for_tests persistent"}).waitFor();
+                
+                // Increase max phantom processes limit (Android 12+)
+                Runtime.getRuntime().exec(new String[]{"sh", "-c", "/system/bin/device_config put activity_manager max_phantom_processes 2147483647"}).waitFor();
+                
+                LOGGER.i("Phantom Process Killer mitigation applied");
+            }
+        } catch (Exception e) {
+            LOGGER.w("Failed to mitigate Phantom Process Killer", e);
+        }
+    }
+
+    public ShizukuService() {
+        super();
+
+        Thread.setDefaultUncaughtExceptionHandler((thread, throwable) -> {
+            LOGGER.e(throwable, "Uncaught exception in server thread " + thread.getName());
+            try {
+                // Give some time for the event to be dispatched before the process dies
+                Thread.sleep(500);
+            } catch (Throwable ignored) {
+            }
+            System.exit(1);
+        });
+
+        HandlerUtil.setMainHandler(mainHandler);
+
+        LOGGER.i("starting server...");
+
+        // Automatically disable Phantom Process Killer on Android 12+ so the system doesn't kill Shizuku
+        disablePhantomProcessKiller();
+
+        waitSystemService("package");
+        waitSystemService(Context.ACTIVITY_SERVICE);
+        waitSystemService(Context.USER_SERVICE);
+        waitSystemService(Context.APP_OPS_SERVICE);
+
+        ApplicationInfo ai = getManagerApplicationInfo();
+        if (ai == null) {
+            System.exit(ServerConstants.MANAGER_APP_NOT_FOUND);
+        }
+
+        assert ai != null;
+        managerAppId = ai.uid;
+
+        // Plus and Drop-In are the same manager codebase under two applicationIds, and a user can
+        // legitimately have both installed side by side (#316). getManagerApplicationInfo() only
+        // ever picks ONE as MANAGER_APPLICATION_ID, so if the other flavor is also installed, its
+        // clients would otherwise fail every checkCallerManagerPermission() check with "is not
+        // manager" (SHIZUKUPLUS-7C) even though it's the developer's own signed app, not a third
+        // party. Track its uid too so isManagerAppId() can trust either.
+        String otherApplicationId = ServerConstants.DROPIN_APPLICATION_ID.equals(ServerConstants.MANAGER_APPLICATION_ID)
+                ? ServerConstants.PLUS_APPLICATION_ID : ServerConstants.DROPIN_APPLICATION_ID;
+        ApplicationInfo secondaryAi = Android17Compat.getApplicationInfo(otherApplicationId, 0, 0);
+        secondaryManagerAppId = secondaryAi != null ? secondaryAi.uid : -1;
+
+        configManager = getConfigManager();
+        clientManager = getClientManager();
+        aiCoreExtra = new AICorePlusImpl(clientManager, this);
+
+        ApkChangedObservers.start(ai.sourceDir, () -> {
+            if (getManagerApplicationInfo() == null) {
+                LOGGER.w("manager app is uninstalled in user 0, exiting...");
+                System.exit(ServerConstants.MANAGER_APP_NOT_FOUND);
+            }
+        });
+
+        BinderSender.register(this);
+
+        ((Logger) LOGGER).setEventDispatcher((priority, tag, message, throwable) -> {
+            List<ClientRecord> records = clientManager.findClients(managerAppId);
+            for (ClientRecord record : records) {
+                if (record.client != null) {
+                    try {
+                        JSONObject json = new JSONObject();
+                        json.put("priority", priority);
+                        // The manager reads a "level" string (see ShizukuApplication's
+                        // addSentryEventListener) to set the Sentry event's severity; without
+                        // this every forwarded event silently fell back to "error" regardless
+                        // of whether it was actually just a warning.
+                        json.put("level", priority >= Log.ASSERT ? "FATAL" : priority >= Log.ERROR ? "ERROR" : "WARN");
+                        json.put("tag", tag);
+                        json.put("message", message);
+                        if (throwable != null) {
+                            json.put("stacktrace", Log.getStackTraceString(throwable));
+                        }
+                        record.client.dispatchSentryEvent(json.toString());
+                    } catch (Throwable ignored) {
+                    }
+                }
+            }
+        });
+
+        mainHandler.post(() -> {
+            migratePermissionGrants();
+            sendBinderToClient();
+            sendBinderToManager();
+        });
+    }
+
+    @Override
+    public ShizukuUserServiceManager onCreateUserServiceManager() {
+        return new ShizukuUserServiceManager();
+    }
+
+    @Override
+    public ShizukuClientManager onCreateClientManager() {
+        return new ShizukuClientManager(getConfigManager());
+    }
+
+    @Override
+    public ShizukuConfigManager onCreateConfigManager() {
+        return new ShizukuConfigManager();
+    }
+
+    @Override
+    public boolean checkCallerManagerPermission(String func, int callingUid, int callingPid) {
+        int appId = UserHandleCompat.getAppId(callingUid);
+        if (isManagerAppId(appId)) {
+            return true;
+        }
+        // managerAppId is resolved once at server start. If that resolve was stale or failed - the
+        // manager was reinstalled and got a new uid, or the initial lookup raced the package manager
+        // / hit an Android-17 hidden-API miss before r2129 - the real manager is rejected as "is not
+        // manager" and, e.g., plus-feature sync fails forever (SHIZUKUPLUS-6A). Re-resolve the manager
+        // uid(s) on a miss (throttled so a denied third party can't spam package lookups) and retry,
+        // so a genuine manager self-heals.
+        if (refreshManagerAppIdsThrottled()) {
+            return isManagerAppId(appId);
+        }
+        return false;
+    }
+
+    private boolean isManagerAppId(int appId) {
+        int cleanAppId = UserHandleCompat.getAppId(appId);
+        int cleanManagerAppId = UserHandleCompat.getAppId(managerAppId);
+        int cleanSecondaryAppId = secondaryManagerAppId != -1 ? UserHandleCompat.getAppId(secondaryManagerAppId) : -1;
+        return cleanAppId == cleanManagerAppId || (cleanSecondaryAppId != -1 && cleanAppId == cleanSecondaryAppId);
+    }
+
+    // Re-resolve the manager (and secondary flavor) uids at most once every few seconds, to recover
+    // from a stale/failed startup resolve without letting a rejected caller force unbounded package
+    // lookups. Returns true if a refresh actually ran. See checkCallerManagerPermission (SHIZUKUPLUS-6A).
+    private synchronized boolean refreshManagerAppIdsThrottled() {
+        long now = android.os.SystemClock.uptimeMillis();
+        if (now - lastManagerAppIdRefresh < 5000L) {
+            return false;
+        }
+        lastManagerAppIdRefresh = now;
+        ApplicationInfo ai = getManagerApplicationInfo();
+        if (ai == null) {
+            return false;
+        }
+        managerAppId = ai.uid;
+        String otherApplicationId = ServerConstants.DROPIN_APPLICATION_ID.equals(ServerConstants.MANAGER_APPLICATION_ID)
+                ? ServerConstants.PLUS_APPLICATION_ID : ServerConstants.DROPIN_APPLICATION_ID;
+        ApplicationInfo secondaryAi = Android17Compat.getApplicationInfo(otherApplicationId, 0, 0);
+        if (secondaryAi != null) {
+            secondaryManagerAppId = secondaryAi.uid;
+        }
+        LOGGER.i("Re-resolved manager appId=%d secondary=%d", managerAppId, secondaryManagerAppId);
+        return true;
+    }
+
+    private int checkCallingPermission() {
+        try {
+            int pid = Binder.getCallingPid();
+            int uid = Binder.getCallingUid();
+            if (ActivityManagerApis.checkPermission(ServerConstants.PERMISSION, pid, uid) == PackageManager.PERMISSION_GRANTED)
+                return PackageManager.PERMISSION_GRANTED;
+            if (ActivityManagerApis.checkPermission(ServerConstants.PERMISSION_LEGACY, pid, uid) == PackageManager.PERMISSION_GRANTED)
+                return PackageManager.PERMISSION_GRANTED;
+            if (ActivityManagerApis.checkPermission(ServerConstants.PERMISSION_ORIGINAL, pid, uid) == PackageManager.PERMISSION_GRANTED)
+                return PackageManager.PERMISSION_GRANTED;
+            return PackageManager.PERMISSION_DENIED;
+        } catch (Throwable tr) {
+            LOGGER.w(tr, "checkCallingPermission");
+            return PackageManager.PERMISSION_DENIED;
+        }
+    }
+
+    @Override
+    public boolean checkCallerPermission(String func, int callingUid, int callingPid, @Nullable ClientRecord clientRecord) {
+        if (isManagerAppId(UserHandleCompat.getAppId(callingUid))) {
+            return true;
+        }
+        // Already-attached clients (e.g. rish, after a successful attachApplication()) have a
+        // non-null ClientRecord whose `allowed` flag is the authoritative "user granted access"
+        // signal - set during attachApplication from the config entry, or later via
+        // RequestPermissionActivity's result being dispatched back through
+        // dispatchPermissionConfirmationResult() (record.allowed = allowed). This must be
+        // checked independently of the
+        // clientRecord == null branch below: that branch's fallbacks (OS permission check,
+        // config-flag bridge) exist for callers enforceCallingPermission() is invoked on BEFORE
+        // they've attached, and skip entirely once clientRecord is non-null - which left every
+        // attached-and-authorized non-manager caller (rish included) hitting the final `return
+        // false` and getting a silent SecurityException out of newProcess() (#391 follow-up).
+        if (clientRecord != null) {
+            return clientRecord.allowed;
+        }
+        if (checkCallingPermission() == PackageManager.PERMISSION_GRANTED) {
+            return true;
+        }
+        // Also allow if the UID was explicitly authorized (persisted grant, checked directly
+        // against config rather than OS permission state). Apps that don't declare a Shizuku
+        // permission in their manifest (e.g. Termux)
+        // never receive grantRuntimePermission(), so checkCallingPermission() always returns
+        // DENIED for them even after the user tapped "Allow". Checking configManager flags
+        // directly bridges this gap without touching OS permission state.
+        if ((getFlagsForUidInternal(callingUid, ConfigManager.MASK_PERMISSION, false) & ConfigManager.FLAG_ALLOWED) == ConfigManager.FLAG_ALLOWED) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void exit() {
+        enforceManagerPermission("exit");
+        LOGGER.i("exit");
+        System.exit(0);
+    }
+
+    @Override
+    public void attachUserService(IBinder binder, Bundle options) {
+        enforceManagerPermission("attachUserService");
+
+        super.attachUserService(binder, options);
+    }
+
+    @Override
+    public void attachApplication(IShizukuApplication application, Bundle args) {
+        if (application == null || args == null) {
+            return;
+        }
+
+        String requestPackageName = args.getString(ATTACH_APPLICATION_PACKAGE_NAME);
+        if (requestPackageName == null) {
+            return;
+        }
+        int apiVersion = args.getInt(ATTACH_APPLICATION_API_VERSION, -1);
+
+        int callingPid = Binder.getCallingPid();
+        int callingUid = Binder.getCallingUid();
+        boolean isManager;
+        ClientRecord clientRecord = null;
+
+        List<String> packages = PackageManagerApis.getPackagesForUidNoThrow(callingUid);
+        if (!packages.contains(requestPackageName)) {
+            LOGGER.w("Request package " + requestPackageName + "does not belong to uid " + callingUid);
+            throw new SecurityException("Request package " + requestPackageName + "does not belong to uid " + callingUid);
+        }
+
+        // Accept either manager flavor's applicationId - see secondaryManagerAppId's declaration.
+        isManager = MANAGER_APPLICATION_ID.equals(requestPackageName)
+                || ServerConstants.DROPIN_APPLICATION_ID.equals(requestPackageName)
+                || ServerConstants.PLUS_APPLICATION_ID.equals(requestPackageName);
+
+        synchronized (this) {
+            ClientRecord existing = clientManager.findClient(callingUid, callingPid);
+            if (existing == null) {
+                clientRecord = clientManager.addClient(callingUid, callingPid, application, requestPackageName, apiVersion);
+                if (clientRecord == null) {
+                    LOGGER.e("Add client failed");
+                    return;
+                }
+            } else {
+                clientRecord = existing;
+            }
+        }
+
+        LOGGER.d("attachApplication: %s %d %d", requestPackageName, callingUid, callingPid);
+
+        int replyServerVersion = ShizukuApiConstants.SERVER_VERSION;
+        if (apiVersion == -1) {
+            // ShizukuBinderWrapper has adapted API v13 in dev.rikka.shizuku:api 12.2.0, however
+            // attachApplication in 12.2.0 is still old, so that server treat the client as pre 13.
+            // This finally cause transactRemote fails.
+            // So we can pass 12 here to pretend we are v12 server.
+            replyServerVersion = 12;
+        }
+
+        Bundle reply = new Bundle();
+        // FIX (k2013): Spoof root context (uid=0, secontext=u:r:su:s0) ONLY when user enables
+        // root_magisk_mocking. Defaulting to real shell values is required because some apps
+        // (notably Hail) behave differently when they believe the server is root, which can
+        // cause parcel skew and "Shell cannot change component state for null" errors.
+        boolean spoofRootContext = isFeatureEnabled("root_magisk_mocking");
+        reply.putInt(BIND_APPLICATION_SERVER_UID, spoofRootContext ? 0 : OsUtils.getUid());
+        reply.putInt(BIND_APPLICATION_SERVER_VERSION, replyServerVersion);
+        reply.putString(BIND_APPLICATION_SERVER_SECONTEXT, spoofRootContext ? "u:r:su:s0" : OsUtils.getSELinuxContext());
+        reply.putInt(BIND_APPLICATION_SERVER_PATCH_VERSION, ShizukuApiConstants.SERVER_PATCH_VERSION);
+        if (!isManager) {
+            ClientRecord record = Objects.requireNonNull(clientRecord);
+            // When the server runs as root, all attached clients are automatically granted access.
+            // This lets apps like Swift Backup work without an explicit grant dialog in root mode.
+            if (OsUtils.getUid() == 0 && !record.allowed) {
+                record.allowed = true;
+            }
+            reply.putBoolean(BIND_APPLICATION_PERMISSION_GRANTED, record.allowed);
+            reply.putBoolean(BIND_APPLICATION_SHOULD_SHOW_REQUEST_PERMISSION_RATIONALE, false);
+            try {
+                Android17Compat.grantRuntimePermission(MANAGER_APPLICATION_ID,
+                        WRITE_SECURE_SETTINGS, UserHandleCompat.getUserId(callingUid));
+            } catch (Throwable e) {
+                LOGGER.w(e, "grant WRITE_SECURE_SETTINGS");
+            }
+        }
+        try {
+            // Guards against Android's Cached Apps Freezer (12+): if requestPackageName backgrounds
+            // between firing attachApplication and us processing it, this reentrant callback into its
+            // own (now possibly-frozen) process can silently fail - "sent binder code 1 ... to frozen
+            // apps and got error -74" (see #371). The temp allowlist exempts the UID from Doze AND
+            // clears OomAdjuster's freeze state (SHOULD_NOT_FREEZE_REASON_UID_ALLOWLISTED), so the
+            // same call already used before sendBinderToUserApp doubles as a freezer guard here.
+            DeviceIdleControllerApis.addPowerSaveTempWhitelistApp(requestPackageName, 30 * 1000,
+                    UserHandleCompat.getUserId(callingUid), 316/* PowerExemptionManager#REASON_SHELL */, "shell");
+        } catch (Throwable e) {
+            LOGGER.w(e, "Failed to add %s to power save temp whitelist before bindApplication", requestPackageName);
+        }
+        try {
+            // Normal path: IShizukuApplication is now moe.shizuku.server.IShizukuApplication, matching
+            // what rikka clients implement, so this transacts under the descriptor they expect.
+            application.bindApplication(reply);
+        } catch (Throwable e) {
+            // The whitelist call above only *requests* an unfreeze - it doesn't guarantee the freeze
+            // state has actually cleared before this reentrant call runs in the same call stack, so
+            // the very first attempt can still lose the race (#371). Retry on the same backoff used
+            // for ClientRecord.dispatchRequestPermissionResult / UserServiceRecord.broadcastBinderReceived
+            // before falling through to the legacy-descriptor path, which is a rare last resort, not
+            // the primary recovery mechanism.
+            LOGGER.w(e, "bindApplication failed for %s, scheduling retry", requestPackageName);
+            scheduleBindApplicationRetry(application, reply, requestPackageName, UserHandleCompat.getUserId(callingUid), 0);
+        }
+    }
+
+    // Mirrors UserServiceRecord.RETRY_DELAYS_MS — see that declaration for the rationale.
+    private static final long[] BIND_APPLICATION_RETRY_DELAYS_MS = {300, 1000, 3000, 9000};
+
+    private static void scheduleBindApplicationRetry(IShizukuApplication application, Bundle reply,
+                                                       String requestPackageName, int userId, int attempt) {
+        HandlerUtil.getMainHandler().postDelayed(() -> {
+            // Re-apply the whitelist on each retry: the initial addPowerSaveTempWhitelistApp()
+            // in attachApplication() may have been called while the process was still frozen,
+            // and some OEM schedulers (Xiaomi/Samsung) need the signal refreshed to actually
+            // clear the freeze state by retry time.
+            try {
+                DeviceIdleControllerApis.addPowerSaveTempWhitelistApp(requestPackageName, 30 * 1000,
+                        userId, 316, "shell");
+            } catch (Throwable ignored) {
+            }
+            try {
+                application.bindApplication(reply);
+            } catch (Throwable retryError) {
+                if (attempt + 1 < BIND_APPLICATION_RETRY_DELAYS_MS.length) {
+                    LOGGER.w(retryError, "Retry %d failed for bindApplication to %s, scheduling next retry", attempt + 1, requestPackageName);
+                    scheduleBindApplicationRetry(application, reply, requestPackageName, userId, attempt + 1);
+                } else {
+                    // Belt-and-suspenders fallback, kept from when this interface lived under
+                    // af.shizuku.server and the descriptor mismatched: re-send bindApplication by
+                    // hand-writing the moe token. Should no longer be reached for descriptor reasons
+                    // now that the AIDL package matches - only exercised once backoff is exhausted.
+                    LOGGER.w("All bindApplication retries failed for %s, trying legacy descriptor", requestPackageName);
+                    try {
+                        Parcel data = Parcel.obtain();
+                        try {
+                            data.writeInterfaceToken("moe.shizuku.server.IShizukuApplication");
+                            // 1 = bindApplication(Bundle)
+                            data.writeInt(1);
+                            reply.writeToParcel(data, 0);
+                            application.asBinder().transact(1, data, null, IBinder.FLAG_ONEWAY);
+                            LOGGER.i("Successfully sent bindApplication via legacy descriptor to " + requestPackageName);
+                        } finally {
+                            data.recycle();
+                        }
+                    } catch (Throwable e2) {
+                        LOGGER.e(e2, "attachApplication legacy also failed for " + requestPackageName);
+                    }
+                }
+            }
+        }, BIND_APPLICATION_RETRY_DELAYS_MS[attempt]);
+    }
+
+    private final java.util.Map<String, Boolean> featureEnabledMap = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.Map<String, String> plusSettingsMap = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private boolean isFeatureEnabled(String key) {
+        if (featureEnabledMap.containsKey(key)) return featureEnabledMap.get(key);
+        // The manager and the server don't always agree on whether a feature key carries the
+        // "_enabled" suffix. Normalize in BOTH directions so a caller checking "foo_enabled"
+        // still resolves a value the manager synced as "foo" (and vice versa).
+        if (key.endsWith("_enabled")) {
+            String stripped = key.substring(0, key.length() - "_enabled".length());
+            if (featureEnabledMap.containsKey(stripped)) return featureEnabledMap.get(stripped);
+        } else if (featureEnabledMap.containsKey(key + "_enabled")) {
+            return featureEnabledMap.get(key + "_enabled");
+        }
+        return featureEnabledMap.getOrDefault(key, false);
+    }
+
+    @Override
+    public boolean checkExtraFeatureEnabled(String key) {
+        return isFeatureEnabled(key);
+    }
+
+    @Override
+    protected boolean isBinderCallBlocked(int uid, String descriptor, int code) {
+        if (!isFeatureEnabled("binder_firewall")) return false;
+
+        // The manager app (the owner of this service) is always allowed
+        if (isManagerAppId(UserHandleCompat.getAppId(uid))) return false;
+
+        boolean isBlocked = false;
+
+        // Block sensitive system operations for all other apps if firewall is active
+        if ("android.os.IPowerManager".equals(descriptor)) {
+            // 17 = reboot, 18 = shutdown
+            if (code == 17 || code == 18) isBlocked = true;
+        } else if ("android.app.IActivityManager".equals(descriptor)) {
+            // Common heuristic for dangerous power/app actions
+            if (code == 50 || code == 61 || code == 78 || code == 103) isBlocked = true;
+        }
+
+        // Dynamic policy from settings
+        String blockedDescriptors = plusSettingsMap.get("firewall_blocked_descriptors");
+        if (blockedDescriptors != null && !blockedDescriptors.isEmpty()) {
+            for (String blocked : blockedDescriptors.split(",")) {
+                if (descriptor.equals(blocked.trim())) isBlocked = true;
+            }
+        }
+
+        if (isBlocked) {
+            LOGGER.w("Binder call blocked: UID=%d, Descriptor=%s, Code=%d", uid, descriptor, code);
+        }
+
+        return isBlocked;
+    }
+
+    private static int TRANSACTION_getPackageInfo = -1;
+    private static int TRANSACTION_getApplicationInfo = -1;
+    private static int TRANSACTION_getPackageUid = -1;
+
+    static {
+        try {
+            Class<?> stub = Class.forName("android.content.pm.IPackageManager$Stub");
+            try {
+                java.lang.reflect.Field f1 = stub.getDeclaredField("TRANSACTION_getPackageInfo");
+                f1.setAccessible(true);
+                TRANSACTION_getPackageInfo = f1.getInt(null);
+            } catch (Exception ignore) {}
+            try {
+                java.lang.reflect.Field f2 = stub.getDeclaredField("TRANSACTION_getApplicationInfo");
+                f2.setAccessible(true);
+                TRANSACTION_getApplicationInfo = f2.getInt(null);
+            } catch (Exception ignore) {}
+            try {
+                java.lang.reflect.Field f3 = stub.getDeclaredField("TRANSACTION_getPackageUid");
+                f3.setAccessible(true);
+                TRANSACTION_getPackageUid = f3.getInt(null);
+            } catch (Exception ignore) {}
+        } catch (Throwable t) {
+            LOGGER.e(t, "Shadow: Failed to dynamically look up IPackageManager transaction codes");
+        }
+    }
+
+    @Override
+    protected boolean handleShadowBinderTransaction(IBinder target, int code, Parcel data, Parcel reply, int flags) {
+        try {
+            String descriptor = target.getInterfaceDescriptor();
+            // Shadowing IPackageManager to hide specific apps or spoof Magisk presence
+            if ("android.content.pm.IPackageManager".equals(descriptor)) {
+                // Save position to restore if we don't handle it
+                int pos = data.dataPosition();
+                data.setDataPosition(0);
+                
+                String packageName = null;
+                try {
+                    data.enforceInterface(descriptor);
+                    packageName = data.readString();
+                } catch (Exception e) {
+                    // Fallback or ignore
+                }
+                
+                // Restore position immediately after reading what we need
+                data.setDataPosition(pos);
+
+                // Spoof original Shizuku package to fix #248 and #249 (client app hardcoded checks)
+                boolean isShizukuSpoof = "moe.shizuku.privileged.api".equals(packageName);
+                
+                if (!isFeatureEnabled("shadow_binder") && !isFeatureEnabled("root_magisk_mocking") && !isShizukuSpoof) return false;
+
+                // Binder-level Magisk & Framework Spoofing
+                if ((isFeatureEnabled("root_magisk_mocking") && packageName != null && 
+                    (packageName.equals("com.topjohnwu.magisk") || 
+                     packageName.equals("org.lsposed.manager") || 
+                     packageName.equals("eu.chainfire.supersu"))) || isShizukuSpoof) {
+                     
+                    LOGGER.i("Shadow: Spoofing package presence from IPackageManager call for %s (code %d)", packageName, code);
+                    try {
+                        android.content.pm.PackageInfo info = new android.content.pm.PackageInfo();
+                        info.packageName = packageName;
+                        info.versionName = "26.4";
+                        info.versionCode = 26400;
+                        info.applicationInfo = new android.content.pm.ApplicationInfo();
+                        info.applicationInfo.packageName = packageName;
+                        info.applicationInfo.sourceDir = "/data/app/" + packageName + "-mocked/base.apk";
+                        info.applicationInfo.flags = android.content.pm.ApplicationInfo.FLAG_SYSTEM;
+
+                        if (code == TRANSACTION_getPackageInfo) {
+                            reply.writeNoException();
+                            reply.writeTypedObject(info, 1);
+                            return true;
+                        } else if (code == TRANSACTION_getApplicationInfo) {
+                            reply.writeNoException();
+                            reply.writeTypedObject(info.applicationInfo, 1);
+                            return true;
+                        } else if (code == TRANSACTION_getPackageUid) {
+                            reply.writeNoException();
+                            reply.writeInt(10000); // Mock UID
+                            return true;
+                        }
+                        // Fallback: let the system handle it or return false
+                        return false;
+                    } catch (Exception e) {
+                        LOGGER.e("Shadow: Failed to spoof package %s", packageName);
+                    }
+                }
+                String hiddenPackages = plusSettingsMap.get("shadow_hidden_packages");
+                if (hiddenPackages != null && packageName != null && !packageName.isEmpty()) {
+                    boolean shouldHide = false;
+                    for (String p : hiddenPackages.split(",")) {
+                        if (packageName.equals(p.trim())) {
+                            shouldHide = true;
+                            break;
+                        }
+                    }
+
+                    if (shouldHide) {
+                        // Only intercept known methods to prevent Type Confusion crashes
+                        if (code == TRANSACTION_getPackageInfo || code == TRANSACTION_getApplicationInfo || code == TRANSACTION_getPackageUid) {
+                            LOGGER.i("Shadow: Hiding package %s from IPackageManager call (code %d)", packageName, code);
+                            reply.writeNoException();
+                            
+                            if (code == TRANSACTION_getPackageInfo || code == TRANSACTION_getApplicationInfo) { 
+                                reply.writeTypedObject(null, 0); // null ApplicationInfo/PackageInfo
+                            } else {
+                                reply.writeInt(0); // 0 UID
+                            }
+                            return true;
+                        }
+                    }
+                }
+            }
+            
+            // Shadowing IActivityManager to mock process states
+            if ("android.app.IActivityManager".equals(descriptor)) {
+                // Future expansion: hide processes from Task Manager
+            }
+            
+        } catch (Exception e) {
+            LOGGER.e("Shadow Binder error", e);
+        }
+
+        return false;
+    }
+
+    @Override
+    public void updateExtraFeatureEnabled(String key, boolean enabled) {
+        enforceManagerPermission("updateExtraFeatureEnabled");
+        LOGGER.i("Plus Feature Update: " + key + " -> " + enabled);
+        featureEnabledMap.put(key, enabled);
+    }
+
+    @Override
+    public void setExtraSetting(String key, String value) {
+        enforceManagerPermission("setExtraSetting");
+        LOGGER.i("Plus Setting Update: " + key + " -> " + value);
+        plusSettingsMap.put(key, value);
+    }
+
+    private void dispatchLog(String packageName, String action) {
+        if (!isFeatureEnabled("enable_activity_log")) return;
+
+        // Store log in internal buffer for CLI access
+        String time = new java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date());
+        String logEntry = String.format("[%s] %s: %s", time, packageName, action);
+        synchronized (serverLogs) {
+            if (serverLogs.size() >= MAX_SERVER_LOGS) {
+                serverLogs.remove(0);
+            }
+            serverLogs.add(logEntry);
+        }
+
+        mainHandler.post(() -> {
+
+            ApplicationInfo ai = getManagerApplicationInfo();
+            if (ai == null) return;
+
+            List<ClientRecord> records = clientManager.findClients(ai.uid);
+            for (ClientRecord record : records) {
+                try {
+                    record.client.dispatchLog("", packageName, action);
+                } catch (Throwable e) {
+                    LOGGER.w(e, "Failed to dispatch log for package %s", packageName);
+                }
+            }
+        });
+    }
+
+    // Whole-partition wipe: `rm` (any flags) whose TARGET is a partition ROOT as a complete path
+    // token — optionally a "/*" glob. Crucially, a deeper path such as /data/data/<pkg>/cache,
+    // /data/local/tmp/..., or /storage/emulated/0/Android/data/<pkg>/... is a LEGITIMATE app
+    // operation and must NOT be blocked, so the root must be followed by whitespace or end-of-string,
+    // never another "/segment". The old `contains("rm -rf /data")` matched all of those subpaths and
+    // hard-failed common app cache-clears (and the SU bridge's own /data/local/tmp cleanup).
+    private static final java.util.regex.Pattern WIPE_PARTITION = java.util.regex.Pattern.compile(
+            "(?:^|\\s)(?:\\S*/)?rm\\s+(?:-\\S+\\s+)*(?:/(?:data|system|storage|vendor|sdcard)|/)(?:/\\*)?(?=\\s|$)");
+
+    private boolean isCatastrophicCommand(String[] cmd) {
+        if (cmd == null || cmd.length == 0) return false;
+        String fullCmd = String.join(" ", cmd);
+        // Block formatting block devices
+        if (fullCmd.contains("mkfs") || fullCmd.contains("mke2fs")) return true;
+        // Block wiping an entire partition (but not legitimate deletes of a subpath under it)
+        if (WIPE_PARTITION.matcher(fullCmd).find()) return true;
+        // Block dd to raw block devices (unless inside a magisk module context, but we want to prompt)
+        if (fullCmd.startsWith("dd ") && fullCmd.contains("of=/dev/block/")) return true;
+        return false;
+    }
+
+    @Override
+    public IRemoteProcess newProcess(String[] cmd, String[] env, String dir) {
+        // Every branch below this point (SU-bridge mocking, build.prop redirection, iptables/pm
+        // interception) executes real, privileged Runtime.exec() side effects on `cmd` before
+        // ever reaching newProcessInternal()'s own enforceCallingPermission("newProcess") check —
+        // an unauthorized caller could trigger real root mkdir/cp/iptables/pm execution purely by
+        // having a live binder reference, with the permission check only gating the *return value*.
+        // Enforce here, first, so no caller-supplied cmd is ever inspected/executed pre-authorization.
+        enforceCallingPermission("newProcess");
+
+        int callingUid = Binder.getCallingUid();
+        int callingPid = Binder.getCallingPid();
+        ClientRecord caller = clientManager.findClient(callingUid, callingPid);
+        String callingPkg = (caller != null) ? caller.packageName : "unknown";
+
+        // Most SU-bridge interceptor branches below already log what they matched/rewrote, but
+        // there was no entry-level log covering every call — so a command that matched NO
+        // interceptor (and just executed as-is) left no trace, making "authorized but appears to
+        // do nothing" reports (#411, #421, #426) undiagnosable from logcat alone. This makes every
+        // call visible regardless of which branch (if any) it hits.
+        LOGGER.d("newProcess: %s -> %s", callingPkg, String.join(" ", cmd));
+
+        // Catastrophic Command Interceptor (Storage Safety)
+        if (isCatastrophicCommand(cmd)) {
+            LOGGER.e("Catastrophic command blocked from execution by %s: %s", callingPkg, String.join(" ", cmd));
+            // In a full implementation, we would broadcast an intent to ShizukuManager to show an AppOps prompt
+            // and wait on a CountDownLatch for the user's Binder response. 
+            // For now, we instantly block to guarantee safety.
+            boolean userApproved = false; // Mock user denial
+            if (!userApproved) {
+                throw new SecurityException("Permission denied (Shizuku Storage Safety Protection)");
+            }
+        }
+        
+        // Global System File Redirection Proxy: transparently map read-only system files to user-writable proxies
+        if (isFeatureEnabled("root_build_prop_redirect") && cmd != null) {
+            String[] proxyTargets = {
+                "/system/build.prop", "/vendor/build.prop",
+                "/system/etc/mixer_paths.xml", "/vendor/etc/mixer_paths.xml",
+                "/system/etc/audio_effects.conf", "/vendor/etc/audio_effects.conf",
+                "/system/etc/gps.conf"
+            };
+            
+            for (int i = 0; i < cmd.length; i++) {
+                if (cmd[i] == null) continue;
+                for (String target : proxyTargets) {
+                    if (cmd[i].contains(target)) {
+                        String fileName = new java.io.File(target).getName();
+                        String proxyPath = "/data/adb/shizuku/" + fileName;
+                        
+                        try {
+                            Runtime.getRuntime().exec(new String[]{"mkdir", "-p", "/data/adb/shizuku"}).waitFor();
+                            java.io.File dest = new java.io.File(proxyPath);
+                            if (!dest.exists()) {
+                                String sourcePath = target;
+                                Runtime.getRuntime().exec(new String[]{"cp", sourcePath, proxyPath}).waitFor();
+                            }
+                        } catch (Exception e) {
+                            LOGGER.e(e, "SUBridge: failed to prepare proxy file for " + target);
+                        }
+                        
+                        cmd[i] = cmd[i].replace(target, proxyPath);
+                        LOGGER.i("SUBridge: dynamically rewrote " + target + " to " + proxyPath);
+                    }
+                }
+            }
+        }
+
+        // Global Magisk Environment Variable Injection
+        if (isFeatureEnabled("root_magisk_mocking")) {
+            if (env == null) {
+                // A null env is supposed to inherit the server process's environment (BOOTCLASSPATH,
+                // ANDROID_DATA, ANDROID_ROOT, etc.) — replacing it outright with just the two Magisk
+                // vars strips that boot env, so any child spawning app_process (e.g. a UserService)
+                // dies instantly with "ANDROID_DATA environment variable unset" (#410).
+                java.util.List<String> envList = new java.util.ArrayList<>();
+                for (java.util.Map.Entry<String, String> entry : System.getenv().entrySet()) {
+                    envList.add(entry.getKey() + "=" + entry.getValue());
+                }
+                envList.add("MAGISK_VER=26.4");
+                envList.add("MAGISK_VER_CODE=26400");
+                env = envList.toArray(new String[0]);
+            } else {
+                java.util.List<String> envList = new java.util.ArrayList<>(java.util.Arrays.asList(env));
+                envList.add("MAGISK_VER=26.4");
+                envList.add("MAGISK_VER_CODE=26400");
+                env = envList.toArray(new String[0]);
+            }
+        }
+        
+        // SU Bridge interception: strip su wrapper and run command directly via Shizuku privileges
+        if (isFeatureEnabled("su_bridge") && cmd != null && cmd.length > 0) {
+            String base = cmd[0];
+            if (base.equals("su") || base.endsWith("/su")) {
+                dispatchLog(callingPkg, "su " + String.join(" ", cmd));
+                java.util.List<String> args = new java.util.ArrayList<>();
+                boolean inCommand = false;
+                boolean skipNext = false;
+                for (int i = 1; i < cmd.length; i++) {
+                    if (skipNext) { skipNext = false; continue; }
+                    if (inCommand) {
+                        args.add(cmd[i]);
+                    } else if (cmd[i].equals("-c") || cmd[i].equals("--command")) {
+                        inCommand = true;
+                    } else if (cmd[i].equals("-s") || cmd[i].equals("--shell") ||
+                               cmd[i].equals("-cn") || cmd[i].equals("--context") ||
+                               cmd[i].equals("-g") || cmd[i].equals("--group") ||
+                               cmd[i].equals("-u") || cmd[i].equals("--user")) {
+                        // These flags take a following argument — skip both
+                        skipNext = true;
+                    } else if (cmd[i].equals("-v") || cmd[i].equals("--version")) {
+                        // Return a fake version string for su
+                        return newProcessInternal(new String[]{"echo", "26.4:MAGISKSU"}, env, dir);
+                    } else if (cmd[i].equals("-V")) {
+                        return newProcessInternal(new String[]{"echo", "26400"}, env, dir);
+                    } else if (cmd[i].equals("-l") || cmd[i].equals("--login") || cmd[i].equals("-") ||
+                               cmd[i].equals("-M") || cmd[i].equals("--magisk-mode") ||
+                               cmd[i].equals("-mm") || cmd[i].equals("--mount-master")) {
+                        // Login / Magisk mode flags — standalone, take NO argument, skip safely.
+                        // (-mm/--mount-master previously sat in the arg-taking branch above, which ate
+                        // the following token — so `su -mm -c "cmd"` swallowed the -c and dropped the
+                        // command, opening an empty interactive shell instead of running it.)
+                    } else if (cmd[i].equals("-p") || cmd[i].equals("-m") || cmd[i].equals("--preserve-environment")) {
+                        // Environment preservation flags — skip
+                    } else if (!cmd[i].startsWith("-") && args.isEmpty()) {
+                        // user/uid argument (e.g. "0", "root") — skip it
+                    } else if (cmd[i].startsWith("-")) {
+                        // Unknown flag — skip safely
+                    } else {
+                        // Positional argument without -c (some su binaries support this)
+                        args.add(cmd[i]);
+                    }
+                }
+                if (!args.isEmpty()) {
+                    if (inCommand) {
+                        // Safe split execution to preserve spaces and quote arguments correctly
+                        String script = args.get(0);
+                        String[] newCmd = new String[2 + args.size()];
+                        newCmd[0] = "sh";
+                        newCmd[1] = "-c";
+                        newCmd[2] = script;
+                        for (int i = 1; i < args.size(); i++) {
+                            newCmd[2 + i] = args.get(i);
+                        }
+                        cmd = newCmd;
+                        LOGGER.i("SUBridge: intercepted su -c call, safely routing arguments to sh");
+                    } else {
+                        // Direct binary/command execution
+                        cmd = args.toArray(new String[0]);
+                        LOGGER.i("SUBridge: intercepted su call, executing command directly");
+                    }
+                    
+                    // Inject actual su path into environment PATH
+                    String realSuPath = plusSettingsMap.get("su_path");
+                    if (realSuPath != null && realSuPath.contains("/")) {
+                        String suDir = realSuPath.substring(0, realSuPath.lastIndexOf("/"));
+                        if (env == null) env = new String[]{"PATH=" + suDir + ":/sbin:/system/bin:/system/xbin"};
+                        else {
+                            boolean foundPath = false;
+                            for (int i = 0; i < env.length; i++) {
+                                if (env[i].startsWith("PATH=")) {
+                                    env[i] = "PATH=" + suDir + ":" + env[i].substring(5);
+                                    foundPath = true;
+                                    break;
+                                }
+                            }
+                            if (!foundPath) {
+                                String[] newEnv = new String[env.length + 1];
+                                System.arraycopy(env, 0, newEnv, 0, env.length);
+                                newEnv[env.length] = "PATH=" + suDir + ":/sbin:/system/bin:/system/xbin";
+                                env = newEnv;
+                            }
+                        }
+                    }
+                } else {
+                    cmd = new String[]{"sh"};
+                    LOGGER.i("SUBridge: intercepted interactive su, opening sh");
+                }
+            }
+        }
+        if (isFeatureEnabled("shell_interceptor") && cmd != null && cmd.length > 0) {
+            // Unpack busybox calls so the underlying applet (cp, tar, rm) hits our hooks
+            if (cmd[0].equals("busybox") || cmd[0].endsWith("/busybox")) {
+                if (cmd.length == 1 || cmd[1].startsWith("-")) {
+                    if (isFeatureEnabled("root_busybox_mocking")) {
+                        LOGGER.i("SUBridge: mocking busybox version string");
+                        return newProcessInternal(new String[]{"echo", "BusyBox v1.36.1 (ShizukuX Built-in)"}, env, dir);
+                    }
+                } else {
+                    String[] newCmd = new String[cmd.length - 1];
+                    System.arraycopy(cmd, 1, newCmd, 0, newCmd.length);
+                    cmd = newCmd;
+                }
+            }
+            
+            String baseCmd = cmd[0];
+            
+            // Dynamic Shell Function Injection for Deep Root Spoofing
+            if (isFeatureEnabled("su_bridge") && (baseCmd.equals("sh") || baseCmd.endsWith("/sh")) && cmd.length >= 3 && (cmd[1].equals("-c") || cmd[1].equals("--command"))) {
+                String originalScript = cmd[2];
+                if (!originalScript.startsWith("magisk() {")) {
+                    String mockHeader = "magisk() { if [ \"$1\" = \"-v\" ] || [ \"$1\" = \"--version\" ]; then echo \"26.4:MAGISKSU\"; elif [ \"$1\" = \"-V\" ]; then echo 26400; else echo \"Magisk v26.4 (26400) - ShizukuX Bridge Mode\"; fi; }; " +
+                                        "su() { if [ \"$1\" = \"-v\" ] || [ \"$1\" = \"--version\" ]; then echo \"26.4:MAGISKSU\"; elif [ \"$1\" = \"-V\" ]; then echo 26400; elif [ \"$1\" = \"-c\" ]; then shift; eval \"$@\"; else eval \"$@\"; fi; }; " +
+                                        "getenforce() { echo Permissive; }; ";
+                    cmd[2] = mockHeader + originalScript;
+                    LOGGER.i("SUBridge: dynamically injected bash mock functions into sh -c payload");
+                }
+            }
+            
+            // Root Mocking: Fake common root environment checks
+            if (isFeatureEnabled("su_bridge")) {
+                if (baseCmd.equals("supolicy") || baseCmd.equals("magiskpolicy")) {
+                    LOGGER.i("SUBridge: mocking SELinux policy injection for " + baseCmd);
+                    return newProcessInternal(new String[]{"true"}, env, dir);
+                } else if ((baseCmd.equals("iptables") || baseCmd.equals("ip6tables") || baseCmd.endsWith("/iptables") || baseCmd.endsWith("/ip6tables")) && isFeatureEnabled("root_iptables_mocking")) {
+                    LOGGER.i("SUBridge: executing and mocking iptables command -> " + String.join(" ", cmd));
+                    java.lang.Process p = null;
+                    try {
+                        p = Runtime.getRuntime().exec(cmd);
+                        int exitCode = p.waitFor();
+                        if (exitCode == 0) {
+                            return newProcessInternal(cmd, env, dir);
+                        } else {
+                            LOGGER.e("SUBridge: iptables exited with error (" + exitCode + "), returning mock success");
+                            return newProcessInternal(new String[]{"true"}, env, dir);
+                        }
+                    } catch (Exception e) {
+                        LOGGER.e("SUBridge: iptables exec failed, returning mock success");
+                        return newProcessInternal(new String[]{"true"}, env, dir);
+                    } finally {
+                        if (p != null) p.destroy();
+                    }
+                } else if (baseCmd.equals("pm") && cmd.length > 1 && cmd[1].equals("list") && String.join(" ", cmd).contains("packages")) {
+                    if (isFeatureEnabled("root_magisk_mocking")) {
+                        LOGGER.i("SUBridge: mocking pm list packages to include Magisk");
+                        java.lang.Process p = null;
+                        try {
+                            p = Runtime.getRuntime().exec(cmd);
+                            java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
+                            java.lang.StringBuilder sb = new java.lang.StringBuilder();
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                sb.append(line).append("\n");
+                            }
+                            sb.append("package:com.topjohnwu.magisk\n");
+                            return newProcessInternal(new String[]{"echo", sb.toString().trim()}, env, dir);
+                        } catch (Exception e) {
+                            return newProcessInternal(new String[]{"echo", "package:com.topjohnwu.magisk"}, env, dir);
+                        } finally {
+                            if (p != null) p.destroy();
+                        }
+                    }
+                } else if (baseCmd.equals("pm") && cmd.length > 2 && cmd[1].equals("path") && cmd[2].equals("com.topjohnwu.magisk")) {
+                    if (isFeatureEnabled("root_magisk_mocking")) {
+                        LOGGER.i("SUBridge: mocking pm path for Magisk");
+                        return newProcessInternal(new String[]{"echo", "package:/data/app/com.topjohnwu.magisk-mocked/base.apk"}, env, dir);
+                    }
+                }
+
+                if (baseCmd.equals("id")) {
+                    LOGGER.i("SUBridge: mocking id command");
+                    if (cmd.length > 1 && (cmd[1].equals("-u") || cmd[1].equals("-g") || cmd[1].equals("-G"))) {
+                        return newProcessInternal(new String[]{"echo", "0"}, env, dir);
+                    }
+                    return newProcessInternal(new String[]{"echo", "uid=0(root) gid=0(root) groups=0(root)"}, env, dir);
+                } else if (baseCmd.equals("whoami")) {
+                    LOGGER.i("SUBridge: mocking whoami command");
+                    return newProcessInternal(new String[]{"echo", "root"}, env, dir);
+                } else if (baseCmd.equals("getenforce")) {
+                    if (isFeatureEnabled("root_magisk_mocking")) {
+                        LOGGER.i("SUBridge: mocking getenforce command");
+                        return newProcessInternal(new String[]{"echo", "Permissive"}, env, dir);
+                    }
+                } else if (baseCmd.equals("setenforce") || baseCmd.equals("chcon") || baseCmd.equals("restorecon")) {
+                    if (isFeatureEnabled("root_auto_grant")) {
+                        LOGGER.i("SUBridge: mapping SELinux modification to AppOps elevation for caller package " + callingPkg);
+                        performAppOpsElevation(callingPkg, callingUid);
+                    }
+                    return newProcessInternal(new String[]{"true"}, env, dir);
+                } else if (baseCmd.equals("setprop") && cmd.length > 2) {
+                    LOGGER.i("SUBridge: intercepted setprop " + cmd[1] + " " + cmd[2]);
+                    try {
+                        android.os.SystemProperties.set(cmd[1], cmd[2]);
+                        return newProcessInternal(new String[]{"true"}, env, dir);
+                    } catch (Exception e) {
+                        LOGGER.e("SUBridge: setprop failed", e);
+                        return newProcessInternal(new String[]{"false"}, env, dir);
+                    }
+                } else if (baseCmd.equals("mount") && cmd.length > 1 && String.join(" ", cmd).contains("remount")) {
+                    String fullCmd = String.join(" ", cmd);
+                    LOGGER.i("SUBridge: intercepting mount remount. Delegating to OverlayManager Proxy.");
+                    if (isFeatureEnabled("overlay_fs_proxy_enabled") && (fullCmd.contains("/system") || fullCmd.contains("/vendor"))) {
+                        try {
+                            overlayManagerExtra.prepareShadowMount(callingPkg, "/system");
+                        } catch (Exception e) {
+                            LOGGER.e("SUBridge: shadow mount proxy failed", e);
+                        }
+                    }
+                    return newProcessInternal(new String[]{"true"}, env, dir);
+                } else if (baseCmd.equals("mount") && cmd.length > 3 && String.join(" ", cmd).contains("--bind")) {
+                    String fullCmd = String.join(" ", cmd);
+                    LOGGER.i("SUBridge: intercepting mount --bind request: " + fullCmd);
+                    if (isFeatureEnabled("root_magisk_mocking")) {
+                        // Fake success for general systemless modifications
+                        LOGGER.i("SUBridge: Faking mount --bind success for systemless module compatibility");
+                        return newProcessInternal(new String[]{"true"}, env, dir);
+                    }
+                    return newProcessInternal(new String[]{"true"}, env, dir);
+                } else if (baseCmd.equals("losetup")) {
+                    if (isFeatureEnabled("root_magisk_mocking")) {
+                        String fullCmd = String.join(" ", cmd);
+                        LOGGER.i("SUBridge: mocking losetup " + fullCmd);
+                        // Respond with a fake loopback device if requested
+                        if (fullCmd.contains("-f") || fullCmd.contains("--show")) {
+                            return newProcessInternal(new String[]{"echo", "/dev/block/loop99"}, env, dir);
+                        }
+                        // Default fake success for setting up loop device
+                        return newProcessInternal(new String[]{"true"}, env, dir);
+                    }
+                } else if (baseCmd.equals("mke2fs") || baseCmd.equals("mkfs.ext4") || baseCmd.equals("make_ext4fs")) {
+                    if (isFeatureEnabled("root_magisk_mocking")) {
+                        LOGGER.i("SUBridge: mocking " + baseCmd + " success for systemless image creation");
+                        return newProcessInternal(new String[]{"true"}, env, dir);
+                    }
+                } else if (baseCmd.equals("chroot")) {
+                    if (isFeatureEnabled("root_magisk_mocking")) {
+                        LOGGER.i("SUBridge: intercepting chroot. Mocking chroot environment execution.");
+                        if (cmd.length > 2) {
+                            // Strip 'chroot' and the fake root directory, execute the remaining payload natively
+                            String[] chrootCmd = new String[cmd.length - 2];
+                            System.arraycopy(cmd, 2, chrootCmd, 0, cmd.length - 2);
+                            return newProcessInternal(chrootCmd, env, dir);
+                        }
+                        // Default fake success
+                        return newProcessInternal(new String[]{"true"}, env, dir);
+                    }
+                } else if ((baseCmd.equals("cp") || baseCmd.equals("mv") || baseCmd.equals("tar")) && (String.join(" ", cmd).contains("/data/data") || String.join(" ", cmd).contains("/system"))) {
+                    if (isFeatureEnabled("root_file_interceptor")) {
+                        LOGGER.i("SUBridge: injecting permission-preservation flags for sensitive file operation");
+                        java.util.List<String> newCmd = new java.util.ArrayList<>(java.util.Arrays.asList(cmd));
+                        // Only cp takes these flags. mv rejects both -p and --preserve=all (it would
+                        // die with "invalid option"), and it already preserves mode/owner/timestamps
+                        // by default — so injecting them here used to BREAK every intercepted mv. tar
+                        // likewise gets nothing injected and passes through unchanged.
+                        if (baseCmd.equals("cp")) {
+                            if (!newCmd.contains("-p")) newCmd.add(1, "-p"); // preserve permissions
+                            if (!newCmd.contains("--preserve=all")) newCmd.add(1, "--preserve=all");
+                        }
+                        return newProcessInternal(newCmd.toArray(new String[0]), env, dir);
+                    }
+                } else if (baseCmd.equals("magisk") || baseCmd.endsWith("/magisk")) {
+                    if (isFeatureEnabled("root_magisk_mocking")) {
+                        LOGGER.i("SUBridge: mocking magisk command");
+                        if (cmd.length > 1) {
+                            if (cmd[1].equals("-v") || cmd[1].equals("--version")) {
+                                return newProcessInternal(new String[]{"echo", "26.4:MAGISKSU"}, env, dir);
+                            } else if (cmd[1].equals("-V")) {
+                                return newProcessInternal(new String[]{"echo", "26400"}, env, dir);
+                            }
+                        }
+                        return newProcessInternal(new String[]{"echo", "Magisk v26.4 (26400) - ShizukuX Bridge Mode"}, env, dir);
+                    }
+                } else if (baseCmd.equals("pm") && cmd.length > 3 && cmd[1].equals("grant")) {
+                    if (isFeatureEnabled("root_auto_grant")) {
+                        LOGGER.i("SUBridge: intercepting pm grant for " + cmd[2]);
+                        // Auto-approve common root app requests
+                        String targetPkg = cmd[2];
+                        String perm = cmd[3];
+                        if (perm.contains("WRITE_SECURE_SETTINGS") || perm.contains("DUMP") || perm.contains("PACKAGE_USAGE_STATS")) {
+                            try {
+                                // waitFor() reaps the child (and lets the grant land before we
+                                // report success); without it each call leaks a zombie + its fds.
+                                Runtime.getRuntime().exec(new String[]{"pm", "grant", targetPkg, perm}).waitFor();
+                                return newProcessInternal(new String[]{"true"}, env, dir);
+                            } catch (Exception e) {
+                                LOGGER.e("SUBridge: pm grant failed", e);
+                            }
+                        }
+                    }
+                } else if (baseCmd.equals("pm") && cmd.length > 2 && (cmd[1].equals("hide") || cmd[1].equals("unhide"))) {
+                    // adb (shell) lacks MANAGE_USERS permission, so pm hide/unhide throws SecurityException.
+                    // Map to pm disable-user / pm enable which shell can execute; user-visible effect is
+                    // equivalent (app removed from launcher and cannot be launched).
+                    String action = cmd[1];
+                    String targetPkg = null;
+                    for (int j = 2; j < cmd.length; j++) {
+                        if (cmd[j].equals("--user")) { j++; continue; }
+                        targetPkg = cmd[j];
+                        break;
+                    }
+                    if (targetPkg == null) targetPkg = "";
+                    if (action.equals("hide")) {
+                        LOGGER.i("SUBridge: intercepting pm hide -> pm disable-user for " + targetPkg);
+                        return newProcessInternal(new String[]{"pm", "disable-user", "--user", "0", targetPkg}, env, dir);
+                    } else {
+                        LOGGER.i("SUBridge: intercepting pm unhide -> pm enable for " + targetPkg);
+                        return newProcessInternal(new String[]{"pm", "enable", targetPkg}, env, dir);
+                    }
+                } else if (baseCmd.equals("cat") && cmd.length > 1 && (cmd[1].equals("/sys/fs/selinux/enforce") || cmd[1].contains("/selinux/enforce"))) {
+                    if (isFeatureEnabled("root_magisk_mocking")) {
+                        LOGGER.i("SUBridge: mocking cat /sys/fs/selinux/enforce -> Permissive");
+                        return newProcessInternal(new String[]{"echo", "0"}, env, dir);
+                    }
+                } else if ((baseCmd.equals("test") || baseCmd.equals("[")) && cmd.length > 1 && (String.join(" ", cmd).contains("/sbin/.magisk") || String.join(" ", cmd).contains("/data/adb/magisk") || String.join(" ", cmd).contains("/dev/magisk") || String.join(" ", cmd).contains("/proc/self/mounts") || String.join(" ", cmd).matches(".*\\b(su|magisk)\\b.*"))) {
+                    if (isFeatureEnabled("root_magisk_mocking")) {
+                        LOGGER.i("SUBridge: mocking test/[ for root/Magisk-related paths");
+                        return newProcessInternal(new String[]{"true"}, env, dir);
+                    }
+                } else if (baseCmd.equals("stat") && cmd.length > 1 && String.join(" ", cmd).matches(".*\\b(su|magisk)\\b.*")) {
+                    if (isFeatureEnabled("root_magisk_mocking")) {
+                        LOGGER.i("SUBridge: mocking stat for su/magisk");
+                        String target = String.join(" ", cmd).contains("magisk") ? "/sbin/magisk" : "/data/local/tmp/su";
+                        return newProcessInternal(new String[]{"echo", "  File: " + target + "\n  Size: 157328\tBlocks: 312\tIO Block: 4096\tregular file\nAccess: (0755/-rwsr-xr-x)\tUid: (    0/    root)\tGid: (    0/    root)"}, env, dir);
+                    }
+                } else if (baseCmd.equals("ls") && cmd.length > 1 && (String.join(" ", cmd).contains("/su") || String.join(" ", cmd).contains("/sbin/.magisk") || String.join(" ", cmd).contains("/data/adb/magisk"))) {
+                    if (isFeatureEnabled("root_magisk_mocking")) {
+                        if (String.join(" ", cmd).contains("su")) {
+                            LOGGER.i("SUBridge: mocking ls for su path");
+                            String customSuPath = plusSettingsMap.getOrDefault("custom_su_path", "");
+                            if (customSuPath == null || customSuPath.trim().isEmpty()) customSuPath = "/data/local/tmp/su";
+                            return newProcessInternal(new String[]{"echo", "-rwsr-xr-x 1 root root 157328 2026-03-11 12:00 " + customSuPath}, env, dir);
+                        } else if (String.join(" ", cmd).contains("magisk")) {
+                            LOGGER.i("SUBridge: mocking ls for Magisk path");
+                            return newProcessInternal(new String[]{"echo", "-rwxr-xr-x 1 root root 14528 2026-03-11 12:00 /sbin/magisk"}, env, dir);
+                        }
+                    }
+                } else if (baseCmd.equals("resetprop")) {
+                    if (isFeatureEnabled("root_magisk_mocking")) {
+                        LOGGER.i("SUBridge: mocking resetprop " + String.join(" ", cmd));
+                        return newProcessInternal(new String[]{"true"}, env, dir);
+                    }
+                } else if (baseCmd.equals("which") && cmd.length > 1 && cmd[1].equals("su")) {
+                    String customSuPath = plusSettingsMap.getOrDefault("custom_su_path", "");
+                    if (customSuPath == null || customSuPath.trim().isEmpty()) customSuPath = "/data/local/tmp/su";
+                    LOGGER.i("SUBridge: mocking which su command -> " + customSuPath);
+                    return newProcessInternal(new String[]{"echo", customSuPath}, env, dir);
+                } else if (baseCmd.equals("getprop") && cmd.length > 1) {
+                    String prop = cmd[1];
+                    boolean forceReal = prop.startsWith("real.");
+                    if (forceReal) prop = prop.substring(5);
+
+                    if (!forceReal && (prop.startsWith("magisk.") || prop.equals("ro.debuggable") || prop.equals("ro.secure") || prop.equals("persist.magisk.hide"))) {
+                        if (isFeatureEnabled("root_magisk_mocking")) {
+                            LOGGER.i("SUBridge: mocking getprop " + prop);
+                            String value = "0";
+                            if (prop.equals("ro.debuggable")) value = "1";
+                            else if (prop.equals("ro.secure")) value = "0";
+                            else if (prop.equals("persist.magisk.hide")) value = "1";
+                            else if (prop.contains("version")) value = "26.4";
+                            else if (prop.contains("code")) value = "26400";
+                            else if (prop.contains("path")) value = "/data/adb/magisk";
+                            return newProcessInternal(new String[]{"echo", value}, env, dir);
+                        }
+                    } else if (prop.startsWith("ro.product.") || prop.startsWith("ro.build.")) {
+                        if (!forceReal && isFeatureEnabled("spoof_device")) {
+                            String target = plusSettingsMap.getOrDefault("spoof_target", "pixel_8_pro");
+                            LOGGER.i("SUBridge: spoofing getprop " + prop + " as " + target);
+                            String spoofValue = "";
+                            
+                            switch (target) {
+                                case "pixel_9_pro_xl":
+                                    if (prop.contains("model")) spoofValue = "Pixel 9 Pro XL";
+                                    else if (prop.contains("manufacturer")) spoofValue = "Google";
+                                    else if (prop.contains("brand")) spoofValue = "google";
+                                    else if (prop.contains("device")) spoofValue = "komodo";
+                                    else if (prop.contains("product")) spoofValue = "komodo";
+                                    else if (prop.contains("fingerprint")) spoofValue = "google/komodo/komodo:15/AP3A.241005.015/12533500:user/release-keys";
+                                    else spoofValue = android.os.SystemProperties.get(prop, "");
+                                    break;
+                                case "s24_ultra":
+                                    if (prop.contains("model")) spoofValue = "SM-S928B";
+                                    else if (prop.contains("manufacturer")) spoofValue = "samsung";
+                                    else if (prop.contains("brand")) spoofValue = "samsung";
+                                    else if (prop.contains("device")) spoofValue = "eureka";
+                                    else if (prop.contains("product")) spoofValue = "eureka";
+                                    else if (prop.contains("fingerprint")) spoofValue = "samsung/eureka/eureka:14/UP1A.231005.007/S928BXXU1AXB5:user/release-keys";
+                                    else spoofValue = android.os.SystemProperties.get(prop, "");
+                                    break;
+                                case "s22_ultra":
+                                    if (prop.contains("model")) spoofValue = "SM-S908B";
+                                    else if (prop.contains("manufacturer")) spoofValue = "samsung";
+                                    else if (prop.contains("brand")) spoofValue = "samsung";
+                                    else if (prop.contains("device")) spoofValue = "b0s";
+                                    else if (prop.contains("product")) spoofValue = "b0s";
+                                    else if (prop.contains("fingerprint")) spoofValue = "samsung/b0s/b0s:14/UP1A.231005.007/S908BXXS7DWL1:user/release-keys";
+                                    else spoofValue = android.os.SystemProperties.get(prop, "");
+                                    break;
+                                case "s23_ultra":
+                                    if (prop.contains("model")) spoofValue = "SM-S918B";
+                                    else if (prop.contains("manufacturer")) spoofValue = "samsung";
+                                    else if (prop.contains("brand")) spoofValue = "samsung";
+                                    else if (prop.contains("device")) spoofValue = "dm3";
+                                    else if (prop.contains("product")) spoofValue = "dm3";
+                                    else if (prop.contains("fingerprint")) spoofValue = "samsung/dm3/dm3:14/UP1A.231005.007/S918BXXU3BWK1:user/release-keys";
+                                    else spoofValue = android.os.SystemProperties.get(prop, "");
+                                    break;
+                                case "oneplus_12":
+                                    if (prop.contains("model")) spoofValue = "CPH2581";
+                                    else if (prop.contains("manufacturer")) spoofValue = "OnePlus";
+                                    else if (prop.contains("brand")) spoofValue = "OnePlus";
+                                    else if (prop.contains("device")) spoofValue = "OP5929L1";
+                                    else if (prop.contains("product")) spoofValue = "OP5929L1";
+                                    else if (prop.contains("fingerprint")) spoofValue = "OnePlus/CPH2581/OP5929L1:14/UKQ1.230924.001/R.202401121400:user/release-keys";
+                                    else spoofValue = android.os.SystemProperties.get(prop, "");
+                                    break;
+                                case "nothing_phone_2":
+                                    if (prop.contains("model")) spoofValue = "A065";
+                                    else if (prop.contains("manufacturer")) spoofValue = "Nothing";
+                                    else if (prop.contains("brand")) spoofValue = "Nothing";
+                                    else if (prop.contains("device")) spoofValue = "Pong";
+                                    else if (prop.contains("product")) spoofValue = "Pong";
+                                    else if (prop.contains("fingerprint")) spoofValue = "Nothing/Pong/Pong:14/UP1A.231005.007/2401121400:user/release-keys";
+                                    else spoofValue = android.os.SystemProperties.get(prop, "");
+                                    break;
+                                case "pixel_8_pro":
+                                default:
+                                    if (prop.contains("model")) spoofValue = "Pixel 8 Pro";
+                                    else if (prop.contains("manufacturer")) spoofValue = "Google";
+                                    else if (prop.contains("brand")) spoofValue = "google";
+                                    else if (prop.contains("device")) spoofValue = "husky";
+                                    else if (prop.contains("product")) spoofValue = "husky";
+                                    else if (prop.contains("fingerprint")) spoofValue = "google/husky/husky:14/UD1A.230803.041/10808577:user/release-keys";
+                                    else spoofValue = android.os.SystemProperties.get(prop, "");
+                                    break;
+                            }
+                            return newProcessInternal(new String[]{"echo", spoofValue}, env, dir);
+                        } else {
+                            // Functional: Return actual device identity
+                            String actualValue = android.os.SystemProperties.get(prop, "");
+                            LOGGER.i("SUBridge: getprop " + prop + " -> " + actualValue);
+                            return newProcessInternal(new String[]{"echo", actualValue}, env, dir);
+                        }
+                    }
+                } else if (isFeatureEnabled("experimental_root") && baseCmd.equals("setprop") && cmd.length == 3) {
+                    String prop = cmd[1];
+                    String value = cmd[2];
+                    if (prop.equals("debug.hwui.anim_duration_scale") || prop.equals("persist.sys.anim_duration_scale")) {
+                        return newProcessInternal(new String[]{"settings", "put", "global", "animator_duration_scale", value}, env, dir);
+                    } else if (prop.equals("debug.hwui.force_dark")) {
+                        String mappedValue = value.equals("true") || value.equals("1") ? "2" : "1";
+                        return newProcessInternal(new String[]{"settings", "put", "secure", "ui_night_mode", mappedValue}, env, dir);
+                    }
+                } else if (isFeatureEnabled("experimental_root")) {
+                    if (baseCmd.equals("pm") && cmd.length > 2 && cmd[1].equals("disable")) {
+                        // Map global disable to user disable for shell compatibility
+                        cmd[1] = "disable-user";
+                        String[] newCmd = new String[cmd.length + 2];
+                        System.arraycopy(cmd, 0, newCmd, 0, cmd.length);
+                        newCmd[cmd.length] = "--user";
+                        newCmd[cmd.length + 1] = "0";
+                        return newProcessInternal(newCmd, env, dir);
+                    } else if (baseCmd.equals("rm") && (String.join(" ", cmd).contains("/system/app/") || String.join(" ", cmd).contains("/system/priv-app/") || String.join(" ", cmd).contains("/product/app/"))) {
+                        String targetPath = null;
+                        for (String arg : cmd) {
+                            if (arg.startsWith("/system/app/") || arg.startsWith("/system/priv-app/") || arg.startsWith("/product/app/")) {
+                                targetPath = arg;
+                                break;
+                            }
+                        }
+                        if (targetPath != null) {
+                            LOGGER.i("SUBridge: intercepting rm on system app, mapping to pm uninstall --user 0");
+                            String safePath = targetPath.replace("'", "'\\''");
+                            String script = "PKG=$(pm list packages -f | grep '" + safePath + "' | sed 's/.*=//' | head -n 1); " +
+                                            "if [ ! -z \"$PKG\" ]; then pm uninstall -k --user 0 \"$PKG\"; else false; fi";
+                            return newProcessInternal(new String[]{"sh", "-c", script}, env, dir);
+                        }
+                        return newProcessInternal(cmd, env, dir);
+                    } else if (baseCmd.equals("kill")) {
+                        String pid = cmd[cmd.length - 1]; // PID is usually the last argument
+                        if (pid.matches("\\d+")) {
+                            LOGGER.i("SUBridge: intercepting kill " + pid + ", mapping to am force-stop");
+                            String script = "PKG=$(ps -p " + pid + " -o NAME= | sed 's/:.*//' | tr -d '[:space:]'); " +
+                                            "if [ ! -z \"$PKG\" ] && [ \"$PKG\" != \"sh\" ] && [ \"$PKG\" != \"su\" ]; then am force-stop \"$PKG\"; else kill " + String.join(" ", java.util.Arrays.copyOfRange(cmd, 1, cmd.length)) + "; fi";
+                            return newProcessInternal(new String[]{"sh", "-c", script}, env, dir);
+                        }
+                        return newProcessInternal(cmd, env, dir);
+                    } else if (baseCmd.equals("pkill") || baseCmd.equals("killall")) {
+                        String target = cmd[cmd.length - 1]; // Target name is usually the last argument
+                        LOGGER.i("SUBridge: intercepting " + baseCmd + " " + target + ", mapping to am force-stop");
+                        String safeTarget = target.replace("\"", "\\\"");
+                        String script = "if [ ! -z \"" + safeTarget + "\" ] && [ \"" + safeTarget + "\" != \"sh\" ] && [ \"" + safeTarget + "\" != \"su\" ]; then am force-stop \"" + safeTarget + "\"; else false; fi";
+                        return newProcessInternal(new String[]{"sh", "-c", script}, env, dir);
+                    } else if (baseCmd.equals("insmod") || baseCmd.equals("rmmod") || baseCmd.equals("modprobe")) {
+                        if (isFeatureEnabled("root_kernel_ghosting_enabled")) {
+                            LOGGER.i("SUBridge: intercepting kernel module load/unload (" + baseCmd + "), returning mock success");
+                            return newProcessInternal(new String[]{"true"}, env, dir);
+                        }
+                        return newProcessInternal(cmd, env, dir);
+                    } else if (baseCmd.equals("reboot")) {
+                        if (isFeatureEnabled("bootloader_fastbootd_reboot_enabled") && cmd.length > 1 && (cmd[1].equals("bootloader") || cmd[1].equals("fastboot") || cmd[1].equals("recovery"))) {
+                            LOGGER.i("SUBridge: Mapping unlocked bootloader reboot to svc power natively");
+                            return newProcessInternal(new String[]{"svc", "power", "reboot", cmd[1]}, env, dir);
+                        } else if (isFeatureEnabled("root_power_ghosting_enabled")) {
+                            LOGGER.i("SUBridge: intercepting reboot request (ghosting): " + String.join(" ", cmd));
+                            return newProcessInternal(new String[]{"true"}, env, dir);
+                        }
+                        return newProcessInternal(cmd, env, dir);
+                    } else if (baseCmd.equals("setprop") && cmd.length > 1 && cmd[1].startsWith("ctl.")) {
+                        if (isFeatureEnabled("root_power_ghosting_enabled")) {
+                            LOGGER.i("SUBridge: intercepting service control (soft reboot) " + cmd[1]);
+                            return newProcessInternal(new String[]{"true"}, env, dir);
+                        }
+                        return newProcessInternal(cmd, env, dir);
+                    } else if (baseCmd.equals("dd") && String.join(" ", cmd).contains("/dev/block/")) {
+                        if (isFeatureEnabled("root_partition_ghosting_enabled")) {
+                            LOGGER.i("SUBridge: intercepting dd on block device. Mocking success.");
+                            String script = "for arg in \"$@\"; do case $arg in of=*) touch \"${arg#of=}\" 2>/dev/null ;; esac; done; true";
+                            String[] proxyCmd = new String[cmd.length + 3];
+                            proxyCmd[0] = "sh"; proxyCmd[1] = "-c"; proxyCmd[2] = script;
+                            System.arraycopy(cmd, 0, proxyCmd, 3, cmd.length);
+                            return newProcessInternal(proxyCmd, env, dir);
+                        }
+                        return newProcessInternal(cmd, env, dir);
+                    } else if (baseCmd.equals("update_engine_client") && isFeatureEnabled("bootloader_flash_ota_enabled")) {
+                        LOGGER.i("SUBridge: Executing update_engine_client natively for systemless OTA flashing");
+                        return newProcessInternal(cmd, env, dir);
+                    } else if (baseCmd.equals("svc") && cmd.length >= 3) {
+                        String service = cmd[1];
+                        String action = cmd[2];
+                        LOGGER.i("Plus Optimization: mapping svc " + service + " to cmd");
+                        if (service.equals("wifi")) {
+                            return newProcessInternal(new String[]{"cmd", "wifi", "set-wifi-enabled", action.equals("enable") ? "enabled" : "disabled"}, env, dir);
+                        } else if (service.equals("data")) {
+                            return newProcessInternal(new String[]{"cmd", "phone", "data", action}, env, dir);
+                        } else if (service.equals("usb") && action.equals("setFunctions")) {
+                            return newProcessInternal(new String[]{"true"}, env, dir);
+                        } else if (service.equals("power") && action.equals("reboot")) {
+                            return newProcessInternal(new String[]{"true"}, env, dir);
+                        }
+                        return newProcessInternal(cmd, env, dir);
+                    } else if (baseCmd.equals("ifconfig") && cmd.length >= 3) {
+                        String iface = cmd[1];
+                        String action = cmd[2];
+                        LOGGER.i("SUBridge: mocking ifconfig " + iface + " " + action);
+                        if (iface.startsWith("wlan") && (action.equals("up") || action.equals("down"))) {
+                            return newProcessInternal(new String[]{"cmd", "wifi", "set-wifi-enabled", action.equals("up") ? "enabled" : "disabled"}, env, dir);
+                        }
+                        return newProcessInternal(new String[]{"true"}, env, dir);
+                    } else if (baseCmd.equals("ip") && cmd.length >= 4 && cmd[1].equals("link") && cmd[2].equals("set")) {
+                        String iface = cmd[3];
+                        String action = cmd[cmd.length - 1]; // "up" or "down" usually at the end
+                        LOGGER.i("SUBridge: mocking ip link set " + iface + " " + action);
+                        if (iface.startsWith("wlan") && (action.equals("up") || action.equals("down"))) {
+                            return newProcessInternal(new String[]{"cmd", "wifi", "set-wifi-enabled", action.equals("up") ? "enabled" : "disabled"}, env, dir);
+                        }
+                        return newProcessInternal(new String[]{"true"}, env, dir);
+                    } else if (baseCmd.equals("dumpsys") && cmd.length >= 2 && (cmd[1].equals("battery") || cmd[1].equals("deviceidle"))) {
+                        LOGGER.i("SUBridge: executing dumpsys " + cmd[1] + " natively under Shizuku DUMP permission");
+                        return newProcessInternal(cmd, env, dir);
+                    } else if (String.join(" ", cmd).contains("MASTER_CLEAR") || String.join(" ", cmd).contains("wipe_data") || (baseCmd.equals("sm") && cmd.length > 1 && cmd[1].equals("format"))) {
+                        LOGGER.e("SUBridge: Intercepted highly destructive command! Ghosting success to prevent data wipe: " + String.join(" ", cmd));
+                        return newProcessInternal(new String[]{"true"}, env, dir);
+                    } else if (baseCmd.equals("chattr")) {
+                        LOGGER.i("SUBridge: mocking chattr immutability applied");
+                        return newProcessInternal(new String[]{"true"}, env, dir);
+                    } else if (baseCmd.equals("lsattr")) {
+                        LOGGER.i("SUBridge: mocking lsattr output");
+                        String target = cmd[cmd.length - 1];
+                        return newProcessInternal(new String[]{"echo", "----i--------- " + target}, env, dir);
+                    } else if (baseCmd.equals("chmod") || baseCmd.equals("chown")) {
+                        LOGGER.i("SUBridge: intercepting " + baseCmd + ", returning mock success");
+                        return newProcessInternal(new String[]{"true"}, env, dir);
+                    } else if (baseCmd.equals("iptables") || baseCmd.equals("ip6tables")) {
+                        String fullCmd = String.join(" ", cmd);
+                        if (fullCmd.contains("--uid-owner")) {
+                            try {
+                                // Extract UID from "--uid-owner <uid>"
+                                int index = -1;
+                                for (int i = 0; i < cmd.length; i++) {
+                                    if (cmd[i].equals("--uid-owner")) { index = i + 1; break; }
+                                }
+                                if (index != -1 && index < cmd.length) {
+                                    int uid = Integer.parseInt(cmd[index]);
+                                    boolean restricted = !fullCmd.contains("-D"); // -A or -I means add/restrict, -D means delete/unrestrict
+                                    LOGGER.i("SUBridge: mapping iptables for UID " + uid + " to NetworkPolicy (restricted=" + restricted + ")");
+                                    
+                                    IBinder binder = ServiceManager.getService("netpolicy");
+                                    if (binder != null) {
+                                        Object service = Class.forName("android.net.INetworkPolicyManager$Stub")
+                                            .getMethod("asInterface", IBinder.class).invoke(null, binder);
+                                        // 1 = POLICY_REJECT_METERED_BACKGROUND, 4 = POLICY_REJECT_ALL (if available on target android version)
+                                        int policy = restricted ? 1 : 0; 
+                                        service.getClass().getMethod("setUidPolicy", int.class, int.class).invoke(service, uid, policy);
+                                    }
+                                }
+                            } catch (Exception e) {
+                                LOGGER.e("SUBridge: failed to map iptables to NetworkPolicy", e);
+                            }
+                        }
+                        return newProcessInternal(new String[]{"true"}, env, dir);
+                    } else if ((baseCmd.equals("tar") || baseCmd.equals("cp")) && (String.join(" ", cmd).contains("/data/data/") || String.join(" ", cmd).contains("/data/app/") || String.join(" ", cmd).contains("/data/user/"))) {
+                        String fullCmd = String.join(" ", cmd);
+                        LOGGER.i("SUBridge: mapping backup command to native bu utility: " + fullCmd);
+                        java.util.regex.Matcher m = java.util.regex.Pattern.compile("/data/(?:data|app|user/\\d+)/([^/\\-\\s]+)").matcher(fullCmd);
+                        if (m.find()) {
+                            String targetPkg = m.group(1);
+                            String archivePath = null;
+                            for (int i = 1; i < cmd.length; i++) {
+                                if (cmd[i].contains("f") && cmd[i].startsWith("-") && i + 1 < cmd.length) {
+                                    archivePath = cmd[i + 1];
+                                    break;
+                                } else if (cmd[i].endsWith(".tar") || cmd[i].endsWith(".gz")) {
+                                    archivePath = cmd[i];
+                                    break;
+                                }
+                            }
+                            boolean isRestore = fullCmd.contains("-x") || fullCmd.contains("--extract");
+                            boolean isGzip = fullCmd.contains("-z") || fullCmd.contains("--gzip") || (archivePath != null && archivePath.endsWith(".gz"));
+
+                            if (archivePath != null) {
+                                if (isRestore) {
+                                    String restoreCmd = "(printf 'ANDROID BACKUP\\n1\\n1\\nnone\\n' ; ";
+                                    if (isGzip) restoreCmd += "gunzip -c " + archivePath;
+                                    else restoreCmd += "cat " + archivePath;
+                                    restoreCmd += ") | bu restore";
+                                    return newProcessInternal(new String[]{"sh", "-c", restoreCmd}, env, dir);
+                                } else {
+                                    String backupCmd = "bu backup -apk -obb " + targetPkg + " | tail -c +25 ";
+                                    if (isGzip) backupCmd += "| gzip -c ";
+                                    backupCmd += "> " + archivePath;
+                                    return newProcessInternal(new String[]{"sh", "-c", backupCmd}, env, dir);
+                                }
+                            } else {
+                                if (isRestore) {
+                                    String restoreCmd = "(printf 'ANDROID BACKUP\\n1\\n1\\nnone\\n' ; cat) | bu restore";
+                                    return newProcessInternal(new String[]{"sh", "-c", restoreCmd}, env, dir);
+                                } else {
+                                    String backupCmd = "bu backup -apk -obb " + targetPkg + " | tail -c +25";
+                                    return newProcessInternal(new String[]{"sh", "-c", backupCmd}, env, dir);
+                                }
+                            }
+                        }
+                        return newProcessInternal(new String[]{"true"}, env, dir);
+                    } else if (baseCmd.equals("screencap")) {
+                        LOGGER.i("SUBridge: functional screencap mapping");
+                        // The shell UID is allowed to run screencap
+                        return newProcessInternal(cmd, env, dir);
+                    }
+                }
+            }
+
+            // Backporting: Native Acceleration for regular apps
+            if (baseCmd.equals("am") && cmd.length >= 3) {
+                if (cmd[1].equals("force-stop")) {
+                    String pkg = cmd[2];
+                    LOGGER.i("Plus Optimization: am force-stop " + pkg + " via ActivityManagerPlus");
+                    if (activityManagerExtra.deepForceStop(pkg)) {
+                        return newProcessInternal(new String[]{"true"}, env, dir);
+                    }
+                } else if (cmd[1].equals("freeze") || cmd[1].equals("suspend")) {
+                    String pkg = cmd[2];
+                    LOGGER.i("Plus Optimization: am freeze " + pkg + " -> restricted bucket");
+                    if (activityManagerExtra.setAppStandbyBucket(pkg, 45)) { // 45 = RESTRICTED
+                        return newProcessInternal(new String[]{"true"}, env, dir);
+                    }
+                }
+            } else if (baseCmd.equals("settings") && cmd.length >= 5 && cmd[1].equals("put")) {
+                String namespace = cmd[2];
+                String key = cmd[3];
+                String value = cmd[4];
+                int userId = UserHandleCompat.getUserId(callingUid);
+                LOGGER.i("Plus Optimization: settings put " + namespace + " " + key + " user=" + userId);
+                try {
+                    android.content.IContentProvider provider = ActivityManagerApis.getContentProviderExternal("settings", userId, null, "com.android.shell");
+                    if (provider != null) {
+                        android.os.Bundle extras = new android.os.Bundle();
+                        extras.putString("value", value);
+                        rikka.shizuku.server.api.IContentProviderUtils.callCompat(provider, null, "settings", "PUT_" + namespace, key, extras);
+                        return newProcessInternal(new String[]{"true"}, env, dir);
+                    }
+                } catch (Throwable tr) {
+                    LOGGER.e(tr, "Plus Optimization: settings put failed");
+                }
+            } else if (baseCmd.equals("pm") && cmd.length >= 2 && cmd[1].equals("install")) {
+                LOGGER.i("Plus Optimization: pm install");
+                // For now, let it fall through to sh -c pm install which is already functional
+            } else if (baseCmd.equals("appops") && cmd.length >= 5) {
+                // Intercept appops set/get for native speed
+                String op = cmd[1]; // set/get
+                String pkg = cmd[2];
+                String modeOrOp = cmd[3];
+                int userId = UserHandleCompat.getUserId(callingUid);
+                LOGGER.i("Plus Optimization: appops " + op + " " + pkg + " user=" + userId);
+                try {
+                    IBinder binder = ServiceManager.getService("appops");
+                    if (binder != null) {
+                        Class<?> stub = Class.forName("com.android.internal.app.IAppOpsService$Stub");
+                        Object service = stub.getMethod("asInterface", IBinder.class).invoke(null, binder);
+                        if (op.equals("set")) {
+                            String value = cmd[4];
+                            int intOp = (int) service.getClass().getMethod("strOpToOp", String.class).invoke(service, modeOrOp);
+                            int intMode = value.equals("allow") ? 0 : (value.equals("ignore") || value.equals("deny")) ? 1 : 2; 
+                            
+                            int targetUid = -1;
+                            try {
+                                targetUid = Integer.parseInt(pkg);
+                            } catch (NumberFormatException e) {
+                                ApplicationInfo ai = Android17Compat.getApplicationInfo(pkg, 0, userId);
+                                if (ai != null) targetUid = ai.uid;
+                            }
+                            
+                            if (targetUid != -1) {
+                                service.getClass().getMethod("setMode", int.class, int.class, String.class, int.class).invoke(service, intOp, targetUid, pkg, intMode);
+                                return newProcessInternal(new String[]{"true"}, env, dir);
+                            }
+                        }
+                    }
+                } catch (Throwable tr) {
+                    LOGGER.e(tr, "Plus Optimization: appops failed");
+                }
+            } else if (baseCmd.equals("service") && cmd.length >= 4 && cmd[1].equals("call")) {
+                String serviceName = cmd[2];
+                int code = -1;
+                try { 
+                    code = Integer.parseInt(cmd[3]); 
+                } catch (NumberFormatException ignored) {}
+
+                if (code != -1) {
+                    try {
+                        IBinder target = ServiceManager.getService(serviceName);
+                        if (target != null) {
+                            String descriptor = target.getInterfaceDescriptor();
+                            if (descriptor != null) {
+                                // 1. Pass raw IPCs through Shizuku's Binder firewall
+                                if (isBinderCallBlocked(callingUid, descriptor, code)) {
+                                    LOGGER.i("SUBridge: blocked raw service call to %s (%s) code %d", serviceName, descriptor, code);
+                                    // Mock standard Android 'service call' success output
+                                    return newProcessInternal(new String[]{"echo", "Result: Parcel(00000000    '....')"}, env, dir);
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        LOGGER.e("SUBridge: failed to evaluate raw service call securely", e);
+                        // Default to mock success on error to prevent escalation
+                        return newProcessInternal(new String[]{"echo", "Result: Parcel(00000000    '....')"}, env, dir);
+                    }
+                }
+            } else if (isFeatureEnabled("storage_proxy") && (baseCmd.equals("ls") || baseCmd.equals("rm") || baseCmd.equals("mkdir") || baseCmd.equals("cat") || baseCmd.equals("stat"))) {
+                String path = cmd[cmd.length - 1];
+                if (path.startsWith("/data/data/") || path.startsWith("/sdcard/Android/data/") || path.startsWith("/data/app/")) {
+                    LOGGER.i("Plus Optimization (Storage Bridge): mapping " + baseCmd + " " + path);
+                    try {
+                        if (baseCmd.equals("ls")) {
+                            java.util.List<String> files = storageProxy.listFiles(path);
+                            if (files != null) {
+                                String joined = String.join("\n", files);
+                                return newProcessInternal(new String[]{"echo", joined}, env, dir);
+                            }
+                        } else if (baseCmd.equals("cat")) {
+                            android.os.ParcelFileDescriptor pfd = storageProxy.openFile(path, android.os.ParcelFileDescriptor.MODE_READ_ONLY);
+                            if (pfd != null) {
+                                return new ProxyRemoteProcess(pfd, 0);
+                            }
+                        } else if (baseCmd.equals("stat")) {
+                            android.os.Bundle info = storageProxy.getFileInfo(path);
+                            if (info.getBoolean("exists")) {
+                                String statOut = "File: " + path + "\nSize: " + info.getLong("size") + "\nModify: " + info.getLong("lastModified");
+                                return newProcessInternal(new String[]{"echo", statOut}, env, dir);
+                            }
+                        } else if (baseCmd.equals("rm")) {
+                            if (storageProxy.delete(path)) {
+                                return newProcessInternal(new String[]{"true"}, env, dir);
+                            }
+                        } else if (baseCmd.equals("mkdir")) {
+                            return newProcessInternal(new String[]{"true"}, env, dir);
+                        }
+                    } catch (Exception e) {
+                        LOGGER.e("SUBridge: StorageProxy command failed", e);
+                    }
+                }
+            }
+        }
+        return super.newProcessInternal(cmd, env, dir);
+    }
+
+    @Override
+@android.annotation.SuppressLint("NewApi")
+    public void showPermissionConfirmation(int requestCode, @NonNull ClientRecord clientRecord, int callingUid, int callingPid, int userId) {
+        // ai may be null for a caller PackageManager can't resolve on this device/profile (same
+        // class of PM-lookup gap already worked around for the shell-consent path, #391) - that
+        // used to make this method bail silently, leaving the client's requestPermission() call
+        // hanging forever with no dispatch and no error. Fall through with a null ApplicationInfo;
+        // the intent always carries clientRecord.packageName (client-supplied but harmless here -
+        // it's a display label only, callingUid is what's actually authorized) so
+        // RequestPermissionActivity can still show a real "callingPackage/uid is requesting..."
+        // dialog instead of dropping the request.
+        ApplicationInfo ai = Android17Compat.getApplicationInfo(clientRecord.packageName, 0, userId);
+
+        PackageInfo pi = Android17Compat.getPackageInfo(MANAGER_APPLICATION_ID, 0, userId);
+        UserInfo userInfo = UserManagerApis.getUserInfo(userId);
+        boolean isWorkProfileUser = BuildUtils.INSTANCE.getAtLeast30() ?
+                "android.os.usertype.profile.MANAGED".equals(userInfo.userType) :
+                (userInfo.flags & UserInfo.FLAG_MANAGED_PROFILE) != 0;
+        if (pi == null && !isWorkProfileUser) {
+            LOGGER.w("Manager not found in non work profile user %d. Revoke permission", userId);
+            clientRecord.dispatchRequestPermissionResult(requestCode, false);
+            return;
+        }
+
+        Intent intent = new Intent(ServerConstants.getRequestPermissionAction())
+                .setPackage(MANAGER_APPLICATION_ID)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_NEW_DOCUMENT)
+                .putExtra("uid", callingUid)
+                .putExtra("pid", callingPid)
+                .putExtra("requestCode", requestCode)
+                .putExtra("callingPackage", clientRecord.packageName);
+        if (ai != null) {
+            intent.putExtra("applicationInfo", ai);
+        }
+        ActivityManagerApis.startActivityNoThrow(intent, null, isWorkProfileUser ? 0 : userId);
+    }
+
+    @Override
+    public void dispatchPermissionConfirmationResult(int requestUid, int requestPid, int requestCode, Bundle data) throws RemoteException {
+        if (!isManagerAppId(UserHandleCompat.getAppId(Binder.getCallingUid()))) {
+            LOGGER.w("dispatchPermissionConfirmationResult called not from the manager package");
+            return;
+        }
+
+        if (data == null) {
+            return;
+        }
+
+        boolean allowed = data.getBoolean(REQUEST_PERMISSION_REPLY_ALLOWED);
+        boolean onetime = data.getBoolean(REQUEST_PERMISSION_REPLY_IS_ONETIME);
+
+        LOGGER.i("dispatchPermissionConfirmationResult: uid=%d, pid=%d, requestCode=%d, allowed=%s, onetime=%s",
+                requestUid, requestPid, requestCode, Boolean.toString(allowed), Boolean.toString(onetime));
+
+        List<ClientRecord> records = clientManager.findClients(requestUid);
+        List<String> packages = new ArrayList<>();
+        if (records.isEmpty()) {
+            LOGGER.w("dispatchPermissionConfirmationResult: no client for uid %d was found", requestUid);
+        } else {
+            for (ClientRecord record : records) {
+                packages.add(record.packageName);
+                record.allowed = allowed;
+                if (record.pid == requestPid) {
+                    record.dispatchRequestPermissionResult(requestCode, allowed);
+                }
+            }
+        }
+
+        if (!onetime) {
+            configManager.update(requestUid, packages, ConfigManager.MASK_PERMISSION, allowed ? ConfigManager.FLAG_ALLOWED : ConfigManager.FLAG_DENIED);
+        }
+
+        if (!onetime && allowed) {
+            int userId = UserHandleCompat.getUserId(requestUid);
+
+            for (String packageName : PackageManagerApis.getPackagesForUidNoThrow(requestUid)) {
+                PackageInfo pi = Android17Compat.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS, userId);
+                if (pi == null || pi.requestedPermissions == null) {
+                    continue;
+                }
+
+                String permToGrant = null;
+                if (ArraysKt.contains(pi.requestedPermissions, PERMISSION)) {
+                    permToGrant = PERMISSION;
+                } else if (ArraysKt.contains(pi.requestedPermissions, ServerConstants.PERMISSION_ORIGINAL)) {
+                    permToGrant = ServerConstants.PERMISSION_ORIGINAL;
+                } else if (ArraysKt.contains(pi.requestedPermissions, ServerConstants.PERMISSION_LEGACY)) {
+                    permToGrant = ServerConstants.PERMISSION_LEGACY;
+                }
+
+                if (permToGrant == null) {
+                    continue;
+                }
+
+                int deviceId = 0;//Context.DEVICE_ID_DEFAULT
+                if (allowed) {
+                    try {
+                        Android17Compat.grantRuntimePermission(packageName, permToGrant, userId);
+                    } catch (Throwable e) {
+                        LOGGER.w(e, "grantRuntimePermission failed for %s (%s)", permToGrant, packageName);
+                    }
+                } else {
+                    try {
+                        Android17Compat.revokeRuntimePermission(packageName, permToGrant, userId);
+                    } catch (Throwable e) {
+                        LOGGER.w(e, "revokeRuntimePermission failed for %s (%s)", permToGrant, packageName);
+                    }
+                }
+            }
+        }
+    }
+
+    private int  getFlagsForUidInternal(int uid, int mask, boolean allowRuntimePermission) {
+        ShizukuConfig.PackageEntry entry = configManager.find(uid);
+        if (entry != null) {
+            return entry.flags & mask;
+        }
+
+        if (allowRuntimePermission && (mask & ConfigManager.MASK_PERMISSION) != 0) {
+            int userId = UserHandleCompat.getUserId(uid);
+            for (String packageName : PackageManagerApis.getPackagesForUidNoThrow(uid)) {
+                PackageInfo pi = Android17Compat.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS, userId);
+                if (pi == null || pi.requestedPermissions == null) {
+                    continue;
+                }
+
+                try {
+                    if (Android17Compat.checkPermission(PERMISSION, uid) == PackageManager.PERMISSION_GRANTED ||
+                        Android17Compat.checkPermission(ServerConstants.PERMISSION_LEGACY, uid) == PackageManager.PERMISSION_GRANTED ||
+                        Android17Compat.checkPermission(ServerConstants.PERMISSION_ORIGINAL, uid) == PackageManager.PERMISSION_GRANTED) {
+                        return ConfigManager.FLAG_ALLOWED;
+                    }
+                } catch (Throwable e) {
+                    LOGGER.w("getFlagsForUid");
+                }
+            }
+        }
+        return 0;
+    }
+
+    @Override
+    public int getFlagsForUid(int uid, int mask) {
+        if (!isManagerAppId(UserHandleCompat.getAppId(Binder.getCallingUid()))) {
+            LOGGER.w("updateFlagsForUid is allowed to be called only from the manager");
+            return 0;
+        }
+        return getFlagsForUidInternal(uid, mask, true);
+    }
+
+    @Override
+    public void updateFlagsForUid(int uid, int mask, int value) throws RemoteException {
+        if (!isManagerAppId(UserHandleCompat.getAppId(Binder.getCallingUid()))) {
+            LOGGER.w("updateFlagsForUid is allowed to be called only from the manager");
+            return;
+        }
+
+        int userId = UserHandleCompat.getUserId(uid);
+        List<String> packagesForUid = PackageManagerApis.getPackagesForUidNoThrow(uid);
+
+        if ((mask & ConfigManager.MASK_PERMISSION) != 0) {
+            boolean allowed = (value & ConfigManager.FLAG_ALLOWED) != 0;
+            boolean denied = (value & ConfigManager.FLAG_DENIED) != 0;
+
+            List<ClientRecord> records = clientManager.findClients(uid);
+            for (ClientRecord record : records) {
+                if (allowed) {
+                    record.allowed = true;
+                } else {
+                    record.allowed = false;
+                    ActivityManagerApis.forceStopPackageNoThrow(record.packageName, UserHandleCompat.getUserId(record.uid));
+                    onPermissionRevoked(record.packageName);
+                }
+            }
+
+            for (String packageName : packagesForUid) {
+                PackageInfo pi = Android17Compat.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS, userId);
+                if (pi == null || pi.requestedPermissions == null) {
+                    continue;
+                }
+
+                String permToGrant = null;
+                if (ArraysKt.contains(pi.requestedPermissions, PERMISSION)) {
+                    permToGrant = PERMISSION;
+                } else if (ArraysKt.contains(pi.requestedPermissions, ServerConstants.PERMISSION_ORIGINAL)) {
+                    permToGrant = ServerConstants.PERMISSION_ORIGINAL;
+                } else if (ArraysKt.contains(pi.requestedPermissions, ServerConstants.PERMISSION_LEGACY)) {
+                    permToGrant = ServerConstants.PERMISSION_LEGACY;
+                }
+
+                if (permToGrant == null) {
+                    continue;
+                }
+
+                int deviceId = 0;//Context.DEVICE_ID_DEFAULT
+                if (allowed) {
+                    try {
+                        Android17Compat.grantRuntimePermission(packageName, permToGrant, userId);
+                    } catch (Throwable e) {
+                        LOGGER.w(e, "grantRuntimePermission failed for %s (%s)", permToGrant, packageName);
+                    }
+                } else {
+                    try {
+                        Android17Compat.revokeRuntimePermission(packageName, permToGrant, userId);
+                    } catch (Throwable e) {
+                        LOGGER.w(e, "revokeRuntimePermission failed for %s (%s)", permToGrant, packageName);
+                    }
+                    onPermissionRevoked(packageName);
+                }
+            }
+        }
+
+        // Recording the actual package names here (rather than null) matters: both
+        // getApplications()'s per-package membership filter and ShizukuConfigManager's
+        // startup reconciliation ("did this uid's package set change since we last saw it?")
+        // treat an entry with an empty/unrecorded packages list as "doesn't cover any package
+        // for this uid" - which made every toggle-authorized app either vanish from the
+        // authorized-apps list on the very next refresh, or get pruned outright the next time
+        // the server restarted, even though nothing about the app had actually changed.
+        configManager.update(uid, packagesForUid, mask, value);
+    }
+
+    private void onPermissionRevoked(String packageName) {
+        getUserServiceManager().removeUserServicesForPackage(packageName);
+    }
+
+    private ParcelableListSlice<PackageInfo> getApplications(int userId) {
+        List<PackageInfo> list = new ArrayList<>();
+        List<Integer> users = new ArrayList<>();
+        if (userId == -1) {
+            users.addAll(UserManagerApis.getUserIdsNoThrow());
+        } else {
+            users.add(userId);
+        }
+
+        for (int user : users) {
+            for (PackageInfo pi : InstalledPackagesCompat.getInstalledPackagesNoThrow(PackageManager.GET_META_DATA | PackageManager.GET_PERMISSIONS | PackageManager.MATCH_ALL, user)) {
+                if (Objects.equals(MANAGER_APPLICATION_ID, pi.packageName)) continue;
+                if (pi.applicationInfo == null) continue;
+
+                int uid = pi.applicationInfo.uid;
+                try {
+                    if (isHidden(uid)) continue;
+                } catch (RemoteException e) {
+                    continue;
+                }
+                
+                int flags = 0;
+                ShizukuConfig.PackageEntry entry = configManager.find(uid);
+                if (entry != null) {
+                    // An empty packages list means no package name was ever recorded for this
+                    // uid (e.g. an entry written before updateFlagsForUid started recording
+                    // them) - treat that as unrestricted rather than as "matches nothing", or
+                    // this package silently vanishes from the authorized-apps list entirely.
+                    if (entry.packages != null && !entry.packages.isEmpty() && !entry.packages.contains(pi.packageName))
+                        continue;
+                    flags = entry.flags & ConfigManager.MASK_PERMISSION;
+                }
+
+                if (flags != 0) {
+                    list.add(pi);
+                } else if (pi.requestedPermissions != null && (
+                        ArraysKt.contains(pi.requestedPermissions, PERMISSION) ||
+                        ArraysKt.contains(pi.requestedPermissions, ServerConstants.PERMISSION_LEGACY) ||
+                        ArraysKt.contains(pi.requestedPermissions, ServerConstants.PERMISSION_ORIGINAL)
+                )) {
+                    list.add(pi);
+                } else if (pi.applicationInfo.metaData != null
+                        && (pi.applicationInfo.metaData.getBoolean("af.shizuku.client.V3_SUPPORT", false)
+                        || pi.applicationInfo.metaData.getBoolean("moe.shizuku.client.V3_SUPPORT", false))) {
+                    list.add(pi);
+                }
+            }
+
+        }
+        return new ParcelableListSlice<>(list);
+    }
+
+    @Override
+    public boolean onTransact(int code, Parcel data, Parcel reply, int flags) throws RemoteException {
+        if (isFeatureEnabled("binder_logging")) {
+            LOGGER.i("Binder transaction: code=%d, calling uid=%d, flags=%d", code, Binder.getCallingUid(), flags);
+        }
+        // enforceInterface() only validates the AIDL descriptor token, not caller identity — every
+        // branch here additionally needs enforceCallingPermission(), matching every other exposed
+        // method in Service.java. Without it, any process with a live IShizukuService binder could
+        // read the full installed-package list (getApplications) or, worst case, receive the raw
+        // DevicePolicyManager system binder (getDhizukuBinder) with zero authorization.
+        if (code == ServerConstants.BINDER_TRANSACTION_getApplications) {
+            data.enforceInterface(ShizukuApiConstants.BINDER_DESCRIPTOR);
+            enforceCallingPermission("getApplications");
+            int userId = data.readInt();
+            ParcelableListSlice<PackageInfo> result = getApplications(userId);
+            reply.writeNoException();
+            result.writeToParcel(reply, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE);
+            return true;
+        } else if (code == ServerConstants.BINDER_TRANSACTION_isCustomApiEnabled) {
+            data.enforceInterface(ShizukuApiConstants.BINDER_DESCRIPTOR);
+            enforceCallingPermission("isCustomApiEnabled");
+            reply.writeNoException();
+            reply.writeInt(1); // ShizukuX server always has it enabled at server level if running
+            return true;
+        } else if (code == ServerConstants.BINDER_TRANSACTION_getDhizukuBinder) {
+            data.enforceInterface(ShizukuApiConstants.BINDER_DESCRIPTOR);
+            enforceCallingPermission("getDhizukuBinder");
+            // In ShizukuX, we share the DevicePolicyManager binder if Dhizuku mode is "active"
+            // (The manager app controls this via settings, but the server just provides the binder if asked)
+            IBinder dpm = ServiceManager.getService(Context.DEVICE_POLICY_SERVICE);
+            reply.writeNoException();
+            reply.writeStrongBinder(dpm);
+            return true;
+        } else if (code == ServerConstants.BINDER_TRANSACTION_getServerPatchVersion) {
+            data.enforceInterface(ShizukuApiConstants.BINDER_DESCRIPTOR);
+            enforceCallingPermission("getServerPatchVersion");
+            reply.writeNoException();
+            reply.writeInt(ShizukuApiConstants.SERVER_PATCH_VERSION);
+            return true;
+        }
+        return super.onTransact(code, data, reply, flags);
+    }
+
+    void sendBinderToClient() {
+        for (int userId : UserManagerApis.getUserIdsNoThrow()) {
+            sendBinderToClient(this, userId);
+        }
+    }
+
+    private static void sendBinderToClient(Binder binder, int userId) {
+        try {
+            java.util.Set<String> runningPackages = new java.util.HashSet<>();
+            try {
+                java.util.List<android.app.ActivityManager.RunningAppProcessInfo> processes = null;
+                try {
+                    java.lang.reflect.Method getService = android.app.ActivityManager.class.getMethod("getService");
+                    Object am = getService.invoke(null);
+                    processes = (java.util.List<android.app.ActivityManager.RunningAppProcessInfo>) am.getClass().getMethod("getRunningAppProcesses").invoke(am);
+                } catch (Throwable t) {
+                    try {
+                        java.lang.reflect.Method getDefault = Class.forName("android.app.ActivityManagerNative").getMethod("getDefault");
+                        Object am = getDefault.invoke(null);
+                        processes = (java.util.List<android.app.ActivityManager.RunningAppProcessInfo>) am.getClass().getMethod("getRunningAppProcesses").invoke(am);
+                    } catch (Throwable ignored) {
+                    }
+                }
+                if (processes != null) {
+                    for (android.app.ActivityManager.RunningAppProcessInfo process : processes) {
+                        if (process.pkgList != null) {
+                            for (String pkg : process.pkgList) {
+                                runningPackages.add(pkg);
+                            }
+                        }
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
+
+            // Discover clients two ways:
+            // 1. Apps that declare moe.shizuku.manager.permission.API_V23 (or its ShizukuX
+            //    variants) in their manifest — the standard way every Shizuku client does.
+            // 2. Apps that register a <packageName>.shizuku ContentProvider even without the
+            //    uses-permission declaration (e.g. AxManagerD and similar deep Shizuku forks
+            //    that bundle the Shizuku API but omit the <uses-permission> tag).  This matches
+            //    Stellar's discovery behaviour and lets such clients receive the binder without
+            //    a manifest fix on their side.
+            Stream<PackageInfo> packages =
+                InstalledPackagesCompat.getInstalledPackagesNoThrow(
+                    PackageManager.GET_PERMISSIONS | PackageManager.GET_PROVIDERS | PackageManager.MATCH_ALL, userId
+                )
+                .stream()
+                .filter(pi -> pi != null)
+                .filter(pi -> {
+                    // Path 1: standard permission-based discovery
+                    if (pi.requestedPermissions != null &&
+                            (ArraysKt.contains(pi.requestedPermissions, PERMISSION) ||
+                             ArraysKt.contains(pi.requestedPermissions, ServerConstants.PERMISSION_LEGACY) ||
+                             ArraysKt.contains(pi.requestedPermissions, ServerConstants.PERMISSION_ORIGINAL))) {
+                        return true;
+                    }
+                    // Path 2: Provider-based discovery — app registers <pkg>.shizuku
+                    if (pi.providers != null) {
+                        String expectedAuthority = pi.packageName + ".shizuku";
+                        for (android.content.pm.ProviderInfo provider : pi.providers) {
+                            if (expectedAuthority.equals(provider.authority)) {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                })
+                .filter(pi -> runningPackages.contains(pi.packageName));
+
+            // NOT sendBinderToUserAppWithRetry: the same force-stop hazard that caused the
+            // PackageInstaller NPE on the live observer path (#386) applies here too — an app
+            // could be mid-PackageInstaller session when the server restarts. The 2-second
+            // delayed catchUpAlreadyRunningClients() pass in BinderSender is the appropriate
+            // place for force-stop retries; by that point the server is stable and any
+            // in-flight session from before the restart is already broken.
+            LOGGER.i("sending binders");
+            packages
+                .parallel()
+                .forEach(pi -> {
+                    sendBinderToUserApp(binder, pi.packageName, userId);
+                });
+            LOGGER.i("sent binders");
+        } catch (Throwable tr) {
+            LOGGER.e("exception when call getInstalledPackages", tr);
+        }
+    }
+
+    void sendBinderToManager() {
+        sendBinderToManager(this);
+    }
+
+    private static void sendBinderToManager(Binder binder) {
+        java.util.List<Integer> failedUserIds = new java.util.ArrayList<>();
+        for (int userId : UserManagerApis.getUserIdsNoThrow()) {
+            boolean success = sendBinderToUserApp(binder, MANAGER_APPLICATION_ID, userId);
+            if (!success) {
+                failedUserIds.add(userId);
+            }
+        }
+        if (!failedUserIds.isEmpty()) {
+            // For unknown reason, sometimes this could happen
+            // Kill Shizuku app and try again could work
+            for (int userId : failedUserIds) {
+                try {
+                    LOGGER.e("kill %s in user %d and try again", MANAGER_APPLICATION_ID, userId);
+                    ActivityManagerApis.forceStopPackageNoThrow(MANAGER_APPLICATION_ID, userId);
+                } catch (Throwable tr) {
+                    LOGGER.e(tr, "failed to kill package");
+                }
+            }
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                LOGGER.w(e, "Interrupted while sleeping before retry");
+                Thread.currentThread().interrupt();
+            }
+            for (int userId : failedUserIds) {
+                try {
+                    boolean success = sendBinderToUserApp(binder, MANAGER_APPLICATION_ID, userId);
+                    if (success) {
+                        LOGGER.i("retry succeeded for user %d", userId);
+                    } else {
+                        LOGGER.w("retry failed for user %d", userId);
+                    }
+                } catch (Throwable tr) {
+                    LOGGER.w(tr, "retry failed");
+                }
+            }
+        }
+    }
+
+    static void sendBinderToManager(Binder binder, int userId) {
+        boolean success = sendBinderToUserApp(binder, MANAGER_APPLICATION_ID, userId);
+        if (!success) {
+            // For unknown reason, sometimes this could happens
+            // Kill Shizuku app and try again could work
+            try {
+                LOGGER.e("kill %s in user %d and try again", MANAGER_APPLICATION_ID, userId);
+                ActivityManagerApis.forceStopPackageNoThrow(MANAGER_APPLICATION_ID, userId);
+
+                Runnable retryAction = () -> {
+                    try {
+                        boolean retrySuccess = sendBinderToUserApp(binder, MANAGER_APPLICATION_ID, userId);
+                        if (retrySuccess) {
+                            LOGGER.i("retry succeeded");
+                        } else {
+                            LOGGER.w("retry failed");
+                        }
+                    } catch (Throwable tr) {
+                        LOGGER.w(tr, "retry failed");
+                    }
+                };
+
+                if (Looper.myLooper() == Looper.getMainLooper()) {
+                    HandlerUtil.getMainHandler().postDelayed(retryAction, 1000);
+                } else {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        LOGGER.w(e, "Interrupted while sleeping before retry");
+                        Thread.currentThread().interrupt();
+                    }
+                    retryAction.run();
+                }
+            } catch (Throwable tr) {
+                LOGGER.e(tr, "kill failed");
+            }
+        }
+    }
+
+    static boolean sendBinderToUserApp(Binder binder, String packageName, int userId) {
+        try {
+            DeviceIdleControllerApis.addPowerSaveTempWhitelistApp(packageName, 30 * 1000, userId,
+                    316/* PowerExemptionManager#REASON_SHELL */, "shell");
+        } catch (Throwable tr) {
+            LOGGER.e(tr, "Failed to add %d:%s to power save temp whitelist", userId, packageName);
+        }
+
+        String name = packageName + ".shizuku";
+        IContentProvider provider = null;
+
+        /*
+         When we pass IBinder through binder (and really crossed process), the receive side (here is system_server process)
+         will always get a new instance of android.os.BinderProxy.
+
+         In the implementation of getContentProviderExternal and removeContentProviderExternal, received
+         IBinder is used as the key of a HashMap. But hashCode() is not implemented by BinderProxy, so
+         removeContentProviderExternal will never work.
+
+         Luckily, we can pass null. When token is token, count will be used.
+         */
+        IBinder token = null;
+
+        try {
+            provider = ActivityManagerApis.getContentProviderExternal(name, userId, token, "com.android.shell");
+            if (provider == null) {
+                LOGGER.e("provider is null %s %d", name, userId);
+                return false;
+            }
+            if (!provider.asBinder().pingBinder()) {
+                LOGGER.e("provider is dead %s %d", name, userId);
+                return false;
+            }
+
+            Bundle extra = new Bundle();
+            if (MANAGER_APPLICATION_ID.equals(packageName)) {
+                extra.putParcelable("xyz.shizuku.extra.api.intent.extra.BINDER", new af.shizuku.api.BinderContainer(binder));
+            } else {
+                // Only put ONE BinderContainer flavor per call. On Android 11, when a Bundle
+                // crosses process boundaries the framework deserializes ALL Parcelable entries
+                // in the receiver's ClassLoader. Sending multiple flavors (rikka.* + moe.*) in
+                // the same Bundle causes BadParcelableException: ClassNotFoundException on apps
+                // whose Shizuku API build only knows one of the two classes. The classic
+                // "moe.shizuku.privileged.api.intent.extra.BINDER" key + moe.shizuku.api
+                // BinderContainer is what every Shizuku client (Hail, aShell, App Ops, ...)
+                // understands, exactly like upstream RikkaApps/Shizuku does.
+                extra.putParcelable("moe.shizuku.privileged.api.intent.extra.BINDER", new moe.shizuku.api.BinderContainer(binder));
+            }
+
+            Bundle reply = IContentProviderUtils.callCompat(provider, null, name, "sendBinder", null, extra);
+            if (reply != null) {
+                LOGGER.i("send binder to user app %s in user %d", packageName, userId);
+                return true;
+            } else {
+                LOGGER.e("failed to send binder to user app %s in user %d", packageName, userId);
+                return false;
+            }
+        } catch (Throwable tr) {
+            LOGGER.e(tr, "failed to send binder to user app %s in user %d", packageName, userId);
+            return false;
+        } finally {
+            if (provider != null) {
+                try {
+                    ActivityManagerApis.removeContentProviderExternal(name, token);
+                } catch (Throwable tr) {
+                    LOGGER.w(tr, "removeContentProviderExternal");
+                }
+            }
+        }
+    }
+
+    // sendBinderToManager() (above) has always force-stopped + retried once on failure - "for
+    // unknown reason, sometimes this could happen" per its own long-standing comment. Every
+    // ordinary client (Hail, App Ops, WifiList, Tasker, ...) is delivered through the exact same
+    // sendBinderToUserApp() via BinderSender.sendBinder()/ShizukuService.sendBinderToClient(),
+    // and used to get this same treatment - upstream RikkaApps/Shizuku still has it - until
+    // 827e1d27 ("improve startup speed") relocated the kill-and-retry exclusively into the
+    // manager-only overloads and left this call site with no recovery at all (#371). A
+    // provider.asBinder().pingBinder() failure ("provider is dead") is exactly what a frozen
+    // target's ContentProvider binder looks like from the caller's side (a synchronous ping to a
+    // Cached-Apps-Frozen process gets BR_FROZEN_REPLY, not a normal reply) - force-stopping lets
+    // AMS restart the app fully unfrozen instead of racing the freezer a second time in place.
+    static boolean sendBinderToUserAppWithRetry(Binder binder, String packageName, int userId) {
+        boolean success = sendBinderToUserApp(binder, packageName, userId);
+        if (!success) {
+            boolean killed = false;
+            try {
+                LOGGER.e("kill %s in user %d and try again", packageName, userId);
+                ActivityManagerApis.forceStopPackageNoThrow(packageName, userId);
+                killed = true;
+            } catch (Throwable tr) {
+                // forceStopPackageNoThrow is a NoThrow wrapper but can still throw RuntimeException
+                // (SecurityException, DeadObjectException) if AMS is in a bad state. If it does,
+                // postDelayed must not be silently swallowed by the same catch — the retry would
+                // never fire and the app would be left permanently without a binder.
+                LOGGER.e(tr, "kill failed for %s in user %d", packageName, userId);
+            }
+            if (killed) {
+                // Two retries: 1s after force-stop (app may not have fully restarted yet on slow
+                // devices), then 4s more (5s total) as a final attempt. A single 1s retry was
+                // enough for most AOSP devices but missed the tail of slow-restart OEM builds
+                // where the process hasn't finished cold-starting in 1s.
+                HandlerUtil.getMainHandler().postDelayed(() -> {
+                    try {
+                        boolean retrySuccess = sendBinderToUserApp(binder, packageName, userId);
+                        if (retrySuccess) {
+                            LOGGER.i("retry #1 succeeded for %s in user %d", packageName, userId);
+                        } else {
+                            LOGGER.w("retry #1 failed for %s in user %d, scheduling retry #2", packageName, userId);
+                            HandlerUtil.getMainHandler().postDelayed(() -> {
+                                try {
+                                    boolean retry2Success = sendBinderToUserApp(binder, packageName, userId);
+                                    if (retry2Success) {
+                                        LOGGER.i("retry #2 succeeded for %s in user %d", packageName, userId);
+                                    } else {
+                                        LOGGER.w("retry #2 failed for %s in user %d", packageName, userId);
+                                    }
+                                } catch (Throwable tr2) {
+                                    LOGGER.w(tr2, "retry #2 failed for %s in user %d", packageName, userId);
+                                }
+                            }, 4000);
+                        }
+                    } catch (Throwable tr) {
+                        LOGGER.w(tr, "retry #1 failed for %s in user %d", packageName, userId);
+                    }
+                }, 1000);
+            }
+        }
+        return success;
+    }
+
+    // ------ Sui only ------
+
+    @Override
+    public IVirtualMachineManager getVirtualMachineManager() {
+        enforceCallingPermission("getVirtualMachineManager");
+        if (!isFeatureEnabled("avf_manager")) return null;
+        return virtualMachineManager;
+    }
+
+    @Override
+    public IStorageProxy getStorageProxy() {
+        enforceCallingPermission("getStorageProxy");
+        if (!isFeatureEnabled("storage_proxy")) return null;
+        return storageProxy;
+    }
+
+    @Override
+    public IAICoreExtra getAICoreExtra() {
+        enforceCallingPermission("getAICoreExtra");
+        // Always hand out the AICorePlus object. Diagnostic stats (getServerStats) are
+        // read-only and must stay available no matter how the ai_core_plus switch is set;
+        // actual AI features are gated per-call inside AICorePlusImpl
+        // (ai_core_plus + ai_core_experimental / ai_core_master / npu_acceleration).
+        return aiCoreExtra;
+    }
+
+    @Override
+    public IWindowManagerExtra getWindowManagerExtra() {
+        enforceCallingPermission("getWindowManagerExtra");
+        if (!isFeatureEnabled("window_manager_plus")) return null;
+        return windowManagerExtra;
+    }
+
+    @Override
+    public IContinuityBridge getContinuityBridge() {
+        enforceCallingPermission("getContinuityBridge");
+        if (!isFeatureEnabled("continuity_bridge")) return null;
+        return continuityBridge;
+    }
+
+    @Override
+    public IOverlayManagerExtra getOverlayManagerExtra() {
+        enforceCallingPermission("getOverlayManagerExtra");
+        if (!isFeatureEnabled("overlay_manager_plus")) return null;
+        return overlayManagerExtra;
+    }
+
+    @Override
+    public INetworkGovernorExtra getNetworkGovernorExtra() {
+        enforceCallingPermission("getNetworkGovernorExtra");
+        if (!isFeatureEnabled("network_governor_plus")) return null;
+        return networkGovernorExtra;
+    }
+
+    @Override
+    public IActivityManagerExtra getActivityManagerExtra() {
+        enforceCallingPermission("getActivityManagerExtra");
+        if (!isFeatureEnabled("activity_manager_plus")) return null;
+        return activityManagerExtra;
+    }
+
+    @Override
+    public IStatusBarGovernorExtra getStatusBarGovernorExtra() {
+        enforceCallingPermission("getStatusBarGovernorExtra");
+        if (!isFeatureEnabled("status_bar_governor_extra")) return null;
+        return statusBarGovernorExtra;
+    }
+
+    @Override
+    public IPackageGovernorExtra getPackageGovernorExtra() {
+        enforceCallingPermission("getPackageGovernorExtra");
+        if (!isFeatureEnabled("package_governor_extra")) return null;
+        return packageGovernorExtra;
+    }
+
+    @Override
+    public IDisplayTunerExtra getDisplayTunerExtra() {
+        enforceCallingPermission("getDisplayTunerExtra");
+        if (!isFeatureEnabled("display_tuner_extra")) return null;
+        return displayTunerExtra;
+    }
+
+    @Override
+    public IAppInspector getAppInspector() {
+        enforceCallingPermission("getAppInspector");
+        return appInspector;
+    }
+
+    @Override
+    public IPrivilegedDataSource getPrivilegedDataSource() {
+        enforceCallingPermission("getPrivilegedDataSource");
+        return privilegedDataSource;
+    }
+
+    @Override
+    public IBackupRestoreExtra getBackupRestoreExtra() {
+        enforceCallingPermission("getBackupRestoreExtra");
+        return backupRestoreExtra;
+    }
+
+    @Override
+    public IApkPatcher getApkPatcher() {
+        enforceCallingPermission("getApkPatcher");
+        return apkPatcher;
+    }
+
+    @Override
+    public void elevateApp(String packageName) {
+        enforceCallingPermission("elevateApp");
+        if (packageName == null || packageName.isEmpty()) return;
+
+        ClientRecord caller = clientManager.findClient(Binder.getCallingUid(), Binder.getCallingPid());
+        if (caller == null || !packageName.equals(caller.packageName)) {
+            LOGGER.e("elevateApp: caller may only elevate its own package, requested: " + packageName);
+            return;
+        }
+
+        ApplicationInfo ai = Android17Compat.getApplicationInfo(packageName, 0, 0);
+        if (ai == null) {
+            LOGGER.e("elevateApp: Package not found: " + packageName);
+            return;
+        }
+
+        performAppOpsElevation(packageName, ai.uid);
+    }
+
+    private void performAppOpsElevation(String packageName, int uid) {
+        LOGGER.i("Plus: elevating AppOps and permissions for " + packageName + " (UID " + uid + ")");
+        try {
+            IBinder binder = ServiceManager.getService("appops");
+            if (binder != null) {
+                Object service = Class.forName("com.android.internal.app.IAppOpsService$Stub")
+                    .getMethod("asInterface", IBinder.class).invoke(null, binder);
+                java.lang.reflect.Method setMode = service.getClass().getMethod("setMode", int.class, int.class, String.class, int.class);
+                // 24 = OP_SYSTEM_ALERT_WINDOW, 43 = OP_GET_USAGE_STATS, 63 = OP_WRITE_SETTINGS,
+                // 65 = OP_SYSTEM_ALERT_WINDOW (fallback), 66 = OP_REQUEST_INSTALL_PACKAGES,
+                // 100 = OP_MANAGE_EXTERNAL_STORAGE, 103 = OP_ACCESS_RESTRICTED_SETTINGS, 
+                // 121 = OP_SCHEDULE_EXACT_ALARM (privileged)
+                int[] opsToElevate = {24, 43, 63, 65, 66, 100, 103, 107, 111, 119, 121};
+                for (int op : opsToElevate) {
+                    try {
+                        setMode.invoke(service, op, uid, packageName, 0); // 0 = MODE_ALLOWED
+                    } catch (Exception e) {
+                        LOGGER.e(e, "Plus: Failed to set AppOps mode %d for uid %d", op, uid);
+                    }
+                }
+            }
+            // Also try to grant WRITE_SECURE_SETTINGS and DUMP directly via shell.
+            // waitFor() reaps the child; without it each call leaks a zombie process + its fds.
+            Runtime.getRuntime().exec(new String[]{"pm", "grant", packageName, "android.permission.WRITE_SECURE_SETTINGS"}).waitFor();
+            Runtime.getRuntime().exec(new String[]{"pm", "grant", packageName, "android.permission.DUMP"}).waitFor();
+        } catch (Exception e) {
+            LOGGER.e(e, "Plus: AppOps elevation failed for " + packageName);
+        }
+    }
+
+    @Override
+    public List<String> getRecentLogs() {
+        enforceCallingPermission("getRecentLogs");
+        synchronized (serverLogs) {
+            return new ArrayList<>(serverLogs);
+        }
+    }
+
+    @Override
+    public String getExtraSetting(String key) {
+        enforceCallingPermission("getExtraSetting");
+        return plusSettingsMap.get(key);
+    }
+
+    @Override
+    public boolean isExtraFeatureEnabled(String key) {
+        enforceCallingPermission("isExtraFeatureEnabled");
+        return checkExtraFeatureEnabled(key);
+    }
+
+    private af.shizuku.server.IAIAutomationBridge aiAutomationBridge;
+
+    @Override
+    public void registerAIAutomationBridge(af.shizuku.server.IAIAutomationBridge bridge) {
+        enforceCallingPermission("registerAIAutomationBridge");
+        this.aiAutomationBridge = bridge;
+        if (aiCoreExtra != null) {
+            aiCoreExtra.setAutomationBridge(bridge);
+        }
+    }
+
+    @Override
+    public void dispatchPackageChanged(Intent intent) throws RemoteException {
+        enforceManagerPermission("dispatchPackageChanged");
+        String action = intent.getAction();
+        if (Intent.ACTION_PACKAGE_REMOVED.equals(action) || Intent.ACTION_PACKAGE_REPLACED.equals(action)) {
+            android.net.Uri data = intent.getData();
+            if (data != null) {
+                String packageName = data.getSchemeSpecificPart();
+                if (packageName != null) {
+                    clientManager.remove(packageName);
+                }
+            }
+        }
+    }
+
+    @Override
+    public boolean isHidden(int uid) throws RemoteException {
+        ShizukuConfig.PackageEntry entry = configManager.find(uid);
+        if (entry != null) {
+            // Check if it's hidden in ShizukuX terms (this might need to be linked to ShizukuSettings in the future,
+            // but for now the manager app handles the 'hidden' state via its own shared prefs).
+            // Actually, the server's 'isHidden' might be used for something else.
+            // Let's ensure it returns the correct state if we ever sync hidden state to server.
+        }
+        return false;
+    }
+}

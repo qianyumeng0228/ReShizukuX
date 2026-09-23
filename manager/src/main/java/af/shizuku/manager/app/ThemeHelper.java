@@ -1,0 +1,65 @@
+package af.shizuku.manager.app;
+
+import android.content.Context;
+import android.content.res.ColorStateList;
+import android.os.Build;
+import android.util.TypedValue;
+import android.view.View;
+import androidx.annotation.StyleRes;
+import androidx.core.graphics.ColorUtils;
+import com.google.android.material.snackbar.Snackbar;
+import af.shizuku.manager.R;
+import af.shizuku.manager.ShizukuSettings;
+import af.shizuku.manager.utils.EnvironmentUtils;
+import rikka.core.util.ResourceUtils;
+
+public class ThemeHelper {
+
+    private static final String THEME_DEFAULT = "DEFAULT";
+    private static final String THEME_BLACK = "BLACK";
+
+    public static boolean isBlackNightTheme(Context context) {
+        return ShizukuSettings.getPreferences().getBoolean(ShizukuSettings.Keys.KEY_BLACK_NIGHT_THEME, EnvironmentUtils.isWatch());
+    }
+
+    public static boolean isUsingSystemColor() {
+        // Original default (true): the app follows the system dynamic color (Monet). The
+        // DynamicColors.Light/Dark overlay applied in onApplyUserThemeResource is also what
+        // flips the (otherwise always-dark) settings base theme to light/dark — keeping this
+        // default true is required for the wallpaper theme (white/black miku) to drive the
+        // global light/dark color scheme correctly.
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                && ShizukuSettings.getPreferences().getBoolean(ShizukuSettings.Keys.KEY_USE_SYSTEM_COLOR, true);
+    }
+
+    public static String getTheme(Context context) {
+        if (isBlackNightTheme(context)
+                && ResourceUtils.isNightMode(context.getResources().getConfiguration()))
+            return THEME_BLACK;
+
+        return ShizukuSettings.getPreferences().getString(ShizukuSettings.Keys.KEY_LIGHT_THEME, THEME_DEFAULT);
+    }
+
+    @StyleRes
+    public static int getThemeStyleRes(Context context) {
+        switch (getTheme(context)) {
+            case THEME_BLACK:
+                return R.style.ThemeOverlay_Black;
+            case THEME_DEFAULT:
+            default:
+                return R.style.ThemeOverlay;
+        }
+    }
+
+    public static void applySnackbarTheme(Context context, Snackbar snackbar) {
+        snackbar.setBackgroundTint(resolveColor(context, R.attr.colorPrimaryContainer))
+            .setTextColor(resolveColor(context, R.attr.colorOnSurface))
+            .setActionTextColor(resolveColor(context, R.attr.colorPrimary));
+    }
+
+    private static int resolveColor(Context context, int color) {
+        TypedValue typedValue = new TypedValue();
+        context.getTheme().resolveAttribute(color, typedValue, true);
+        return typedValue.data;
+    }
+}

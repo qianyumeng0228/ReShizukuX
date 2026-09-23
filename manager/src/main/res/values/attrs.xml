@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="appColorPrimary" format="reference" />
+
+    <!-- EmptyStateView custom attributes -->
+    <attr name="emptyIcon" format="reference" />
+    <attr name="emptyTitle" format="reference" />
+    <attr name="emptyDescription" format="reference" />
+    <attr name="emptyActionText" format="reference" />
+
+    <declare-styleable name="EmptyStateView">
+        <attr name="emptyIcon" />
+        <attr name="emptyTitle" />
+        <attr name="emptyDescription" />
+        <attr name="emptyActionText" />
+    </declare-styleable>
+
+    <declare-styleable name="ExtraFeaturePreference">
+        <attr name="infoTitle" format="reference|string" />
+        <attr name="infoDetail" format="reference|string" />
+        <attr name="badgeType" format="enum">
+            <enum name="none" value="0" />
+            <enum name="plus" value="1" />
+            <enum name="root" value="2" />
+            <enum name="experimental" value="3" />
+        </attr>
+        <!-- Independent of badgeType (category) - a risk-severity signal, so a feature can be
+             both e.g. ROOT and DANGEROUS without one badge overwriting the other. -->
+        <attr name="severityBadge" format="enum">
+            <enum name="none" value="0" />
+            <enum name="risky" value="1" />
+            <enum name="dangerous" value="2" />
+        </attr>
+    </declare-styleable>
+
+    <!-- CollapsiblePreferenceCategory: set false for a top-level nav category that should still
+         get the M3E card-grouping treatment but must always stay expanded (e.g. settings_main). -->
+    <attr name="collapsible" format="boolean" />
+</resources>
+

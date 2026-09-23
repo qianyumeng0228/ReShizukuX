@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingHorizontal="@dimen/m3e_spacing_medium"
+    android:paddingVertical="@dimen/m3e_spacing_medium"
+    android:background="?android:attr/selectableItemBackground"
+    android:gravity="center_vertical"
+    android:minHeight="72dp"
+    android:orientation="horizontal"
+    app:fitsSystemWindowsInsets="start|end"
+    tools:ignore="UseCompoundDrawables">
+
+    <ImageView
+        android:id="@android:id/icon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:importantForAccessibility="no"
+        tools:src="@drawable/ic_launcher" />
+
+    <com.google.android.material.checkbox.MaterialCheckBox
+        android:id="@+id/checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:visibility="gone"
+        android:clickable="false"
+        android:focusable="false"
+        tools:visibility="visible" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/m3e_spacing_large"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@android:id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?textAppearanceTitleMedium"
+            android:textColor="?colorOnSurface"
+            tools:text="Shizuku" />
+
+        <TextView
+            android:id="@android:id/summary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?textAppearanceBodySmall"
+            android:textColor="?colorOnSurfaceVariant"
+            tools:text="af.shizuku.manager" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/app_context"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?textAppearanceBodySmall"
+                android:textColor="?colorTertiary"
+                tools:text="About: Frozen apps manager" />
+
+            <TextView
+                android:id="@+id/requires_root"
+                android:layout_width="wrap_content"
+                android:textAppearance="?textAppearanceLabelSmall"
+                android:layout_height="wrap_content"
+                android:textColor="?colorError"
+                android:visibility="gone"
+                android:drawableStart="@drawable/ic_root_24"
+                android:drawablePadding="4dp"
+                android:drawableTint="?colorError"
+                android:text="@string/app_management_item_summary_requires_root" />
+
+            <TextView
+                android:id="@+id/requires_plus"
+                android:layout_width="wrap_content"
+                android:textAppearance="?textAppearanceLabelSmall"
+                android:layout_height="wrap_content"
+                android:textColor="?colorError"
+                android:visibility="gone"
+                android:drawableStart="@drawable/ic_bolt_24"
+                android:drawablePadding="4dp"
+                android:drawableTint="?colorError"
+                android:text="@string/app_management_item_summary_requires_plus" />
+
+            <TextView
+                android:id="@+id/shizuku_aware"
+                android:layout_width="wrap_content"
+                android:textAppearance="?textAppearanceLabelSmall"
+                android:layout_height="wrap_content"
+                android:textColor="?colorPrimary"
+                android:visibility="gone"
+                android:drawableStart="@drawable/ic_server_ok_24"
+                android:drawablePadding="4dp"
+                android:drawableTint="?colorPrimary"
+                android:text="@string/app_management_item_summary_shizuku_aware" />
+
+            <TextView
+                android:id="@+id/su_path_nav"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textAppearance="?textAppearanceLabelSmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone"
+                tools:text="Menu &gt; Preferences &gt; SU path"
+                tools:visibility="visible" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:orientation="horizontal">
+
+                <androidx.compose.ui.platform.ComposeView
+                    android:id="@+id/su_copy_open"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+                <androidx.compose.ui.platform.ComposeView
+                    android:id="@+id/su_magic_setup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:visibility="gone"
+                    tools:visibility="visible" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <com.google.android.material.materialswitch.MaterialSwitch
+        android:id="@+id/switch_widget"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clickable="false"
+        android:focusable="false" />
+
+</LinearLayout>
