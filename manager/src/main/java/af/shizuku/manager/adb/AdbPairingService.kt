@@ -189,6 +189,13 @@ class AdbPairingService : Service() {
     }
 
     private fun onStart(): Notification {
+        // If the Compose wizard already discovered the pairing port via its own mDNS,
+        // skip waiting for our own mDNS and show the input notification immediately.
+        val knownPort = PairingSessionHolder.pairingPortFlow.value
+        if (knownPort > 0) {
+            startSearch()
+            return createInputNotification(knownPort)
+        }
         startSearch()
         return searchingNotification
     }

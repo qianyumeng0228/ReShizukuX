@@ -144,11 +144,10 @@ fun AdbPairingWizard(
         }
     }
 
-    // --- Initialize PairingSessionHolder + start AdbPairingService (notification RemoteInput) ---
+    // --- Initialize PairingSessionHolder callback (service starts after port discovery) ---
     DisposableEffect(Unit) {
         PairingSessionHolder.portableMode = true
         PairingSessionHolder.resultCallback = { success, port, error ->
-            // Runs on the service's IO thread; post to main thread for Compose state updates.
             scope.launch(Dispatchers.Main) {
                 if (success) {
                     Timber.tag(TAG).i("Pairing succeeded via service, port=$port")
@@ -165,12 +164,6 @@ fun AdbPairingWizard(
                 }
             }
         }
-        // Start the foreground service so the notification RemoteInput appears.
-        try {
-            context.startForegroundService(AdbPairingService.startIntent(context))
-        } catch (e: Throwable) {
-            Timber.tag(TAG).w(e, "Failed to start AdbPairingService; wizard will use in-app mDNS fallback")
-        }
         onDispose {
             PairingSessionHolder.clear()
             try {
@@ -181,23 +174,21 @@ fun AdbPairingWizard(
         }
     }
 
-    // --- When Step 2 becomes active: start our own mDNS (fallback) + observe service's port ---
+    // --- Step 2: wizard's own mDNS discovers the pairing port first (avoids dual-mDNS conflict).
+    //     Once found, start AdbPairingService so its notification RemoteInput appears. ---
     LaunchedEffect(step) {
         if (step == 2) {
             errorMessage = null
-            // Fallback mDNS in case the service's mDNS hasn't fired yet.
             pairingMdns = startPairingDiscovery(context) { port, host ->
                 if (port > 0 && pairingPort <= 0) {
                     pairingPort = port
                     pairingHost = host
-                    step = 3
-                }
-            }
-            // Also observe the service's mDNS result (it writes to PairingSessionHolder).
-            PairingSessionHolder.pairingPortFlow.collectLatest { servicePort ->
-                if (servicePort > 0 && pairingPort <= 0 && step == 2) {
-                    pairingPort = servicePort
-                    pairingHost = PairingSessionHolder.pairingHost
+                    PairingSessionHolder.onPairingPortFound(port, host)
+                    try {
+                        context.startForegroundService(AdbPairingService.startIntent(context))
+                    } catch (e: Throwable) {
+                        Timber.tag(TAG).w(e, "Failed to start AdbPairingService")
+                    }
                     step = 3
                 }
             }
