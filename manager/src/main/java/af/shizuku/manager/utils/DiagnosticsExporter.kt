@@ -40,7 +40,7 @@ object DiagnosticsExporter {
         line("Package", context.packageName)
         line("Version", BuildConfig.VERSION_NAME)
         line("VersionCode", BuildConfig.VERSION_CODE)
-        line("Flavor", BuildConfig.FLAVOR)
+        line("Flavor", "portable")
         line("BuildType", BuildConfig.BUILD_TYPE)
         sb.append('\n')
 
