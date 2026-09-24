@@ -83,17 +83,45 @@ fun TerminalTab() {
     }
 
     fun runCommand() {
-        val cmd = input.trim()
-        if (cmd.isEmpty() || executing || !running) return
+        val raw = input.trim()
+        if (raw.isEmpty() || executing || !running) return
         executing = true
-        lines.add("$ $cmd")
+        lines.add("$ $raw")
         input = ""
-        scope.launch {
-            val output = withContext(Dispatchers.IO) {
-                execViaShizuku(cmd)
+
+        val lower = raw.lowercase()
+        when {
+            // `adb shell <cmd>` → 剥掉前缀，用 Shizuku shell 执行剩余部分。
+            lower.startsWith("adb shell ") -> {
+                val stripped = raw.substring("adb shell ".length).trim()
+                if (stripped.isEmpty()) {
+                    lines.add("→ 实际执行: (空)\n（adb shell 后缺少命令参数）")
+                    executing = false
+                } else {
+                    lines.add("→ 实际执行: $stripped")
+                    scope.launch {
+                        lines.add(withContext(Dispatchers.IO) { execViaShizuku(stripped) })
+                        executing = false
+                    }
+                }
             }
-            lines.add(output)
-            executing = false
+            // 其他 adb 命令（adb devices / connect / push / install…，或裸 `adb shell`）：
+            // 手机终端没有 adb 客户端二进制，不执行，给出友好提示。
+            lower.startsWith("adb ") || lower == "adb" -> {
+                lines.add(
+                    "该命令需要电脑端 adb 客户端（手机终端无 adb 二进制）。" +
+                        "若目标是以 shell 权限执行命令，请使用 adb shell 命令 形式，" +
+                        "终端会自动剥离前缀执行。"
+                )
+                executing = false
+            }
+            // 普通 shell 命令，直接执行。
+            else -> {
+                scope.launch {
+                    lines.add(withContext(Dispatchers.IO) { execViaShizuku(raw) })
+                    executing = false
+                }
+            }
         }
     }
 
