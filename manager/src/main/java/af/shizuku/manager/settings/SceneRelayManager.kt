@@ -497,21 +497,46 @@ object SceneRelayManager {
             java.util.zip.ZipFile(apk).use { zip ->
                 var fallback: String? = null
                 var best: Pair<String, Long>? = null
+                // Newer Scene builds (N1 2026.09+) hide the daemon under an obfuscated res/
+                // entry name (e.g. "res/VN", an ELF binary ~2.7MB) instead of a name containing
+                // "daemon" — match the largest plausible ELF under res/ as a fallback so the
+                // relay keeps working across Scene packaging changes.
+                var elfFallback: Pair<String, Long>? = null
                 val entries = zip.entries()
                 while (entries.hasMoreElements()) {
                     val e = entries.nextElement()
                     val name = e.name
-                    if (!name.contains("daemon", ignoreCase = true)) continue
+                    val size = e.size
+                    if (!name.contains("daemon", ignoreCase = true)) {
+                        // ELF fallback: only big res/ payloads (native binaries, not arsc/xml).
+                        if (name.startsWith("res/") && size >= 1_000_000 &&
+                            !name.endsWith(".arsc") && !name.endsWith(".xml") &&
+                            (elfFallback == null || size > elfFallback.second)
+                        ) {
+                            val isElf = try {
+                                val zin = zip.getInputStream(e)
+                                val header = ByteArray(4)
+                                val read = zin.read(header)
+                                zin.close()
+                                read == 4 && header[0] == 0x7f.toByte() &&
+                                    header[1] == 'E'.code.toByte() && header[2] == 'L'.code.toByte() &&
+                                    header[3] == 'F'.code.toByte()
+                            } catch (_: Throwable) {
+                                false
+                            }
+                            if (isElf) elfFallback = name to size
+                        }
+                        continue
+                    }
                     if (name.endsWith(".bak") || name.endsWith(".log") || name.endsWith(".txt") ||
                         name.endsWith(".md") || name.endsWith(".sh") || name.endsWith(".json") ||
                         name.endsWith(".xml")) continue
                     if (fallback == null) fallback = name
-                    val size = e.size
                     if (size >= 1_000_000 && (best == null || size > best.second)) {
                         best = name to size
                     }
                 }
-                best?.first ?: fallback
+                best?.first ?: elfFallback?.first ?: fallback
             }
         } catch (e: Throwable) {
             android.util.Log.w("SceneRelay", "resolveDaemonEntry (zip) failed: ${e.message}")

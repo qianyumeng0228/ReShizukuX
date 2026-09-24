@@ -291,7 +291,7 @@ public class ShizukuSettings {
      * <p>
      * The wallpaper setting doubles as the global theme control (ShizukuX beautification):
      * "white miku" forces the light color scheme, "black miku" forces the dark scheme, and
-     * "original" forces nothing (the app follows the user's own 主题/light/dark setting).
+     * "original" forces nothing (the app follows the user's own 涓婚/light/dark setting).
      *
      * @return MODE_NIGHT_NO / MODE_NIGHT_YES to force a scheme, or -1 when the wallpaper
      *         selection does not force one ("original").
@@ -491,7 +491,7 @@ public class ShizukuSettings {
 
     /** External relay auto-activation toggle (Scene ADB mode / Brevent). Default OFF. */
     public static boolean getExternalRelayAuto() {
-        return getPreferences().getBoolean(Keys.KEY_EXTERNAL_RELAY_AUTO, false);
+        return getPreferences().getBoolean(Keys.KEY_EXTERNAL_RELAY_AUTO, true);
     }
 
     public static void setExternalRelayAuto(boolean enable) {
@@ -712,7 +712,7 @@ public class ShizukuSettings {
     }
 
     /** Raw KEY_LANGUAGE value, unlike {@link #getLocale()} this does NOT collapse
-     *  null/"SYSTEM" to {@link Locale#getDefault()} — used by the #429 one-time
+     *  null/"SYSTEM" to {@link Locale#getDefault()} 鈥?used by the #429 one-time
      *  AppCompatDelegate locale migration to tell "never picked anything" apart
      *  from "explicitly picked System". */
     public static String getRawLanguageTag() {
@@ -742,7 +742,7 @@ public class ShizukuSettings {
         if (p != null) p.edit().putBoolean(Keys.KEY_DHIZUKU_MODE, enable).apply();
     }
 
-    /** User's stated preference for themed (Material You) icons — we can't read or set the
+    /** User's stated preference for themed (Material You) icons 鈥?we can't read or set the
      *  actual per-launcher setting, so this only records intent (defaults to wanted). */
     public static boolean isThemedIconWanted() {
         SharedPreferences p = getPreferences();
@@ -1252,7 +1252,7 @@ public class ShizukuSettings {
     /**
      * Set by the OFF path (HomeTab switch off) so the Watchdog does not immediately re-arm a
      * service the user deliberately stopped. Cleared on the next explicit ON start. In-memory
-     * only: a fresh process after a crash should NOT remember "user stopped" — that would
+     * only: a fresh process after a crash should NOT remember "user stopped" 鈥?that would
      * suppress legitimate crash-restart across a process death.
      */
     private static volatile boolean userInitiatedStop = false;
