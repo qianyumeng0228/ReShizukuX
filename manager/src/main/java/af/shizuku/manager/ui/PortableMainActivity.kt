@@ -28,7 +28,7 @@ import af.shizuku.manager.R
  * ShizukuX Portable 的 Compose 宿主 Activity。
  *
  * 与现有 View 体系（MainActivity / Fragment / RecyclerView）共存：这里只是新增一个
- * 四 Tab 骨架入口，不删除、不改造任何既有页面。
+ * 五 Tab 骨架入口（状态 / 授权 / 终端 / 自动化 / 设置），不删除、不改造任何既有页面。
  */
 class PortableMainActivity : ComponentActivity() {
 
@@ -49,6 +49,7 @@ private enum class PortableTab(
 ) {
     HOME("状态", R.drawable.ic_power_settings_new_24),
     APPS("授权", R.drawable.ic_group_24),
+    TERMINAL("终端", R.drawable.ic_code_24),
     AUTOMATION("自动化", R.drawable.ic_bolt_24),
     SETTINGS("设置", R.drawable.ic_settings_outline_24);
 }
@@ -94,7 +95,8 @@ private fun PortableApp() {
             when (selected) {
                 0 -> HomeTab(onPairingRequired = { showPairingWizard = true })
                 1 -> AppsTab()
-                2 -> AutomationTab()
+                2 -> TerminalTab()
+                3 -> AutomationTab()
                 else -> SettingsTab()
             }
         }
