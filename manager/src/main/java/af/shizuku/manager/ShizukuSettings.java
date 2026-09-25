@@ -511,7 +511,7 @@ public class ShizukuSettings {
     }
 
     public static boolean getTcpMode() {
-        return getPreferences().getBoolean(Keys.KEY_TCP_MODE, true);
+        return false; // Portable: TCP mode disabled (tcpip:5555 breaks wireless-debugging startup)
     }
 
     public static void setTcpMode(boolean enable) {

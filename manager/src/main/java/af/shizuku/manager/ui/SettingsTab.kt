@@ -99,15 +99,6 @@ fun SettingsTab() {
         Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
             Column {
                 SettingSwitch(
-                    title = "TCP 模式",
-                    subtitle = "通过 TCP/ADB 端口而非 local abstract socket 连接",
-                    checked = tcpMode,
-                    onCheckedChange = {
-                        tcpMode = it
-                        ShizukuSettings.setTcpMode(it)
-                    }
-                )
-                SettingSwitch(
                     title = "强制无线 ADB",
                     subtitle = "启动时强制走无线调试通道（wadb）",
                     checked = forceWadb,

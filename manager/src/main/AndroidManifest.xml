@@ -82,21 +82,8 @@
         android:permissionGroup="${applicationId}.permission-group.API"
         android:protectionLevel="dangerous" />
     
-    <!-- Portable (single drop-in flavor): IS the stock-Shizuku package-name replacement,
-         so it must DEFINE moe.shizuku.manager.permission.API_V23 itself. Stock-only clients
-         request this exact name; on authorize the server OS-grants it (grantRuntimePermission),
-         which silently fails unless an installed package defines it. protectionLevel="dangerous"
-         mirrors stock Shizuku exactly. -->
-    <permission-group
-        android:name="moe.shizuku.manager.permission-group.API"
-        android:description="@string/permission_group_description"
-        android:label="@string/permission_group_label" />
-    <permission
-        android:name="moe.shizuku.manager.permission.API_V23"
-        android:description="@string/permission_description"
-        android:label="@string/permission_label"
-        android:permissionGroup="moe.shizuku.manager.permission-group.API"
-        android:protectionLevel="dangerous" />
+    <!-- Portable: moe.shizuku.manager.permission.API_V23 is intentionally NOT declared here.          Shevery (com.hamondev.shevery) declares the same name; Android permissions are global and          redeclaring it fails INSTALL_FAILED_DUPLICATE_PERMISSION. The uses-permission below          references the same name so stock Shizuku clients keep working. --> 
+
     <uses-permission android:name="moe.shizuku.manager.permission.API_V23" />
 
     <application
