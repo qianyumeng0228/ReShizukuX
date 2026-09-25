@@ -29,7 +29,7 @@ object EnvironmentUtils {
     fun isTlsSupported(): Boolean = af.shizuku.common.util.EnvironmentUtils.isTlsSupported(appContext)
 
     fun isWifiRequired(): Boolean {
-        return (getAdbTcpPort() <= 0 || !ShizukuSettings.getTcpMode())
+        return getAdbTcpPort() <= 0 // Port-based only: plain-TCP (5555) works over loopback without WiFi; wireless-debugging dynamic ports are WiFi-bound
     }
 
     // Warm up the root check eagerly when the class is loaded.
