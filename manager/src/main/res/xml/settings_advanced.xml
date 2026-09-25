@@ -85,8 +85,8 @@
 
         <SwitchPreferenceCompat
             android:key="wifi_debug_reassert_enabled"
-            android:title="重断言无线调试开关"
-            android:summary="Realme/HyperOS 等开机清空 adb_wifi_enabled 时自动写回 1（仅 0→1，绝不关闭）"
+            android:title="无线调试守护"
+            android:summary="部分系统开机后会关闭无线调试，开启后自动恢复（只恢复，绝不关闭）"
             android:icon="@drawable/ic_warning_24"
             android:defaultValue="false" />
 

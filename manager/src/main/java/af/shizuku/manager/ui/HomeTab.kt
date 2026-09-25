@@ -231,7 +231,7 @@ fun HomeTab(
         val guardLabel = when {
             running && ShizukuSettings.isDaemonEnabled() &&
                 ShizukuSettings.getLastLaunchMode() == ShizukuSettings.LaunchMethod.ROOT -> "双进程"
-            else -> "Alarm 模式"
+            else -> "自愈模式"
         }
         Text(
             text = "守护：$guardLabel",

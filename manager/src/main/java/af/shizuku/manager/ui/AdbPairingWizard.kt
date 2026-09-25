@@ -2,6 +2,7 @@ package af.shizuku.manager.ui
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -55,6 +57,10 @@ import af.shizuku.manager.adb.PreferenceAdbKeyStore
 import af.shizuku.manager.starter.Starter
 import af.shizuku.manager.utils.AdbPortProbe
 import af.shizuku.manager.utils.ShizukuStateMachine
+import android.net.wifi.WifiManager
+import java.net.Inet4Address
+import java.net.InetAddress
+import java.net.NetworkInterface
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -174,8 +180,12 @@ fun AdbPairingWizard(
         }
     }
 
-    // --- Step 2: wizard's own mDNS discovers the pairing port first (avoids dual-mDNS conflict).
-    //     Once found, start AdbPairingService so its notification RemoteInput appears. ---
+    // --- Step 2: wizard's own mDNS discovers the pairing port.
+    //     IMPORTANT: do NOT start AdbPairingService here — the background service would
+    //     race the wizard for the pairing port, connect first, wait for a notification
+    //     RemoteInput that never comes, time out ("Pairing failed"), and the system then
+    //     unregisters the pairing service so this wizard can never discover the port.
+    //     The wizard owns the whole pairing flow (discovery -> code -> SPAKE2) itself. ---
     LaunchedEffect(step) {
         if (step == 2) {
             errorMessage = null
@@ -223,27 +233,30 @@ fun AdbPairingWizard(
         }
     }
 
-    // --- Step 3: when 6 digits entered, send code to AdbPairingService for pairing ---
+    // --- Step 3: when 6 digits entered, run in-app pairing (no AdbPairingService,
+    //     same reason as above — the wizard owns the pairing connection). ---
     LaunchedEffect(pairCode) {
         if (step == 3 && pairCode.length == 6 && !isBusy) {
             delay(200)
             isBusy = true
             errorMessage = null
-            step = 4 // show "pairing in progress" UI while service works
-            // Hand the code to the service — it runs AdbPairingClient and calls back via
-            // PairingSessionHolder.resultCallback (set up above).
+            step = 4 // show "pairing in progress" UI
+            // Prefer the service channel: on HyperOS the pairing dialog dies when Settings
+            // loses focus, so the connection must be held by AdbPairingService (notification
+            // RemoteInput). Fall back to in-app pairing if the service is unavailable.
             try {
                 val intent = AdbPairingService.dialogReplyIntent(
                     context, pairingPort, pairCode
                 )
                 context.startService(intent)
             } catch (e: Throwable) {
-                // Service unavailable — fall back to in-app pairing.
                 Timber.tag(TAG).w(e, "dialogReplyIntent failed, falling back to in-app pairing")
                 val ok = runPairing(context, pairingHost, pairingPort, pairCode)
                 isBusy = false
-                if (ok) { step = 5 } else {
-                    errorMessage = "配对失败，请确认配对码正确后重试"
+                if (ok) {
+                    step = 5
+                } else {
+                    errorMessage = "配对失败，请确认配对码正确且系统配对窗口仍打开后重试"
                     pairCode = ""
                     step = 3
                 }
@@ -376,6 +389,12 @@ fun AdbPairingWizard(
                             if (port > 0 && pairingPort <= 0) {
                                 pairingPort = port
                                 pairingHost = host
+                                PairingSessionHolder.onPairingPortFound(port, host)
+                                try {
+                                    context.startForegroundService(AdbPairingService.startIntent(context))
+                                } catch (e: Throwable) {
+                                    Timber.tag(TAG).w(e, "Failed to start AdbPairingService")
+                                }
                                 step = 3
                             }
                         }
@@ -504,35 +523,74 @@ private fun Step3Content(
     pairCode: String,
     onCodeChange: (String) -> Unit
 ) {
+    val isOemWithShadePairing = remember {
+        // MIUI / HyperOS (Xiaomi/Redmi/Poco) kills the system pairing dialog the moment
+        // Settings loses focus, so switching back to this wizard to type the code makes
+        // the session vanish before the connection is made. The only reliable channel is
+        // the notification RemoteInput (the shade does NOT kill the dialog — verified).
+        val m = Build.MANUFACTURER.lowercase()
+        m.contains("xiaomi") || m.contains("redmi") || m.contains("poco")
+    }
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("输入配对码", style = MaterialTheme.typography.titleMedium)
-            Text(
-                "请输入系统配对窗口中显示的 6 位数字配对码。输入满 6 位后自动开始配对。",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            OutlinedTextField(
-                value = pairCode,
-                onValueChange = onCodeChange,
-                label = { Text("配对码（6 位数字）") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text(
-                "已输入 ${pairCode.length} / 6 位",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(modifier = Modifier.padding(10.dp)) {
-                    Text(
-                        "也可以下拉通知栏，在 Shizuku 配对通知中输入配对码发送（MIUI 推荐）。",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+            if (isOemWithShadePairing) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(
+                            "本机为小米 / HyperOS：系统配对弹窗在切换应用时会立即失效。",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Text(
+                            "请保持「无线调试」配对窗口在屏幕上，直接下拉通知栏，在 ShizukuX 配对通知中输入 6 位配对码并发送。输码后本页会自动继续，无需返回。",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                }
+                // On HyperOS the in-app text field is a dead end (switching apps kills the
+                // dialog). Keep it disabled to avoid another failed attempt.
+                OutlinedTextField(
+                    value = pairCode,
+                    onValueChange = { },
+                    label = { Text("配对码（6 位数字）— 请用通知栏输入") },
+                    singleLine = true,
+                    enabled = false,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            } else {
+                Text(
+                    "请输入系统配对窗口中显示的 6 位数字配对码。输入满 6 位后自动开始配对。",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                OutlinedTextField(
+                    value = pairCode,
+                    onValueChange = onCodeChange,
+                    label = { Text("配对码（6 位数字）") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Text(
+                    "已输入 ${pairCode.length} / 6 位",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (!isOemWithShadePairing) {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Text(
+                            "也可以下拉通知栏，在 Shizuku 配对通知中输入配对码发送。",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
         }
@@ -647,7 +705,10 @@ private fun startPairingDiscovery(
         var mdnsRef: AdbMdns? = null
         val mdns = AdbMdns(context.applicationContext, AdbMdns.TLS_PAIRING) { port ->
             if (port > 0) {
-                onPortFound(port, mdnsRef?.resolvedHost ?: "127.0.0.1")
+                // Android 16 上 mDNS 解析出的 pairing 服务地址常解析为本机回环
+                // (127.0.0.1 / ::1)，但 adbd 的无线配对服务只绑定 WiFi 接口，
+                // 用回环直连会被 ECONNREFUSED 拒绝。必须用设备自身 WiFi IP 连接。
+                onPortFound(port, resolveDeviceIp(context))
             }
         }
         mdnsRef = mdns
@@ -657,6 +718,48 @@ private fun startPairingDiscovery(
         Timber.tag(TAG).w(e, "mDNS pairing discovery failed to start")
         null
     }
+}
+
+/**
+ * Resolve the device's own WiFi IPv4 to connect to adbd's pairing port.
+ *
+ * The pairing service is bound to the WiFi interface only (not loopback), so a
+ * connection to 127.0.0.1 is refused on Android 12+ / 16. mDNS resolution of the
+ * local service frequently yields 127.0.0.1 / ::1 as well, so we take the WiFi IP
+ * directly. Falls back to a non-loopback IPv4 from NetworkInterface enumeration,
+ * then finally 127.0.0.1 if everything else failed.
+ */
+private fun resolveDeviceIp(context: Context): String {
+    // 1. WiFi connectionInfo IP (most reliable for wireless debugging).
+    try {
+        val wifiManager = context.applicationContext
+            .getSystemService(Context.WIFI_SERVICE) as? WifiManager
+        @Suppress("DEPRECATION")
+        val ip = wifiManager?.connectionInfo?.ipAddress ?: 0
+        if (ip != 0) {
+            val bytes = byteArrayOf(
+                (ip and 0xff).toByte(),
+                ((ip shr 8) and 0xff).toByte(),
+                ((ip shr 16) and 0xff).toByte(),
+                ((ip shr 24) and 0xff).toByte()
+            )
+            val addr = InetAddress.getByAddress(bytes).hostAddress
+            if (!addr.isNullOrBlank()) return addr
+        }
+    } catch (_: Exception) {}
+    // 2. NetworkInterface scan fallback.
+    try {
+        NetworkInterface.getNetworkInterfaces()?.asSequence()?.forEach { nif ->
+            if (nif.isUp && !nif.isLoopback) {
+                nif.inetAddresses.asSequence().forEach { addr ->
+                    if (addr is Inet4Address && !addr.isLoopbackAddress) {
+                        addr.hostAddress?.let { return it }
+                    }
+                }
+            }
+        }
+    } catch (_: Exception) {}
+    return "127.0.0.1"
 }
 
 /** Quick test: can we connect to the adb connect port with the stored key (already paired)? */

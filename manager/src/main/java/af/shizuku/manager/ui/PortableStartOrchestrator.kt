@@ -141,7 +141,7 @@ object PortableStartOrchestrator {
 
         // ---------------------------------------------------------------- ④ hostile ROM reassert (ADB, opt-in)
         if (method == ShizukuSettings.LaunchMethod.ADB) {
-            onStep?.invoke(4, "重断言无线调试开关")
+            onStep?.invoke(4, "无线调试守护")
             // Best effort; never fails the flow.
             runCatching { WifiDebugReassert.reassertIfEnabled(ctx) }
                 .onFailure { Timber.tag(TAG).w(it, "reassert step failed (non-fatal)") }

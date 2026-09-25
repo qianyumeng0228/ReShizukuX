@@ -76,7 +76,7 @@ fun SettingsTab() {
                 )
                 SettingSwitch(
                     title = "守护模式",
-                    subtitle = "看门狗服务与 Alarm 保活，掉线后自动恢复",
+                    subtitle = "服务掉线后定时检查自动恢复",
                     checked = watchdog,
                     onCheckedChange = {
                         watchdog = it
@@ -84,8 +84,8 @@ fun SettingsTab() {
                     }
                 )
                 SettingSwitch(
-                    title = "敌意 ROM 重断言",
-                    subtitle = "ROM 在开机/网络切换后清除无线调试时自动重写",
+                    title = "无线调试守护",
+                    subtitle = "部分系统开机后会关闭无线调试，开启后自动恢复",
                     checked = wifiReassert,
                     onCheckedChange = {
                         wifiReassert = it

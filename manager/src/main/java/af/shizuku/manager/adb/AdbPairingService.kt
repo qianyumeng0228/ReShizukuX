@@ -202,9 +202,13 @@ class AdbPairingService : Service() {
 
     private fun onInput(code: String, port: Int): Notification {
         serviceScope.launch {
-            // Prefer the mDNS-resolved host; falls back to loopback if discovery isn't live (e.g.
-            // the service was killed and restarted from the reply intent, which only carries the port).
-            val host = adbMdns?.resolvedHost ?: PairingSessionHolder.pairingHost ?: "127.0.0.1"
+            // Prefer the wizard-provided device WiFi IP (PairingSessionHolder.pairingHost);
+            // mDNS resolution of the local pairing service often yields 127.0.0.1 on
+            // Android 12+/16, which the WiFi-bound pairing socket refuses (ECONNREFUSED).
+            val host = PairingSessionHolder.pairingHost
+                .takeIf { it != "127.0.0.1" }
+                ?: adbMdns?.resolvedHost?.takeIf { it != "127.0.0.1" }
+                ?: "127.0.0.1"
 
             val key = try {
                 AdbKey(PreferenceAdbKeyStore(ShizukuSettings.getPreferences()), "shizukux")

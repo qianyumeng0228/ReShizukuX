@@ -451,7 +451,7 @@
              stock Shizuku (same package name). -->
         <provider
             android:name=".ShizukuManagerProvider"
-            android:authorities="${applicationId}.shizuku;moe.shizuku.privileged.api"
+            android:authorities="${applicationId}.shizuku;${applicationId}"
             android:directBootAware="true"
             android:enabled="true"
             android:exported="true"
