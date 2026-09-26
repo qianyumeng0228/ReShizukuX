@@ -49,7 +49,10 @@ data class Repo(
 )
 
 /**
- * 仓库缓存的模块列表（P5 用，P1 先建表）。
+ * 仓库缓存的模块列表（P5 商店）。
+ *
+ * 字段与 [io.reshizukux.modules.repository.RepoModuleInfo] 对齐；
+ * 可选字段在 modules.json 缺失时落库为 null。
  */
 @Entity(tableName = "repo_modules", primaryKeys = ["repoUrl", "id"])
 data class RepoModule(
@@ -61,12 +64,13 @@ data class RepoModule(
     val author: String,
     val description: String,
     val downloadUrl: String,
-    val sha256: String,
+    val sha256: String?,
     val signature: String?,
     val publicKey: String?,
-    val minSdk: Int,
-    val requiresRoot: Boolean,
-    val usesWebUI: Boolean,
+    val minSdk: Int?,
+    val requiresRoot: Boolean?,
+    val usesWebUI: Boolean?,
+    val changelog: String?,
     val lastUpdated: Long
 )
 
@@ -110,6 +114,12 @@ interface RepoDao {
 
     @Query("SELECT * FROM repos WHERE url = :url LIMIT 1")
     fun getByUrl(url: String): Repo?
+
+    @Query("SELECT * FROM repos WHERE enabled = 1 ORDER BY name ASC")
+    fun getEnabled(): List<Repo>
+
+    @Query("SELECT COUNT(*) FROM repos")
+    fun count(): Int
 }
 
 @Dao
@@ -122,6 +132,15 @@ interface RepoModuleDao {
 
     @Query("SELECT * FROM repo_modules WHERE repoUrl = :repoUrl ORDER BY name ASC")
     fun getByRepo(repoUrl: String): List<RepoModule>
+
+    @Query("SELECT * FROM repo_modules WHERE repoUrl = :repoUrl AND id = :moduleId LIMIT 1")
+    fun getByRepoAndId(repoUrl: String, moduleId: String): RepoModule?
+
+    @Query("SELECT * FROM repo_modules ORDER BY name ASC")
+    fun getAll(): List<RepoModule>
+
+    @Query("SELECT COUNT(*) FROM repo_modules WHERE repoUrl = :repoUrl")
+    fun countByRepo(repoUrl: String): Int
 }
 
 /**
