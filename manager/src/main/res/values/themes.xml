@@ -72,7 +72,7 @@
     <style name="Theme.App.Portable" parent="Base.AppTheme" />
 <style name="Theme.App.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">?android:attr/colorBackground</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground_base</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/rsx_ic_launcher_foreground_base</item>
         <item name="postSplashScreenTheme">@style/Theme.Light</item>
     </style>
 
