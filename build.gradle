@@ -20,7 +20,7 @@ def getGitCommitCount() {
 }
 
 def gitCommitCount = getGitCommitCount()
-def baseVersionName = "13.7.0"
+def baseVersionName = "14.0.0"
 def versionCodeOverride = {
     def raw = findProperty("shizukuVersionCode") ?: System.getenv("SHIZUKU_VERSION_CODE")
     if (raw == null || raw.toString().trim().isEmpty()) return null
@@ -31,10 +31,10 @@ def versionNameOverride = {
     if (raw == null || raw.toString().trim().isEmpty()) return null
     return raw.toString().trim()
 }()
-// Portable 预发布版：固定 k1001 版本线（versionCode=1001，未来新版本手动递增）
-def portableVersionName = versionNameOverride ?: "v${baseVersionName}.k1001"
+// ReShizukuX：免 Root 模块系统完整功能版，alpha 阶段
+def portableVersionName = versionNameOverride ?: "v${baseVersionName}-alpha1"
 ext {
-    versionCode = versionCodeOverride ?: 1001
+    versionCode = versionCodeOverride ?: 1100
     versionName = portableVersionName
 }
 
