@@ -183,6 +183,7 @@ dependencies {
     implementation project(":provider")
     implementation project(":database")
     implementation project(":common")
+    implementation project(":modules")
     api project(":core:ui")
 
     implementation libs.hidden.compat
