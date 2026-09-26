@@ -238,6 +238,15 @@ dependencies {
 
     implementation libs.appiconloader
 
+    // ReShizukuX beta1 回归功能依赖
+    implementation libs.sentry.android
+    implementation libs.lottie.compose
+    implementation libs.androidx.biometric
+    implementation libs.glance.appwidget
+    implementation libs.glance.material3
+    implementation libs.markwon.core
+    implementation libs.markwon.html
+
     testImplementation libs.kotestJunit5
     testImplementation libs.mockk
     testImplementation libs.robolectric

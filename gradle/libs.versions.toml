@@ -45,6 +45,11 @@ robolectric = "4.14.1"
 coroutines-test = "1.10.2"
 androidx-test-core = "1.6.1"
 compose-bom = "2024.04.01"
+sentry = "8.17.0"
+lottie = "6.6.2"
+biometric = "1.1.0"
+glance = "1.1.1"
+markwon = "4.6.2"
 
 [libraries]
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
@@ -125,6 +130,14 @@ room-compiler = { group = "androidx.room", name = "room-compiler", version.ref =
 room-testing = { group = "androidx.room", name = "room-testing", version.ref = "room" }
 
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidx-test-core" }
+
+sentry-android = { group = "io.sentry", name = "sentry-android", version.ref = "sentry" }
+lottie-compose = { group = "com.airbnb.android", name = "lottie-compose", version.ref = "lottie" }
+androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
+glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
+glance-material3 = { group = "androidx.glance", name = "glance-material3", version.ref = "glance" }
+markwon-core = { group = "io.noties.markwon", name = "core", version.ref = "markwon" }
+markwon-html = { group = "io.noties.markwon", name = "html", version.ref = "markwon" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

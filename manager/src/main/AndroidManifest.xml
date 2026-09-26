@@ -606,6 +606,14 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_external_relay" />
         </service>
+
+        <!-- Sentry 崩溃上报（默认关闭，用户可在设置中开启；DSN 运行时注入） -->
+        <meta-data
+            android:name="io.sentry.dsn"
+            android:value="" />
+        <meta-data
+            android:name="io.sentry.auto-init"
+            android:value="false" />
     </application>
 
 </manifest>
