@@ -11,7 +11,7 @@
     <string name="home_status_service_user_adb">ADB</string>
     
     <!-- ShizukuX Strings -->
-    <string name="settings_shizuku_extra_features">ShizukuX 功能</string>
+    <string name="settings_shizuku_extra_features">ReShizukuX 功能</string>
     <string name="settings_extra_category_performance">性能与加速</string>
     <string name="settings_extra_category_network">网络与隐私</string>
     <string name="settings_extra_category_intelligence">智能与连续性</string>
@@ -26,7 +26,7 @@
     <string name="settings_on_device_adb_tcp">设备内 ADB over TCP</string>
     <string name="settings_on_device_adb_tcp_summary">直接在设备上启用 ADB TCP 模式（端口 5555）。需要 Root 权限。</string>
     <string name="settings_force_start_wadb">绕过 WADB 的 Wi-Fi 检查</string>
-    <string name="settings_force_start_wadb_summary">即使 Wi-Fi 断开也尝试启动 Shizuku。</string>
+    <string name="settings_force_start_wadb_summary">即使 Wi-Fi 断开也尝试启动 ReShizukuX。</string>
     <string name="settings_version">版本</string>
     <string name="settings_developer_options_revealed">开发者选项已开启！</string>
     <string name="settings_developer_options_click_more">再点击 %d 次以开启开发者选项。</string>
@@ -45,7 +45,7 @@
     <string name="doctor_check_secure_settings">安全设置：%1$s</string>
     <!-- Home - Adb -->
     <string name="home_adb_title"><![CDATA[通过电脑启动（使用 ADB）]]></string>
-    <string name="home_adb_description"><![CDATA[没有 Root 的设备需要通过 ADB 启动 Shizuku（需要连接电脑）。每次设备重启后都需要重新启动。请<b><a href=\"%1$s\">阅读帮助</a></b>。]]></string>
+    <string name="home_adb_description"><![CDATA[没有 Root 的设备需要通过 ADB 启动 ReShizukuX（需要连接电脑）。每次设备重启后都需要重新启动。请<b><a href=\"%1$s\">阅读帮助</a></b>。]]></string>
     <string name="home_adb_button_view_help">阅读帮助</string>
     <string name="home_adb_button_go_settings"><![CDATA[去设置]]></string>
     <string name="dialog_enable_auto_pairing_title"><![CDATA[开启自动配对？]]></string>
@@ -71,8 +71,8 @@
     <string name="one_tap_step_pairing_manual"><![CDATA[请在无线调试页面完成配对，配对后将自动继续]]></string>
     <string name="one_tap_step_auth_running"><![CDATA[正在连接并授权…]]></string>
     <string name="one_tap_step_auth_done"><![CDATA[ADB 授权成功]]></string>
-    <string name="one_tap_step_start_running"><![CDATA[正在启动 Shizuku 服务…]]></string>
-    <string name="one_tap_step_complete_desc"><![CDATA[Shizuku 已通过无线调试运行]]></string>
+    <string name="one_tap_step_start_running"><![CDATA[正在启动 ReShizukuX 服务…]]></string>
+    <string name="one_tap_step_complete_desc"><![CDATA[ReShizukuX 已通过无线调试运行]]></string>
     <string name="adb_permission_guide_title"><![CDATA[解除 ADB 权限限制]]></string>
     <string name="adb_permission_guide_xiaomi"><![CDATA[ADB 权限被系统限制。请依次打开以下开关：
 
@@ -88,7 +88,7 @@
     <string name="adb_permission_guide_oppo"><![CDATA[OPPO/一加系统可能通过“权限监控”限制 ADB 和服务端。请前往开发者选项：
 ① 关闭「权限监控」（ColorOS 12+ 的独立开关，与 Disable system optimization 不是同一个）
 ② 若开发者选项中没有「权限监控」按钮，请将设备语言切换为英文，再找到并关闭 "Disable system optimization"
-③ 完成后务必重启手机（仅重启 Shizuku 可能不生效）]]></string>
+③ 完成后务必重启手机（仅重启 ReShizukuX 可能不生效）]]></string>
     <string name="adb_permission_guide_go_developer"><![CDATA[前往开发者选项]]></string>
     <string name="settings_auto_pairing"><![CDATA[自动配对]]></string>
     <string name="settings_auto_pairing_summary"><![CDATA[启用配对助手，自动读取并输入无线调试配对码]]></string>
@@ -96,17 +96,17 @@
     <string name="settings_auto_restore_dev_options_summary"><![CDATA[重启后自动恢复开发者选项、USB 调试与无线调试（需要 WRITE_SECURE_SETTINGS 权限）]]></string>
     <string name="settings_auto_restore_dev_options_no_permission"><![CDATA[无 WRITE_SECURE_SETTINGS 权限，自动恢复将无法生效。可通过 adb 授予：adb shell pm grant 包名 android.permission.WRITE_SECURE_SETTINGS]]></string>
     <string name="settings_auto_restore_dev_options_no_permission_title"><![CDATA[缺少权限]]></string>
-    <string name="settings_auto_restore_dev_options_auto_grant"><![CDATA[通过 Shizuku 自动授权]]></string>
-    <string name="settings_auto_restore_dev_options_granted"><![CDATA[已通过 Shizuku 授予 WRITE_SECURE_SETTINGS 权限]]></string>
+    <string name="settings_auto_restore_dev_options_auto_grant"><![CDATA[通过 ReShizukuX 自动授权]]></string>
+    <string name="settings_auto_restore_dev_options_granted"><![CDATA[已通过 ReShizukuX 授予 WRITE_SECURE_SETTINGS 权限]]></string>
     <string name="settings_auto_restore_dev_options_grant_failed"><![CDATA[自动授权失败，请用 adb 命令手动授予]]></string>
     <string name="settings_restore_dev_options_now"><![CDATA[立即恢复开发者选项]]></string>
     <string name="settings_restore_dev_options_now_summary"><![CDATA[恢复开发者选项、USB 调试与无线调试]]></string>
     <string name="settings_restore_dev_options_ok"><![CDATA[已恢复开发者选项、USB 调试与无线调试]]></string>
     <string name="settings_restore_wifi_notification_title"><![CDATA[无线调试未自动恢复]]></string>
-    <string name="settings_restore_wifi_notification_text"><![CDATA[开机自动恢复时 Wi-Fi 未开启，无线调试与 Shizuku 自动启动受阻。请开启 Wi-Fi，Shizuku 将自动启动。]]></string>
+    <string name="settings_restore_wifi_notification_text"><![CDATA[开机自动恢复时 Wi-Fi 未开启，无线调试与 ReShizukuX 自动启动受阻。请开启 Wi-Fi，ReShizukuX 将自动启动。]]></string>
     <string name="settings_restore_wifi_notification_action"><![CDATA[开启 Wi-Fi]]></string>
     <string name="settings_adb_security_notification_title"><![CDATA[USB 调试（安全设置）已关闭]]></string>
-    <string name="settings_adb_security_notification_text"><![CDATA[点击前往开发者选项开启，Shizuku 才能正常启动]]></string>
+    <string name="settings_adb_security_notification_text"><![CDATA[点击前往开发者选项开启，ReShizukuX 才能正常启动]]></string>
     <string name="settings_adb_security_notification_text_usb_on"><![CDATA[前往开发者选项 → 调试 → USB 调试（安全设置）]]></string>
     <string name="settings_adb_security_notification_text_usb_off"><![CDATA[前往开发者选项 → 开启 USB 调试，再开启 USB 调试（安全设置）]]></string>
     <string name="settings_adb_security_notification_action"><![CDATA[前往开启]]></string>
@@ -118,14 +118,14 @@
     <string name="home_adb_dialog_view_command_button_send">发送</string>
     <!-- Home - Wireless Adb -->
     <string name="home_wireless_adb_title"><![CDATA[通过无线调试启动]]></string>
-    <string name="home_wireless_adb_description"><![CDATA[在 Android 11 及更高版本上，您可以直接在设备上启用无线调试并启动 Shizuku，无需连接电脑。<p>请先查看分步指南。]]></string>
+    <string name="home_wireless_adb_description"><![CDATA[在 Android 11 及更高版本上，您可以直接在设备上启用无线调试并启动 ReShizukuX，无需连接电脑。<p>请先查看分步指南。]]></string>
     <string name="home_wireless_adb_description_pre_11"><![CDATA[在 Android 11 之前，需要连接电脑才能启用无线调试。]]></string>
     <string name="home_wireless_adb_view_guide_button">分步骤指南</string>
     <!-- Adb -->
     <string name="dialog_adb_discovery">正在搜索无线调试服务</string>
     <string name="dialog_adb_discovery_message">请在“开发者选项”中启用“无线调试”功能。当网络变化时“无线调试”会被自动禁用。
         \n
-        \n注意：请不要禁用“开发者选项”或“USB 调试”，否则 Shizuku 会被停止。</string>
+        \n注意：请不要禁用“开发者选项”或“USB 调试”，否则 ReShizukuX 会被停止。</string>
     <string name="dialog_adb_discovery_message_toggle_wireless_debugging">如果一直搜索，请尝试禁用并启用“无线调试”。</string>
     <string name="dialog_adb_port">端口号</string>
     <string name="dialog_adb_invalid_port">端口号是一个 1 至 65535 的整数。</string>
@@ -136,22 +136,22 @@
     <string name="dialog_adb_pairing_legacy_guide">此系统上，配对码弹窗一旦关闭，配对会话即结束，稍后在对话框中输入旧码无法成功。
 
 可靠的配对方式：
-1. 点下方按钮，在系统无障碍设置中开启「Shizuku 配对服务」。
+1. 点下方按钮，在系统无障碍设置中开启「ReShizukuX 配对服务」。
 2. 打开无线调试，点「使用配对码配对设备」。
-3. 保持弹窗打开——Shizuku 会自动读取配对码并完成配对。
+3. 保持弹窗打开——ReShizukuX 会自动读取配对码并完成配对。
 
 或者：弹窗显示期间，下拉通知栏，在通知的输入框中输入配对码。</string>
     <string name="dialog_adb_pairing_enable_auto">开启无障碍自动配对</string>
     <string name="notification_adb_pairing_help">配对说明</string>
     <string name="paring_code_is_wrong">配对码错误。</string>
-    <string name="cannot_connect_port">无法连接到无线调试服务。\n\n请确保已将 Shizuku 加入防火墙、广告拦截器、VPN 或其他可能限制网络访问的应用的白名单。</string>
+    <string name="cannot_connect_port">无法连接到无线调试服务。\n\n请确保已将 ReShizukuX 加入防火墙、广告拦截器、VPN 或其他可能限制网络访问的应用的白名单。</string>
     <string name="dialog_wireless_adb_not_enabled">无线调试未启用。\n\n请注意，在 Android 11 之前，必须连接电脑才能启用无线调试。</string>
     <string name="dialog_usb_debugging_not_enabled">USB 调试未启用。\n请在“开发者选项”中启用 USB 调试。</string>
     <string name="dialog_adb_pairing_message">请按以下步骤开始配对：\n- 打开“开发者选项”\n- 启用“无线调试”\n- 点按“无线调试”\n- 点按“使用配对码配对设备”\n- 在通知中输入配对码</string>
-    <string name="dialog_adb_pairing_accessibility_permission">在 Android 14 上，安装或更新 Shizuku 时，软件包安装程序会撤销 %1$s 权限；启用配对辅助功能需要此权限。\n\n若要授予权限，请运行以下 ADB 命令：\n\n%2$s\n\n运行命令后即可继续配对。\n\n注意：通过 ADB 安装或更新 Shizuku 也可以跳过此操作。</string>
-    <string name="dialog_adb_pairing_accessibility_permission_template">在 Android 14 上，安装或更新 Shizuku 时，软件包安装程序会撤销 ^1 权限；启用配对辅助功能需要此权限。\n\n若要授予权限，请运行以下 ADB 命令：\n\n^2\n\n运行命令后即可继续配对。\n\n注意：通过 ADB 安装或更新 Shizuku 也可以跳过此操作。</string>
-    <string name="dialog_adb_pairing_accessibility_enable">请启用无障碍服务以开始配对。这样 Shizuku 才能检测配对码。\n\n检测到配对码后，或等待 1 分钟后，无障碍服务会自动关闭以节省电量。</string>
-    <string name="dialog_adb_pairing_accessibility_navigate">请按以下步骤开始配对：\n- 进入“开发者选项”\n- 启用“无线调试”\n- 点按“无线调试”\n- 点按“使用配对码配对设备”。Shizuku 会自动检测配对码。</string>
+    <string name="dialog_adb_pairing_accessibility_permission">在 Android 14 上，安装或更新 ReShizukuX 时，软件包安装程序会撤销 %1$s 权限；启用配对辅助功能需要此权限。\n\n若要授予权限，请运行以下 ADB 命令：\n\n%2$s\n\n运行命令后即可继续配对。\n\n注意：通过 ADB 安装或更新 ReShizukuX 也可以跳过此操作。</string>
+    <string name="dialog_adb_pairing_accessibility_permission_template">在 Android 14 上，安装或更新 ReShizukuX 时，软件包安装程序会撤销 ^1 权限；启用配对辅助功能需要此权限。\n\n若要授予权限，请运行以下 ADB 命令：\n\n^2\n\n运行命令后即可继续配对。\n\n注意：通过 ADB 安装或更新 ReShizukuX 也可以跳过此操作。</string>
+    <string name="dialog_adb_pairing_accessibility_enable">请启用无障碍服务以开始配对。这样 ReShizukuX 才能检测配对码。\n\n检测到配对码后，或等待 1 分钟后，无障碍服务会自动关闭以节省电量。</string>
+    <string name="dialog_adb_pairing_accessibility_navigate">请按以下步骤开始配对：\n- 进入“开发者选项”\n- 启用“无线调试”\n- 点按“无线调试”\n- 点按“使用配对码配对设备”。ReShizukuX 会自动检测配对码。</string>
     <string name="adb_pairing_requires_multi_window">请先进入分屏（多窗口）模式。</string>
     <string name="adb_pairing_requires_multi_window_reason">系统要求配对对话框始终可见。只有使用分屏模式才能让此应用和系统对话框同时可见。</string>
     <string name="adb_error_key_store">无法生成无线调试密钥。\n这可能是因为此设备上的 KeyStore 机制已损坏。</string>
@@ -161,23 +161,23 @@
     <string name="enable">启用</string>
     <string name="development_settings">开发者选项</string>
     <string name="notification_settings">通知设置</string>
-    <string name="adb_pairing_tutorial_title">将 Shizuku 与您的设备配对</string>
-    <string name="adb_pairing_tutorial_content_notification">一条来自 Shizuku 的通知将帮助您完成配对。</string>
+    <string name="adb_pairing_tutorial_title">将 ReShizukuX 与您的设备配对</string>
+    <string name="adb_pairing_tutorial_content_notification">一条来自 ReShizukuX 的通知将帮助您完成配对。</string>
     <string name="adb_pairing_tutorial_content_steps">进入“开发者选项”，然后打开“无线调试”。</string>
     <string name="adb_pairing_tutorial_content_enter_pairing_code">
-        点击“无线调试”左侧，然后点击“使用配对码配对设备”。系统会弹出窗口显示 6 位配对码——请先记住它，再在 Shizuku 的通知或对话框里输入。若下拉通知栏时弹窗已关闭，可重新打开无线调试设置，再次点击“使用配对码配对设备”获取新配对码。</string>
-    <string name="adb_pairing_tutorial_content_notification_blocked">配对过程需要您与 Shizuku 的通知交互。请允许
-        Shizuku 发布通知。</string>
+        点击“无线调试”左侧，然后点击“使用配对码配对设备”。系统会弹出窗口显示 6 位配对码——请先记住它，再在 ReShizukuX 的通知或对话框里输入。若下拉通知栏时弹窗已关闭，可重新打开无线调试设置，再次点击“使用配对码配对设备”获取新配对码。</string>
+    <string name="adb_pairing_tutorial_content_notification_blocked">配对过程需要您与 ReShizukuX 的通知交互。请允许
+        ReShizukuX 发布通知。</string>
     <string name="adb_pairing_tutorial_content_miui">MIUI
         用户可能需要在系统设置中从“通知管理”-“通知显示设置”将通知样式切换为“原生样式”。</string>
     <string name="adb_pairing_tutorial_content_miui_2">否则，您可能无法输入通知中的配对码。</string>
-    <string name="adb_pairing_tutorial_content_finish">回到 Shizuku 并启动 Shizuku。</string>
-    <string name="adb_pairing_tutorial_content_network">Shizuku 需要访问本地网络。这受网络权限控制。</string>
+    <string name="adb_pairing_tutorial_content_finish">回到 ReShizukuX 并启动 ReShizukuX。</string>
+    <string name="adb_pairing_tutorial_content_network">ReShizukuX 需要访问本地网络。这受网络权限控制。</string>
     <string name="adb_pairing_tutorial_content_network_limation_not_foreground">某些系统（例如
-        MIUI）会禁止应用在不可见时访问网络，即使该应用使用了前台服务。请在这些系统上为 Shizuku 关闭电池优化功能。</string>
+        MIUI）会禁止应用在不可见时访问网络，即使该应用使用了前台服务。请在这些系统上为 ReShizukuX 关闭电池优化功能。</string>
     <!-- Home - Root -->
     <string name="home_root_title"><![CDATA[启动（针对已 Root 设备）]]></string>
-    <string name="home_root_description"><![CDATA[如果您正在使用 Magisk，可以尝试使用 %1$s。对于 Root 用户，它最终会取代 Shizuku。请注意，现有应用可能需要稍作修改才能使用 %2$s。]]></string>
+    <string name="home_root_description"><![CDATA[如果您正在使用 Magisk，可以尝试使用 %1$s。对于 Root 用户，它最终会取代 ReShizukuX。请注意，现有应用可能需要稍作修改才能使用 %2$s。]]></string>
     <string name="home_root_button_start">启动</string>
     <string name="home_root_button_restart">重新启动</string>
     <!-- Home - Application management -->
@@ -189,43 +189,43 @@
     <string name="home_app_management_view_authorized_apps"><![CDATA[点按以管理已授权的应用]]></string>
     <string name="home_app_management_empty">已请求或声明 Shizuku 权限的应用会显示在此处。</string>
     <!-- Home - Automation -->
-    <string name="home_automation_title">使用自动化工具控制 Shizuku</string>
-    <string name="home_automation_description">Tasker 和 MacroDroid 等应用可以发送 Intent，自动启动或停止 Shizuku。</string>
+    <string name="home_automation_title">使用自动化工具控制 ReShizukuX</string>
+    <string name="home_automation_description">Tasker 和 MacroDroid 等应用可以发送 Intent，自动启动或停止 ReShizukuX。</string>
     <string name="home_automation_button_view_intents">查看意图</string>
     <string name="home_automation_dialog_label_action">操作</string>
     <string name="home_automation_dialog_label_package">包名</string>
     <string name="home_automation_dialog_label_class">类名</string>
     <string name="home_automation_dialog_label_target">目标</string>
     <!-- Home - Learn more -->
-    <string name="home_learn_more_title">了解 Shizuku</string>
+    <string name="home_learn_more_title">了解 ReShizukuX</string>
     <string name="home_learn_more_description">了解如何使用 Shizuku 进行开发</string>
     <!-- Home - Adb permissions limited -->
     <string name="home_adb_is_limited_title">您需要进行额外的步骤</string>
-    <string name="home_adb_is_limited_description">您的设备制造商限制了 ADB 的权限，使用 Shizuku
-        的应用无法正常工作。\n\n通常，在“开发者选项”中调整一些选项即可解除此限制。请阅读帮助来了解具体的操作方式。\n\n您可能需要重新启动 Shizuku 以使操作生效。</string>
+    <string name="home_adb_is_limited_description">您的设备制造商限制了 ADB 的权限，使用 ReShizukuX
+        的应用无法正常工作。\n\n通常，在“开发者选项”中调整一些选项即可解除此限制。请阅读帮助来了解具体的操作方式。\n\n您可能需要重新启动 ReShizukuX 以使操作生效。</string>
     <!-- Application management -->
     <string name="app_management_dialog_adb_is_limited_title">ADB 权限受限</string>
     <string name="app_management_dialog_adb_is_limited_message"><![CDATA[这很可能是设备制造商限制了 ADB 权限。<p><b><a href="%1$s">此文档</a></b>中可能有针对您设备的解决方案。]]></string>
-    <string name="app_management_dialog_adb_is_limited_oppo"><![CDATA[OPPO/一加系统限制了 ADB 权限（服务端缺少系统授予权限），导致应用无法获得 Shizuku 授权。请在开发者选项中关闭「权限监控」（ColorOS 12+ 的独立开关；没有该按钮则把设备语言切换为英文，再关闭 "Disable system optimization"），然后<b>重启手机</b>。重启后重新启动 Shizuku，授权即可正常。]]></string>
-    <string name="app_management_item_summary_requires_root">* 需要在 Root 模式下运行的 Shizuku</string>
+    <string name="app_management_dialog_adb_is_limited_oppo"><![CDATA[OPPO/一加系统限制了 ADB 权限（服务端缺少系统授予权限），导致应用无法获得 ReShizukuX 授权。请在开发者选项中关闭「权限监控」（ColorOS 12+ 的独立开关；没有该按钮则把设备语言切换为英文，再关闭 "Disable system optimization"），然后<b>重启手机</b>。重启后重新启动 ReShizukuX，授权即可正常。]]></string>
+    <string name="app_management_item_summary_requires_root">* 需要在 Root 模式下运行的 ReShizukuX</string>
     <string name="app_management_toggle_all">切换全部</string>
     <!-- Terminal -->
-    <string name="home_terminal_title">在终端应用中使用 Shizuku</string>
-    <string name="home_terminal_description">通过 Shizuku 在终端应用中运行 Shell 命令</string>
+    <string name="home_terminal_title">在终端应用中使用 ReShizukuX</string>
+    <string name="home_terminal_description">通过 ReShizukuX 在终端应用中运行 Shell 命令</string>
     <string name="terminal_tutorial_miui">用户反映 MIUI 破坏了导出功能所使用的存储访问框架。</string>
-    <string name="terminal_tutorial_miui_2">如果您使用 MIUI，可能需要从 Shizuku APK 的 assets 目录中提取该文件。</string>
+    <string name="terminal_tutorial_miui_2">如果您使用 MIUI，可能需要从 ReShizukuX APK 的 assets 目录中提取该文件。</string>
     <string name="terminal_tutorial_1">将文件导出到新文件夹。</string>
     <string name="terminal_tutorial_1_description">将导出两个文件： %1$s 和 %2$s。如果所选文件夹中已存在这些文件，则会将其删除。</string>
     <string name="terminal_export_files">导出文件</string>
     <string name="terminal_tutorial_2">使用终端应用将文件复制到其私有文件目录。</string>
     <string name="terminal_tutorial_2_description">提示：如果终端应用的主目录（~）位于私有文件目录中，将文件放在那里即可直接运行 %1$s，无需输入路径。\n\n否则，可以在终端应用的 %3$s 配置文件中为 %2$s 创建别名。</string>
-    <string name="terminal_tutorial_3">使用以下命令打开 Shell 或运行 ShizukuX 命令：</string>
-    <string name="rish_description"><![CDATA[使用 %1$s，您可以在任意终端应用中连接到由 Shizuku 运行的 Shell 并与之交互。<p>点按以阅读 %1$s 的使用说明。]]></string>
+    <string name="terminal_tutorial_3">使用以下命令打开 Shell 或运行 ReShizukuX 命令：</string>
+    <string name="rish_description"><![CDATA[使用 %1$s，您可以在任意终端应用中连接到由 ReShizukuX 运行的 Shell 并与之交互。<p>点按以阅读 %1$s 的使用说明。]]></string>
     <!-- Settings -->
     <string name="settings_title">设置</string>
     <string name="settings_behavior">行为</string>
     <string name="settings_start_on_boot">开机启动（Root）</string>
-    <string name="settings_start_on_boot_summary">已 Root 的设备可以在开机时启动 Shizuku</string>
+    <string name="settings_start_on_boot_summary">已 Root 的设备可以在开机时启动 ReShizukuX</string>
     <string name="settings_start_on_boot_bug">由于 Android 11-12
         中的一个漏洞，无线调试不会记住任何授权网络。\n\n每次重启时，当授权对话框弹出时，点击“允许”重新授权网络。</string>
     <string name="settings_use_system_color">使用系统主题颜色</string>
@@ -235,18 +235,18 @@
     <string name="settings_wallpaper_black_miku">黑色初音</string>
     <string name="settings_wallpaper_original">原版</string>
     <string name="settings_watchdog">Watchdog</string>
-    <string name="settings_watchdog_summary">如果 Shizuku 崩溃，则自动重启</string>
+    <string name="settings_watchdog_summary">如果 ReShizukuX 崩溃，则自动重启</string>
     <string name="settings_anti_kill_guide">防杀设置引导</string>
-    <string name="settings_anti_kill_guide_summary">防止系统清理后台导致 Shizuku 服务停止、已授权应用失效</string>
-    <string name="anti_kill_dialog_title">防止 ShizukuX 被系统清理</string>
-    <string name="anti_kill_dialog_message">系统杀掉 ShizukuX 后，Shizuku 服务会停止，已授权的应用（如 GKD）将失效，直到服务重启。若上方 Watchdog 开关已开启，服务会被自动拉起并从磁盘恢复授权。
+    <string name="settings_anti_kill_guide_summary">防止系统清理后台导致 ReShizukuX 服务停止、已授权应用失效</string>
+    <string name="anti_kill_dialog_title">防止 ReShizukuX 被系统清理</string>
+    <string name="anti_kill_dialog_message">系统杀掉 ReShizukuX 后，ReShizukuX 服务会停止，已授权的应用（如 GKD）将失效，直到服务重启。若上方 Watchdog 开关已开启，服务会被自动拉起并从磁盘恢复授权。
 
-要确保 Watchdog 本身存活，请允许 ShizukuX 在后台运行：
-1. 系统设置 → 应用 → ShizukuX → 省电策略 → 无限制
-2. 系统设置 → 应用 → ShizukuX → 自启动 → 允许
-3. 最近任务 → 长按 ShizukuX → 锁定
+要确保 Watchdog 本身存活，请允许 ReShizukuX 在后台运行：
+1. 系统设置 → 应用 → ReShizukuX → 省电策略 → 无限制
+2. 系统设置 → 应用 → ReShizukuX → 自启动 → 允许
+3. 最近任务 → 长按 ReShizukuX → 锁定
 4. MIUI/HyperOS：设置 → 应用设置 → 授权管理 → 后台弹出界面 → 允许
-5. 其他品牌（ColorOS/OriginOS 等）：关闭 ShizukuX 的「耗电管理」/「禁用系统优化」</string>
+5. 其他品牌（ColorOS/OriginOS 等）：关闭 ReShizukuX 的「耗电管理」/「禁用系统优化」</string>
     <string name="anti_kill_dialog_open_battery">前往电池优化设置</string>
 
     <string name="external_relay_auto_title">自动授权</string>
@@ -261,16 +261,16 @@
     <string name="external_relay_auto_scene_detected">检测到 Scene ADB 授权，正在自动激活...</string>
     <string name="external_relay_auto_brevent_detected">检测到黑阈打开，正在自动激活...</string>
     <string name="settings_tcp_mode">TCP 模式</string>
-    <string name="settings_tcp_mode_summary">允许 Shizuku 在没有 Wi-Fi 的情况下重启。（Shizuku 必须在重启后至少启动过一次。）</string>
+    <string name="settings_tcp_mode_summary">允许 ReShizukuX 在没有 Wi-Fi 的情况下重启。（ReShizukuX 必须在重启后至少启动过一次。）</string>
     <string name="settings_tcp_mode_dialog_close_port">TCP 端口将立即关闭。您需要连接 Wi-Fi 才能重新启用 TCP 模式。是否继续？</string>
     <string name="settings_tcp_mode_closing_port">正在关闭 TCP 端口...</string>
     <string name="settings_restart_dialog_title">需要重启</string>
-    <string name="settings_restart_dialog_message">Shizuku 需要重启才能应用此设置。</string>
-    <string name="settings_restart_dialog_message_wifi_required"><![CDATA[<br><br><b>需要 Wi-Fi。Shizuku 会在后台继续运行并等待 Wi-Fi 连接，连接成功后才会重启。</b>]]></string>
+    <string name="settings_restart_dialog_message">ReShizukuX 需要重启才能应用此设置。</string>
+    <string name="settings_restart_dialog_message_wifi_required"><![CDATA[<br><br><b>需要 Wi-Fi。ReShizukuX 会在后台继续运行并等待 Wi-Fi 连接，连接成功后才会重启。</b>]]></string>
     <string name="settings_tcp_port">TCP 端口</string>
     <string name="settings_tcp_port_default">默认值（5555）</string>
     <string name="settings_tcp_port_hint">留空使用默认值（5555）</string>
-    <string name="settings_tcp_learn_more">了解如何使用自动化工具控制 Shizuku</string>
+    <string name="settings_tcp_learn_more">了解如何使用自动化工具控制 ReShizukuX</string>
     <string name="settings_language">语言</string>
     <string name="settings_translation_contributors">翻译贡献者</string>
     <string name="settings_translation">参与翻译</string>
@@ -296,7 +296,7 @@
     <string name="bug_report_dialog_method_2">否则，您可以通过发送电子邮件的方式。</string>
     <string name="bug_report_dialog_button_email">电子邮件</string>
     <string name="bug_report_email_subject">问题标题</string>
-    <string name="bug_report_email_body">请描述该问题（Bug）。如果可能，请包含复现步骤，以及任何相关的截图或日志。\n\n设备：%1$s\n\nAndroid 版本：%2$s\n\nShizuku 版本：%3$s</string>
+    <string name="bug_report_email_body">请描述该问题（Bug）。如果可能，请包含复现步骤，以及任何相关的截图或日志。\n\n设备：%1$s\n\nAndroid 版本：%2$s\n\nReShizukuX 版本：%3$s</string>
     <!-- Snackbar -->
     <string name="snackbar_invalid_port">端口必须介于 1 和 65535 之间</string>
     <string name="snackbar_battery_optimization_home">要使开机启动和 Watchdog 功能正常工作，必须关闭电池优化。</string>
@@ -304,9 +304,9 @@
     <string name="snackbar_action_fix">修复</string>
     <!-- Toast -->
     <string name="toast_no_email_app">未找到电子邮件应用</string>
-    <string name="toast_shizuku_already_starting">Shizuku 已在后台启动</string>
+    <string name="toast_shizuku_already_starting">ReShizukuX 已在后台启动</string>
     <string name="toast_accessibility_tv_only">该服务仅支持电视设备</string>
-    <string name="toast_pairing_timeout">Shizuku 配对服务超时</string>
+    <string name="toast_pairing_timeout">ReShizukuX 配对服务超时</string>
     <!-- Dark Mode Setting Override -->
     <string name="dark_theme">主题</string>
     <string name="dark_theme_off">浅色主题</string>
@@ -317,14 +317,14 @@
     <string name="about_dialog_button_close">关闭</string>
     <string name="about_view_source_code"><![CDATA[在 %s 查看源码]]></string>
     <!-- Start -->
-    <string name="action_start">启动 Shizuku</string>
+    <string name="action_start">启动 ReShizukuX</string>
     <!-- Stop -->
-    <string name="action_stop">停止 Shizuku</string>
-    <string name="dialog_stop_message">Shizuku 服务将被停止。</string>
+    <string name="action_stop">停止 ReShizukuX</string>
+    <string name="dialog_stop_message">ReShizukuX 服务将被停止。</string>
     <!-- Notification -->
     <string name="notification_channel_service_status">服务启动状态</string>
-    <string name="notification_service_starting">Shizuku 服务正在启动…</string>
-    <string name="notification_service_start_failed">启动 Shizuku 服务失败。</string>
+    <string name="notification_service_starting">ReShizukuX 服务正在启动…</string>
+    <string name="notification_service_start_failed">启动 ReShizukuX 服务失败。</string>
     <string name="notification_service_start_no_root">请求 Root 权限失败。</string>
     <string name="notification_working">工作中…</string>
     <string name="notification_channel_adb_pairing">无线调试配对</string>
@@ -336,13 +336,13 @@
     <string name="notification_adb_pairing_starting_title">配对成功，正在启动服务…</string>
     <string name="notification_adb_pairing_starting_text">正在连接无线调试端口</string>
     <string name="starter_local_network_permission_needed">需要"附近设备"权限才能搜索无线调试服务并完成配对。请在权限弹窗中允许后重试。</string>
-    <string name="starter_local_network_permission_rationale">ShizukuX 需要本地网络权限来搜索无线调试服务并完成配对。请在权限弹窗中允许后继续。</string>
+    <string name="starter_local_network_permission_rationale">ReShizukuX 需要本地网络权限来搜索无线调试服务并完成配对。请在权限弹窗中允许后继续。</string>
     <string name="starter_local_network_permission_denied">本地网络权限已被禁止。请在系统设置中开启后使用无线调试。</string>
     <string name="starter_go_settings">去设置</string>
     <string name="local_network_denied_hint">本地网络权限被拒绝，可能无法搜索到配对服务；若搜索失败请在设置中开启该权限。</string>
-    <string name="local_network_denied_dialog_message">本地网络权限被拒绝，ShizukuX 可能无法搜索到配对服务。请授权后继续，或取消以尝试。</string>
+    <string name="local_network_denied_dialog_message">本地网络权限被拒绝，ReShizukuX 可能无法搜索到配对服务。请授权后继续，或取消以尝试。</string>
     <string name="notification_adb_pairing_succeed_title">配对成功</string>
-    <string name="notification_adb_pairing_succeed_text">您现在可以启动 Shizuku 服务了。</string>
+    <string name="notification_adb_pairing_succeed_text">您现在可以启动 ReShizukuX 服务了。</string>
     <string name="notification_adb_pairing_failed_title">配对失败</string>
     <string name="notification_adb_pairing_retry">重试</string>
     <!-- Permission related, appears in system permission UI -->
@@ -355,26 +355,26 @@
     <string name="starter">启动器</string>
     <string name="start_with_root_failed">未授予 Root 权限，或设备未 Root，因此无法启动服务。</string>
     <!-- WADB Starter -->
-    <string name="wadb_notification_title">正在启动 Shizuku…</string>
+    <string name="wadb_notification_title">正在启动 ReShizukuX…</string>
     <string name="wadb_notification_wifi_required">正在等待 Wi-Fi 连接，连接成功后才能继续</string>
     <string name="wadb_notification_retry">等待重试</string>
     <string name="wadb_error_title">在系统启动时启动出现错误</string>
     <string name="wadb_error_notify_dev">点击通知开发者。</string>
     <string name="wadb_permission_error_notification_title">权限错误</string>
-    <string name="wadb_permission_error_notification_content">Shizuku 需要 WRITE_SECURE_SETTINGS
+    <string name="wadb_permission_error_notification_content">ReShizukuX 需要 WRITE_SECURE_SETTINGS
         权限才能开机启动。点击了解如何授予此权限。</string>
     <string name="wadb_notification_channel">ADB 自动启动服务</string>
     <!-- Watchdog -->
     <string name="watchdog_running">Watchdog 正在运行</string>
     <string name="watchdog_turn_off">关闭</string>
-    <string name="watchdog_shizuku_crashed_title">Shizuku 最近崩溃了</string>
+    <string name="watchdog_shizuku_crashed_title">ReShizukuX 最近崩溃了</string>
     <string name="watchdog_shizuku_crashed_text">Watchdog 已重启服务。点击了解可防止未来崩溃的潜在修复方案。</string>
     <string name="watchdog_shizuku_crashed_action_turn_off_alerts">关闭提醒</string>
     <!-- Misc -->
     <string name="dialog_cannot_open_browser_title">无法启动浏览器</string>
     <string name="toast_copied_to_clipboard">已复制到剪贴板</string>
     <string name="accessibility_service_description">为无法使用通知或分屏功能的设备（例如，运行 Android 14
-        及更高版本的电视）提供配对支持。\n\n使 Shizuku 能够从无线调试配对屏幕中提取配对码。找到配对码后，它将自动禁用。</string>
+        及更高版本的电视）提供配对支持。\n\n使 ReShizukuX 能够从无线调试配对屏幕中提取配对码。找到配对码后，它将自动禁用。</string>
     <!-- Messages for legacy -->
     <string name="dialog_legacy_not_support_title">%1$s 不支持现代 Shizuku</string>
     <string name="dialog_legacy_not_support_message"><![CDATA[旧式 Shizuku 已于 2019 年 3 月被弃用。此外，旧式 Shizuku 无法在较新版本的 Android 系统上工作。<p>请要求 <b>%1$s</b> 的开发者进行更新。]]></string>
@@ -403,7 +403,7 @@
     <string name="settings_main_category_personalization">个性化</string>
     <string name="settings_main_category_system">系统</string>
     <string name="settings_main_nav_feature_hub_title">功能中心</string>
-    <string name="settings_main_nav_feature_hub_summary">管理 ShizukuX 专属功能</string>
+    <string name="settings_main_nav_feature_hub_summary">管理 ReShizukuX 专属功能</string>
     <string name="settings_main_nav_root_compat_title">Root 与兼容性</string>
     <string name="settings_main_nav_root_compat_summary">ADB 连接、SU 桥接、无 Root 集成以及原版 Shizuku 兼容性</string>
     <string name="settings_main_nav_appearance_summary">主题、形状、图标、动效、主页布局和语言</string>
@@ -415,12 +415,12 @@
     <string name="settings_main_nav_advanced_diagnostics_summary">日志、ADB 工具和故障排查</string>
     <string name="settings_main_nav_about_summary">版本、许可和更新</string>
 
-    <string name="root_hub_magic_setup_all_summary">ShizukuX 已为您配置了 %d 个应用！</string>
-    <string name="root_hub_magic_setup_success">Magic Setup 完成！ShizukuX 已为您配置了 %s。</string>
+    <string name="root_hub_magic_setup_all_summary">ReShizukuX 已为您配置了 %d 个应用！</string>
+    <string name="root_hub_magic_setup_success">Magic Setup 完成！ReShizukuX 已为您配置了 %s。</string>
     <string name="root_hub_magic_setup_fail">Magic Setup 失败。请尝试手动复制路径。</string>
     <string name="root_hub_magic_setup_all_no_apps">未找到支持自动配置的 Root 应用。</string>
     <string name="root_hub_path_copied">SU 路径已复制到剪贴板</string>
-    <string name="root_hub_no_export">未设置 SU 路径。请先在主页导出 Shizuku 文件。</string>
+    <string name="root_hub_no_export">未设置 SU 路径。请先在主页导出 ReShizukuX 文件。</string>
     
     <string name="settings_nav_behavior_summary">开机启动、Watchdog 和 TCP 模式</string>
     <string name="settings_nav_shizuku_plus_summary">增强型 API、Shell 加速器等</string>
@@ -436,10 +436,10 @@
     <string name="server_memory_usage"><![CDATA[服务内存使用情况]]></string>
     <string name="server_memory_uncapped"><![CDATA[不设上限]]></string>
     <string name="server_clients_connected"><![CDATA[%1$d 个应用已连接]]></string>
-    <string name="extra_dashboard_title"><![CDATA[ShizukuX 控制面板]]></string>
+    <string name="extra_dashboard_title"><![CDATA[ReShizukuX 控制面板]]></string>
     <string name="error_unknown"><![CDATA[未知错误]]></string>
     <string name="translation_contributors"><![CDATA[thejaustin]]></string>
-    <string name="translation_url"><![CDATA[https://github.com/qianyumeng0228/ShizukuX]]></string>
+    <string name="translation_url"><![CDATA[https://github.com/qianyumeng0228/ReShizukuX]]></string>
     <string name="settings_expressive_title"><![CDATA[表现力设计（M3E）]]></string>
     <string name="settings_expressive_shapes"><![CDATA[表现力图标形状]]></string>
     <string name="settings_expressive_shapes_summary"><![CDATA[使用不对称的叶片和水滴形状作为图标]]></string>
@@ -468,11 +468,11 @@
     <string name="doctor_status_detected"><![CDATA[检测到]]></string>
     <string name="doctor_status_review"><![CDATA[需要查看]]></string>
     <string name="doctor_tip_s22_ultra"><![CDATA[<b>S22 Ultra 提示</b>：如果遇到连接断开，请拨号“*#0808#”并选择“MTP + ADB”，以保持 ADB 连接稳定。]]></string>
-    <string name="doctor_tip_secure_folder"><![CDATA[<b>检测到安全文件夹</b>：Shizuku 在主用户（所有者）中运行效果最佳。在安全文件夹或工作资料中运行时，可能需要先从主用户启动服务。]]></string>
-    <string name="doctor_tip_phantom_process"><![CDATA[<b>幻影进程限制</b>：如果运行的命令过多，Android 12-15+ 可能会终止 Shizuku。“修复”按钮会尝试关闭此限制。]]></string>
+    <string name="doctor_tip_secure_folder"><![CDATA[<b>检测到安全文件夹</b>：ReShizukuX 在主用户（所有者）中运行效果最佳。在安全文件夹或工作资料中运行时，可能需要先从主用户启动服务。]]></string>
+    <string name="doctor_tip_phantom_process"><![CDATA[<b>幻影进程限制</b>：如果运行的命令过多，Android 12-15+ 可能会终止 ReShizukuX。“修复”按钮会尝试关闭此限制。]]></string>
     <string name="doctor_tip_s22_ultra_exynos"><![CDATA[<b>S22 Ultra（Exynos）</b>：如果服务响应缓慢，请尝试在“设备维护”&gt;“内存”中禁用<b>“内存加速”</b>。]]></string>
     <string name="doctor_tip_s22_ultra_snapdragon"><![CDATA[<b>S22 Ultra（骁龙）</b>：请确保在“快速设置”中启用“增强处理”，以获得更高的命令吞吐量。]]></string>
-    <string name="doctor_system_well_configured"><![CDATA[您的系统似乎已为 ShizukuX 配置良好。]]></string>
+    <string name="doctor_system_well_configured"><![CDATA[您的系统似乎已为 ReShizukuX 配置良好。]]></string>
     <string name="su_bridge_other_detected_apps"><![CDATA[检测到的其他 Root 应用]]></string>
     <string name="su_bridge_installed_root_app"><![CDATA[已安装的 Root 应用]]></string>
     <string name="su_bridge_suggested_root_app"><![CDATA[推荐的 Root 应用]]></string>
@@ -517,8 +517,8 @@
     <string name="app_management_sort_a_to_z"><![CDATA[名称（A-Z）]]></string>
     <string name="app_management_sort_last_installed"><![CDATA[上次安装]]></string>
     <string name="app_management_sort_last_updated"><![CDATA[最后更新]]></string>
-    <string name="app_management_item_summary_partial_root"><![CDATA[⚠ 部分支持 — 部分功能仍需要 Root 模式的 Shizuku]]></string>
-    <string name="app_management_item_summary_requires_plus"><![CDATA[* 需要 ShizukuX 增强 API]]></string>
+    <string name="app_management_item_summary_partial_root"><![CDATA[⚠ 部分支持 — 部分功能仍需要 Root 模式的 ReShizukuX]]></string>
+    <string name="app_management_item_summary_requires_plus"><![CDATA[* 需要 ReShizukuX 增强 API]]></string>
     <string name="app_management_item_context"><![CDATA[应用：%s]]></string>
     <string name="app_management_enhancements"><![CDATA[增强功能]]></string>
     <string name="app_management_enhancements_desc"><![CDATA[为此应用启用 Extra 功能，以提升性能和兼容性。]]></string>
@@ -541,30 +541,30 @@
     <string name="settings_lp_app_info"><![CDATA[应用信息]]></string>
     <string name="settings_lp_toggle_permission"><![CDATA[切换 Shizuku 权限]]></string>
     <string name="settings_lp_hide_from_list"><![CDATA[从列表中隐藏]]></string>
-    <string name="onboarding_welcome_title"><![CDATA[欢迎来到 ShizukuX]]></string>
+    <string name="onboarding_welcome_title"><![CDATA[欢迎来到 ReShizukuX]]></string>
     <string name="onboarding_welcome_desc"><![CDATA[增强版 Shizuku，提供强大的应用管理功能。滑动手势、快捷操作和可自定义的体验，尽在一处。]]></string>
     <string name="onboarding_swipe_title"><![CDATA[默认手势]]></string>
     <string name="onboarding_swipe_desc"><![CDATA[默认情况下，在应用管理列表中，向右滑动打开应用，向左滑动查看其系统设置页面。]]></string>
     <string name="onboarding_gestures_title"><![CDATA[自定义手势]]></string>
     <string name="onboarding_gestures_desc"><![CDATA[您可以在“设置”中自定义滑动操作。可选择“打开应用”“应用信息”“切换权限”或“从列表中隐藏”。]]></string>
     <string name="onboarding_longpress_title"><![CDATA[定制体验]]></string>
-    <string name="onboarding_longpress_desc"><![CDATA[选择长按应用时显示的操作，或启用 ShizukuX 专属功能，例如 Dhizuku 模式。]]></string>
+    <string name="onboarding_longpress_desc"><![CDATA[选择长按应用时显示的操作，或启用 ReShizukuX 专属功能，例如 Dhizuku 模式。]]></string>
     <string name="onboarding_next"><![CDATA[下一步]]></string>
     <string name="onboarding_skip"><![CDATA[跳过]]></string>
     <string name="onboarding_get_started"><![CDATA[开始使用]]></string>
-    <string name="onboarding_setup_title"><![CDATA[启动 Shizuku]]></string>
-    <string name="onboarding_setup_desc"><![CDATA[选择如何在此设备上启动 Shizuku。您也可以稍后从主屏幕执行此操作。]]></string>
-    <string name="onboarding_setup_running"><![CDATA[Shizuku 正在运行]]></string>
+    <string name="onboarding_setup_title"><![CDATA[启动 ReShizukuX]]></string>
+    <string name="onboarding_setup_desc"><![CDATA[选择如何在此设备上启动 ReShizukuX。您也可以稍后从主屏幕执行此操作。]]></string>
+    <string name="onboarding_setup_running"><![CDATA[ReShizukuX 正在运行]]></string>
     <string name="onboarding_setup_later"><![CDATA[我稍后再做]]></string>
     <string name="onboarding_setup_wadb_desc"><![CDATA[Android 11+，无需电脑。使用无线调试。]]></string>
-    <string name="onboarding_setup_root_desc"><![CDATA[您的设备已 Root。以 Root 权限启动 Shizuku。]]></string>
+    <string name="onboarding_setup_root_desc"><![CDATA[您的设备已 Root。以 Root 权限启动 ReShizukuX。]]></string>
     <string name="onboarding_setup_adb_desc"><![CDATA[适用于任何设备。通过电脑运行一条 ADB 命令即可启动。]]></string>
     <string name="swipe_hint_title"><![CDATA[滑动手势]]></string>
     <string name="swipe_hint_right"><![CDATA[向右滑动即可快速执行操作]]></string>
     <string name="swipe_hint_left"><![CDATA[向左滑动即可快速执行操作]]></string>
     <string name="swipe_hint_dismiss"><![CDATA[点击任意位置即可关闭]]></string>
     <string name="settings_auto_disable_usb_debugging"><![CDATA[自动禁用 USB 调试]]></string>
-    <string name="settings_auto_disable_usb_debugging_summary"><![CDATA[停止 Shizuku 时禁用 USB 调试]]></string>
+    <string name="settings_auto_disable_usb_debugging_summary"><![CDATA[停止 ReShizukuX 时禁用 USB 调试]]></string>
     <string name="settings_diagnostics_category"><![CDATA[诊断]]></string>
     <string name="settings_stealth_mode"><![CDATA[隐身模式]]></string>
     <string name="settings_stealth_mode_summary"><![CDATA[隐藏应用图标并简化界面，以保护隐私]]></string>
@@ -598,12 +598,12 @@
     <string name="settings_reset_adb_keys_error"><![CDATA[无法重置 ADB 密钥]]></string>
     <string name="settings_dhizuku_mode"><![CDATA[Dhizuku 模式]]></string>
     <string name="settings_dhizuku_mode_summary"><![CDATA[将设备所有者（DevicePolicyManager）权限委托给支持 Dhizuku 的应用。]]></string>
-    <string name="dhizuku_device_owner_label"><![CDATA[ShizukuX（Dhizuku 模式）]]></string>
+    <string name="dhizuku_device_owner_label"><![CDATA[ReShizukuX（Dhizuku 模式）]]></string>
     <string name="dhizuku_device_owner_desc"><![CDATA[Dhizuku 模式需要与授权应用共享设备所有者权限。]]></string>
     <string name="dhizuku_device_owner_enabled"><![CDATA[Dhizuku 设备所有者已启用]]></string>
     <string name="dhizuku_device_owner_disabled"><![CDATA[Dhizuku 设备所有者已禁用]]></string>
-    <string name="settings_enhanced_api"><![CDATA[ShizukuX 增强型 API]]></string>
-    <string name="settings_enhanced_api_summary"><![CDATA[为高级用户启用高级系统接口。所有 ShizukuX 专属功能都需要此接口。]]></string>
+    <string name="settings_enhanced_api"><![CDATA[ReShizukuX 增强型 API]]></string>
+    <string name="settings_enhanced_api_summary"><![CDATA[为高级用户启用高级系统接口。所有 ReShizukuX 专属功能都需要此接口。]]></string>
     <string name="settings_shell_interceptor"><![CDATA[Shell 加速器]]></string>
     <string name="settings_shell_interceptor_summary"><![CDATA[通过本机 API 加速 Shell 命令，提升 MacroDroid 和 Tasker 任务的性能。]]></string>
     <string name="settings_avf_manager"><![CDATA[虚拟机管理器（AVF）]]></string>
@@ -628,17 +628,17 @@
     <string name="settings_extra_learn_more"><![CDATA[了解更多]]></string>
     <string name="settings_extra_feature_help_enable">启用功能</string>
     <string name="settings_extra_feature_help_close">关闭</string>
-    <string name="help_general_plus_summary"><![CDATA[<b>ShizukuX 如何与其他应用配合使用</b><br><br>ShizukuX 提供<i>Extra 专属功能</i>（如存储桥接、AI 桥接和主题桥接）。本应用以及明确面向 ShizukuX API（xyz.shizuku.extra.api）的第三方应用都可以使用这些功能。<br><br><b>重要提示：</b>ShizukuX 完全兼容原版 Shizuku API。现有的 Shizuku 应用（如 SD Maid SE 和 SwiftBackup）无需开发者更新，即可自动发现并使用 ShizukuX。<br><br><b>与原版 Shizuku 共存：</b>同一时间只能运行一个 Shizuku 服务。如果仍安装了原版 Shizuku，可以通过主页上的伴侣卡片快速切换；但建议卸载原版 Shizuku，仅使用 ShizukuX。]]></string>
+    <string name="help_general_plus_summary"><![CDATA[<b>ReShizukuX 如何与其他应用配合使用</b><br><br>ReShizukuX 提供<i>Extra 专属功能</i>（如存储桥接、AI 桥接和主题桥接）。本应用以及明确面向 ReShizukuX API（xyz.shizuku.extra.api）的第三方应用都可以使用这些功能。<br><br><b>重要提示：</b>ReShizukuX 完全兼容原版 Shizuku API。现有的 ReShizukuX 应用（如 SD Maid SE 和 SwiftBackup）无需开发者更新，即可自动发现并使用 ReShizukuX。<br><br><b>与原版 Shizuku 共存：</b>同一时间只能运行一个 ReShizukuX 服务。如果仍安装了原版 Shizuku，可以通过主页上的伴侣卡片快速切换；但建议卸载原版 Shizuku，仅使用 ReShizukuX。]]></string>
     <string name="help_dhizuku_title"><![CDATA[关于 Dhizuku 模式]]></string>
-    <string name="help_dhizuku_detail"><![CDATA[Dhizuku 允许 Shizuku 与第三方应用共享设备所有者（DevicePolicyManager）权限。这对 Dhizuku Manager 或信息亭模式工具等应用很重要，因为这些应用需要管理系统策略，但又不能成为唯一的设备所有者。]]></string>
+    <string name="help_dhizuku_detail"><![CDATA[Dhizuku 允许 ReShizukuX 与第三方应用共享设备所有者（DevicePolicyManager）权限。这对 Dhizuku Manager 或信息亭模式工具等应用很重要，因为这些应用需要管理系统策略，但又不能成为唯一的设备所有者。]]></string>
     <string name="help_shell_interceptor_title"><![CDATA[关于 Shell 加速器]]></string>
-    <string name="help_shell_interceptor_detail"><![CDATA[Shell 加速器会拦截标准 Shell 命令（am、pm、settings），并将其直接转换为 Shizuku 服务 API 调用。这样可以避免每条命令都创建新的 /system/bin/sh 进程，从而显著提升 MacroDroid 或 Tasker 自动化的速度和电池效率。]]></string>
+    <string name="help_shell_interceptor_detail"><![CDATA[Shell 加速器会拦截标准 Shell 命令（am、pm、settings），并将其直接转换为 ReShizukuX 服务 API 调用。这样可以避免每条命令都创建新的 /system/bin/sh 进程，从而显著提升 MacroDroid 或 Tasker 自动化的速度和电池效率。]]></string>
     <string name="help_avf_manager_title"><![CDATA[关于 AVF 虚拟机管理器]]></string>
     <string name="help_avf_manager_detail"><![CDATA[Android 虚拟化框架（AVF）管理器允许您运行隔离的 Linux 或 Microdroid 虚拟机。在支持的硬件（Snapdragon 8 Gen 1+、Tensor G2+）上，这可以通过 VirtIO-GPU 支持实现硬件加速虚拟化，以运行桌面 Linux 环境或隔离的安全任务。]]></string>
     <string name="help_storage_proxy_title"><![CDATA[关于存储桥]]></string>
-    <string name="help_storage_proxy_detail"><![CDATA[存储桥接为受限文件系统路径（如 /data/data/（应用数据）和 /data/app/（APK 文件））提供经过身份验证的高速访问。这使 Neo Backup 等备份工具无需完整 Root 权限即可运行，同时仍遵循 Shizuku 的权限模型。]]></string>
+    <string name="help_storage_proxy_detail"><![CDATA[存储桥接为受限文件系统路径（如 /data/data/（应用数据）和 /data/app/（APK 文件））提供经过身份验证的高速访问。这使 Neo Backup 等备份工具无需完整 Root 权限即可运行，同时仍遵循 ReShizukuX 的权限模型。]]></string>
     <string name="help_continuity_bridge_title"><![CDATA[关于多设备连续性]]></string>
-    <string name="help_continuity_bridge_detail"><![CDATA[连续性桥接允许同一网络上的 ShizukuX 设备转移任务，并同步剪贴板和应用状态。它利用 Android 17 Handoff API（在可行时向后兼容），让手机和平板电脑之间的自动化任务无缝衔接。]]></string>
+    <string name="help_continuity_bridge_detail"><![CDATA[连续性桥接允许同一网络上的 ReShizukuX 设备转移任务，并同步剪贴板和应用状态。它利用 Android 17 Handoff API（在可行时向后兼容），让手机和平板电脑之间的自动化任务无缝衔接。]]></string>
     <string name="help_ai_core_plus_title"><![CDATA[关于智能桥]]></string>
     <string name="help_ai_core_plus_detail"><![CDATA[智能桥授予人工智能助手对屏幕内容和 NPU 调度的特权访问。它通过提供绕过标准 Android 屏幕录制限制的高性能、窗口感知帧捕获，为本地 LLM 启用“循环搜索”或屏幕感知上下文等功能。]]></string>
     <string name="help_window_manager_plus_title"><![CDATA[关于窗口调节器]]></string>
@@ -664,7 +664,7 @@
     <string name="help_root_magisk_title"><![CDATA[关于 Magisk 模拟]]></string>
     <string name="help_root_magisk_detail"><![CDATA[许多应用会通过查找 Magisk 特有的属性或 /sbin/.magisk 目录来检查 Root。此模块会模拟这些元素，让依赖 Magisk 检测才能启用 Root 功能的应用正常工作。]]></string>
     <string name="help_root_auto_grant_title"><![CDATA[关于自动授权]]></string>
-    <string name="help_root_auto_grant_detail"><![CDATA[旧版 Root 应用通常会尝试通过 Shell 授予自身权限。此桥接会监听这些“pm grant”调用，并使用 Shizuku 的提升权限立即批准，从而减少手动权限管理。]]></string>
+    <string name="help_root_auto_grant_detail"><![CDATA[旧版 Root 应用通常会尝试通过 Shell 授予自身权限。此桥接会监听这些“pm grant”调用，并使用 ReShizukuX 的提升权限立即批准，从而减少手动权限管理。]]></string>
     <string name="help_root_file_interceptor_title"><![CDATA[关于文件拦截器]]></string>
     <string name="help_root_file_interceptor_detail"><![CDATA[应用使用标准 Shell 将文件复制到 /data/data 时，通常会丢失所有权和 SELinux 上下文。此模块会自动添加 --preserve=all 等参数，维护文件完整性，避免应用崩溃。]]></string>
     <string name="help_root_busybox_title"><![CDATA[关于 BusyBox 模拟]]></string>
@@ -677,7 +677,7 @@
     <string name="settings_experimental_root_experimental"><![CDATA[实验性 Root 兼容性]]></string>
     <string name="settings_spoof_device_experimental"><![CDATA[模拟设备身份]]></string>
     <string name="settings_open_source_licenses"><![CDATA[开源许可证]]></string>
-    <string name="settings_open_source_licenses_summary"><![CDATA[ShizukuX 使用的开源库]]></string>
+    <string name="settings_open_source_licenses_summary"><![CDATA[ReShizukuX 使用的开源库]]></string>
     <string name="settings_experimental_warning_title"><![CDATA[实验性功能]]></string>
     <string name="settings_experimental_warning_message"><![CDATA[此功能处于实验阶段，可能导致系统不稳定或崩溃。确定要启用吗？]]></string>
     <string name="settings_category_root_integration"><![CDATA[Root 集成]]></string>
@@ -685,15 +685,15 @@
     <string name="settings_adb_proxy"><![CDATA[本地 ADB 代理服务]]></string>
     <string name="settings_adb_proxy_summary"><![CDATA[在端口 15555 上模拟 ADB 服务，为需要无线 ADB 的应用提供支持，无需让系统功能持续处于活动状态。]]></string>
     <string name="settings_fake_su"><![CDATA[SU 桥接（su 包装器）]]></string>
-    <string name="settings_fake_su_summary"><![CDATA[为支持自定义路径的旧版 Root 应用提供由 Shizuku 驱动的“su”二进制文件。]]></string>
+    <string name="settings_fake_su_summary"><![CDATA[为支持自定义路径的旧版 Root 应用提供由 ReShizukuX 驱动的“su”二进制文件。]]></string>
     <string name="settings_root_integration_hub"><![CDATA[Root 集成中心]]></string>
-    <string name="settings_root_integration_hub_summary"><![CDATA[配置和管理 Root 应用，使其使用 ShizukuX 权限。]]></string>
+    <string name="settings_root_integration_hub_summary"><![CDATA[配置和管理 Root 应用，使其使用 ReShizukuX 权限。]]></string>
     <string name="settings_root_compatibility_hub"><![CDATA[Root 兼容性中心]]></string>
-    <string name="settings_root_compatibility_hub_summary"><![CDATA[配置和管理 Root 应用，使其使用 ShizukuX 权限。]]></string>
+    <string name="settings_root_compatibility_hub_summary"><![CDATA[配置和管理 Root 应用，使其使用 ReShizukuX 权限。]]></string>
     <string name="su_bridge_title"><![CDATA[SU 桥接]]></string>
     <string name="su_bridge_hub_title"><![CDATA[SU 桥接（完整页面）]]></string>
     <string name="su_bridge_hub_summary"><![CDATA[设备身份、使用方法、推荐应用与 Magic Setup 自动配置]]></string>
-    <string name="su_bridge_description"><![CDATA[通过创建自定义“su”二进制文件，为不支持 Shizuku 的应用提供类似 Root 的访问能力。]]></string>
+    <string name="su_bridge_description"><![CDATA[通过创建自定义“su”二进制文件，为不支持 ReShizukuX 的应用提供类似 Root 的访问能力。]]></string>
     <string name="su_bridge_suggested_apps"><![CDATA[推荐应用]]></string>
     <string name="su_bridge_suggested_apps_desc"><![CDATA[这些应用支持自定义 SU 路径。请将路径指向导出的“su”脚本。]]></string>
     <string name="su_bridge_global_config_title"><![CDATA[全局配置]]></string>
@@ -701,22 +701,22 @@
     <string name="su_bridge_setup_all"><![CDATA[设置全部]]></string>
     <string name="su_bridge_setup_all_success"><![CDATA[已尝试自动设置所有兼容应用。]]></string>
     <string name="su_bridge_magic_setup"><![CDATA[Magic Setup（自动配置）]]></string>
-    <string name="su_bridge_magic_setup_success"><![CDATA[Magic Setup 已完成！ShizukuX 已为你配置 %s。]]></string>
+    <string name="su_bridge_magic_setup_success"><![CDATA[Magic Setup 已完成！ReShizukuX 已为你配置 %s。]]></string>
     <string name="su_bridge_magic_setup_fail"><![CDATA[Magic Setup 失败。请尝试手动复制路径。]]></string>
     <string name="su_bridge_magic_setup_all"><![CDATA[全部自动配置]]></string>
-    <string name="su_bridge_magic_setup_all_summary"><![CDATA[ShizukuX 已为 %d 个应用完成自动配置！]]></string>
+    <string name="su_bridge_magic_setup_all_summary"><![CDATA[ReShizukuX 已为 %d 个应用完成自动配置！]]></string>
     <string name="su_bridge_magic_setup_all_no_apps"><![CDATA[未找到支持自动配置的 Root 应用。]]></string>
     <string name="su_bridge_copy_open"><![CDATA[复制路径并打开]]></string>
-    <string name="su_bridge_no_export"><![CDATA[未设置 SU 路径。首先从主屏幕导出 Shizuku 文件。]]></string>
-    <string name="root_hub_shizuku_aware_note"><![CDATA[SU 桥接可以为非 Root 设备提供类似 Root 的访问能力。不过，Magic Setup（自动配置）需要 Shizuku 处于 Root 模式，才能修改其他应用。在 ADB 模式下，请使用“复制路径”并手动配置应用。]]></string>
-    <string name="su_bridge_magic_setup_root_required"><![CDATA[Magic Setup 需要 Shizuku 处于 Root 模式。]]></string>
+    <string name="su_bridge_no_export"><![CDATA[未设置 SU 路径。首先从主屏幕导出 ReShizukuX 文件。]]></string>
+    <string name="root_hub_shizuku_aware_note"><![CDATA[SU 桥接可以为非 Root 设备提供类似 Root 的访问能力。不过，Magic Setup（自动配置）需要 ReShizukuX 处于 Root 模式，才能修改其他应用。在 ADB 模式下，请使用“复制路径”并手动配置应用。]]></string>
+    <string name="su_bridge_magic_setup_root_required"><![CDATA[Magic Setup 需要 ReShizukuX 处于 Root 模式。]]></string>
     <string name="su_bridge_no_custom_path_support"><![CDATA[此应用不支持自定义路径，需要真正的 Root 权限。]]></string>
     <string name="su_bridge_manual_setup_required"><![CDATA[ADB 模式下需要手动设置]]></string>
     <string name="su_bridge_how_to_use"><![CDATA[使用方法：]]></string>
-    <string name="su_bridge_step_1"><![CDATA[1. 从主屏幕导出 Shizuku 文件。]]></string>
+    <string name="su_bridge_step_1"><![CDATA[1. 从主屏幕导出 ReShizukuX 文件。]]></string>
     <string name="su_bridge_step_2"><![CDATA[2. 在 Root 应用的设置中找到“SU Path”或“Binary Path”。]]></string>
     <string name="su_bridge_step_3"><![CDATA[3. 将其更改为导出的“su”文件的路径。]]></string>
-    <string name="su_bridge_step_4"><![CDATA[4. 对于不支持自定义路径的应用，请在 ShizukuX 设置中启用“SU 桥接”。它会自动重定向许多旧版 su 调用。]]></string>
+    <string name="su_bridge_step_4"><![CDATA[4. 对于不支持自定义路径的应用，请在 ReShizukuX 设置中启用“SU 桥接”。它会自动重定向许多旧版 su 调用。]]></string>
     <string name="su_bridge_app_instruction"><![CDATA[在“设置”中将路径设置为 %s]]></string>
     <string name="su_bridge_path_label"><![CDATA[导出的 su 路径]]></string>
     <string name="su_bridge_su_path_label"><![CDATA[导出的 su 路径]]></string>
@@ -754,19 +754,19 @@
     <string name="manual_report_copied_dialog_title"><![CDATA[报告已复制]]></string>
     <string name="manual_report_copied_dialog_message"><![CDATA[该报告已复制到您的剪贴板。您想立即打开 GitHub Issues，还是将报告作为文件共享？]]></string>
     <string name="manual_report_copied_dialog_share"><![CDATA[共享文件]]></string>
-    <string name="crash_detected_dialog_message"><![CDATA[ShizukuX 检测到您上次会话发生崩溃。您想生成一份报告来帮助我们解决问题吗？]]></string>
+    <string name="crash_detected_dialog_message"><![CDATA[ReShizukuX 检测到您上次会话发生崩溃。您想生成一份报告来帮助我们解决问题吗？]]></string>
     <string name="crash_detected_dialog_short_message"><![CDATA[报告已复制到剪贴板。要打开 GitHub 粘贴报告，还是将报告作为文件共享？]]></string>
     <string name="crash_detected_dialog_ignore"><![CDATA[忽略]]></string>
     <string name="shortcut_open_terminal"><![CDATA[打开终端]]></string>
     <string name="watchdog_shizuku_crashed_action_report_manually"><![CDATA[手动报告]]></string>
     <string name="home_service_doctor_title"><![CDATA[服务诊断]]></string>
-    <string name="home_service_doctor_summary"><![CDATA[启动 Shizuku 时遇到问题？点按以运行诊断检查。]]></string>
+    <string name="home_service_doctor_summary"><![CDATA[启动 ReShizukuX 时遇到问题？点按以运行诊断检查。]]></string>
     <string name="doctor_dialog_title"><![CDATA[系统诊断]]></string>
     <string name="doctor_check_battery"><![CDATA[电池优化：%1$s]]></string>
     <string name="doctor_check_adb"><![CDATA[无线调试：%1$s]]></string>
     <string name="doctor_check_root"><![CDATA[Root 权限：%1$s]]></string>
     <string name="doctor_check_permission"><![CDATA[ADB 权限：%1$s]]></string>
-    <string name="doctor_check_server"><![CDATA[Shizuku 服务：%1$s]]></string>
+    <string name="doctor_check_server"><![CDATA[ReShizukuX 服务：%1$s]]></string>
     <string name="doctor_check_server_version"><![CDATA[服务端版本]]></string>
     <string name="doctor_tip_server_version"><![CDATA[服务端未返回版本号（首页显示“版本 0”），说明服务端未正常启动或被系统限制。OPPO/一加请确认已关闭开发者选项中的“权限监控”（ColorOS 12+ 独立开关），没有则切英文语言关闭 "Disable system optimization"，然后重启手机。]]></string>
     <string name="doctor_check_background"><![CDATA[后台限制：%1$s]]></string>
@@ -785,10 +785,10 @@
     <string name="doctor_status_enabled_must_off"><![CDATA[已启用（必须关闭）]]></string>
     <string name="doctor_tip_xiaomi"><![CDATA[小米/HyperOS：在开发者选项中启用“USB 调试（安全设置）”。]]></string>
     <string name="doctor_tip_oppo_permission"><![CDATA[OPPO/Realme/OnePlus：在开发者选项中禁用“权限监控”，防止后台服务被终止。]]></string>
-    <string name="doctor_tip_tcl_background"><![CDATA[TCL：请将 ShizukuX 加入“设置”中的“自动启动”和“高后台功耗”白名单。]]></string>
-    <string name="doctor_tip_battery"><![CDATA[关闭 ShizukuX 的电池优化，防止它在后台被终止。]]></string>
-    <string name="doctor_tip_adb"><![CDATA[无线调试必须保持启用，Shizuku 才能在重启后以非 Root 模式启动。]]></string>
-    <string name="snackbar_server_version_skew"><![CDATA[ShizukuX 已更新，但正在运行的服务仍是旧版本。请重新启动服务，以便已连接的应用继续工作。]]></string>
+    <string name="doctor_tip_tcl_background"><![CDATA[TCL：请将 ReShizukuX 加入“设置”中的“自动启动”和“高后台功耗”白名单。]]></string>
+    <string name="doctor_tip_battery"><![CDATA[关闭 ReShizukuX 的电池优化，防止它在后台被终止。]]></string>
+    <string name="doctor_tip_adb"><![CDATA[无线调试必须保持启用，ReShizukuX 才能在重启后以非 Root 模式启动。]]></string>
+    <string name="snackbar_server_version_skew"><![CDATA[ReShizukuX 已更新，但正在运行的服务仍是旧版本。请重新启动服务，以便已连接的应用继续工作。]]></string>
     <string name="snackbar_action_restart"><![CDATA[重新启动]]></string>
     <string name="toast_adb_ssl_error"><![CDATA[无线 ADB 握手失败（SSL 协议错误）。请使用开发者选项中的“重置 ADB 密钥”，然后重试。]]></string>
     <string name="adb_error_ssl_title"><![CDATA[连接错误]]></string>
@@ -814,14 +814,14 @@
     <string name="notification_channel_shell_consent"><![CDATA[Shell 访问请求]]></string>
     <string name="notification_shell_consent_title"><![CDATA[Shell 访问请求]]></string>
     <string name="notification_shell_consent_title_identified"><![CDATA[%s 正在请求 Shell 访问]]></string>
-    <string name="notification_shell_consent_text"><![CDATA[点按以查看来自 Shell 客户端（例如 rish 或 ADB）的 Shizuku 特权访问请求。]]></string>
+    <string name="notification_shell_consent_text"><![CDATA[点按以查看来自 Shell 客户端（例如 rish 或 ADB）的 ReShizukuX 特权访问请求。]]></string>
     <string name="notification_shell_consent_text_identified"><![CDATA[仅当您刚刚运行过 Shell 命令时才允许。]]></string>
     <string name="notification_shell_consent_action_allow"><![CDATA[始终允许]]></string>
     <string name="notification_shell_consent_action_deny"><![CDATA[拒绝]]></string>
     <string name="permission_group_label"><![CDATA[Shizuku]]></string>
     <string name="permission_group_description"><![CDATA[@string/permission_label]]></string>
-    <string name="shell_consent_dialog_title"><![CDATA[Shell 客户端（例如 rish 或 ADB）正在请求 Shizuku 特权访问。\n\n仅当您刚刚运行过 Shell 命令时才允许。无法识别发起请求的应用。]]></string>
-    <string name="shell_consent_dialog_title_identified"><![CDATA[%s 正在请求 Shizuku 特权 Shell 访问。\n\n仅当您刚刚运行过 Shell 命令时才允许。]]></string>
+    <string name="shell_consent_dialog_title"><![CDATA[Shell 客户端（例如 rish 或 ADB）正在请求 ReShizukuX 特权访问。\n\n仅当您刚刚运行过 Shell 命令时才允许。无法识别发起请求的应用。]]></string>
+    <string name="shell_consent_dialog_title_identified"><![CDATA[%s 正在请求 ReShizukuX 特权 Shell 访问。\n\n仅当您刚刚运行过 Shell 命令时才允许。]]></string>
     <string name="shell_consent_button_allow"><![CDATA[允许]]></string>
     <string name="shell_consent_retry_hint"><![CDATA[已授权，请重新运行命令以连接（应用等待期间已暂停）]]></string>
     <string name="starting_root_shell"><![CDATA[正在启动 Root Shell…]]></string>
@@ -851,9 +851,9 @@
     <string name="starter_step_start_service_running"><![CDATA[正在启动服务进程…]]></string>
     <string name="starter_step_start_service_done"><![CDATA[服务进程已启动]]></string>
     <string name="starter_step_wait_binder"><![CDATA[等待服务响应]]></string>
-    <string name="starter_step_wait_binder_running"><![CDATA[等待 Shizuku 服务连接…]]></string>
+    <string name="starter_step_wait_binder_running"><![CDATA[等待 ReShizukuX 服务连接…]]></string>
     <string name="starter_step_complete"><![CDATA[启动完成]]></string>
-    <string name="starter_step_complete_desc"><![CDATA[Shizuku 已成功启动]]></string>
+    <string name="starter_step_complete_desc"><![CDATA[ReShizukuX 已成功启动]]></string>
     <string name="starter_step_check_root"><![CDATA[检查 Root 权限]]></string>
     <string name="starter_step_check_root_running"><![CDATA[正在检查 Root 权限…]]></string>
     <string name="starter_step_check_root_done"><![CDATA[已获取 Root 权限]]></string>
@@ -864,7 +864,7 @@
     <string name="starter_step_connected"><![CDATA[连接成功]]></string>
     <string name="starter_btn_open_log"><![CDATA[查看日志]]></string>
     <string name="starter_btn_hide_log"><![CDATA[隐藏日志]]></string>
-    <string name="starter_already_running"><![CDATA[Shizuku 已在后台运行]]></string>
+    <string name="starter_already_running"><![CDATA[ReShizukuX 已在后台运行]]></string>
     <string name="starter_waiting_pairing"><![CDATA[请在通知中输入配对码完成配对]]></string>
     <string name="starter_pairing_failed"><![CDATA[配对失败，请重试]]></string>
     <string name="starter_cancel"><![CDATA[取消]]></string>
@@ -926,7 +926,7 @@
     <string name="empty_state_description_no_home_cards"><![CDATA[您已隐藏所有主屏幕卡。转到“设置”以恢复它们。]]></string>
     <string name="empty_state_action_restore_home_cards"><![CDATA[恢复卡片]]></string>
     <string name="empty_state_title_no_plus_features"><![CDATA[所有功能均已禁用]]></string>
-    <string name="empty_state_description_no_plus_features"><![CDATA[您已禁用 ShizukuX 的所有功能。启用功能以在此处查看它们。]]></string>
+    <string name="empty_state_description_no_plus_features"><![CDATA[您已禁用 ReShizukuX 的所有功能。启用功能以在此处查看它们。]]></string>
     <string name="empty_state_title_activity_log_empty"><![CDATA[没有记录任何活动]]></string>
     <string name="empty_state_description_activity_log_empty"><![CDATA[当启用活动日志记录时，Shizuku API 调用和事件将显示在此处。]]></string>
     <string name="empty_state_title_hidden_apps"><![CDATA[没有隐藏的应用]]></string>
@@ -947,7 +947,7 @@
     <string name="update_channel_stable"><![CDATA[正式版]]></string>
     <string name="update_channel_dev"><![CDATA[开发版本]]></string>
     <string name="update_channel_dev_warning_title"><![CDATA[切换到开发频道？]]></string>
-    <string name="update_channel_dev_warning_message"><![CDATA[开发版本来自 qianyumeng0228/ShizukuX，可能包含错误、崩溃或破坏性更改。仅当您想提前测试新功能时才使用此选项。\n\n您可以随时切换回正式版。]]></string>
+    <string name="update_channel_dev_warning_message"><![CDATA[开发版本来自 qianyumeng0228/ReShizukuX，可能包含错误、崩溃或破坏性更改。仅当您想提前测试新功能时才使用此选项。\n\n您可以随时切换回正式版。]]></string>
     <string name="settings_update_manual_category"><![CDATA[手动更新]]></string>
     <string name="settings_check_for_update_title"><![CDATA[检查更新]]></string>
     <string name="settings_check_for_update_summary"><![CDATA[手动检查是否有新版本可用]]></string>
@@ -957,16 +957,16 @@
     <string name="update_notification_channel"><![CDATA[更新通知]]></string>
     <string name="update_notification_channel_description"><![CDATA[应用更新下载和安装通知]]></string>
     <string name="update_downloading_title"><![CDATA[正在下载更新]]></string>
-    <string name="update_downloading_description"><![CDATA[正在下载 ShizukuX %1$s…]]></string>
+    <string name="update_downloading_description"><![CDATA[正在下载 ReShizukuX %1$s…]]></string>
     <string name="update_downloading_progress"><![CDATA[正在下载%1$s-%2$d%%]]></string>
     <string name="update_ready_title"><![CDATA[更新准备安装]]></string>
-    <string name="update_ready_description"><![CDATA[ShizukuX %1$s 已准备好安装]]></string>
+    <string name="update_ready_description"><![CDATA[ReShizukuX %1$s 已准备好安装]]></string>
     <string name="update_install_now"><![CDATA[立即安装]]></string>
     <string name="update_download_failed_title"><![CDATA[下载失败]]></string>
     <string name="update_download_failed_message"><![CDATA[下载更新失败。请再试一次。]]></string>
     <string name="migration_dialog_title"><![CDATA[重要提示：需要重新安装]]></string>
-    <string name="migration_dialog_message"><![CDATA[ShizukuX 已将包名从 moe.shizuku.privileged.api 更改为 xyz.shizuku.extra.api。旧版本和当前版本会被系统视为两个独立的应用，因此无法直接更新。\n\n您可以先从旧版本迁移设置，然后将旧版本卸载。]]></string>
-    <string name="migration_dialog_message_root"><![CDATA[ShizukuX 已将包名从 moe.shizuku.privileged.api 更改为 xyz.shizuku.extra.api。旧版本和当前版本会被系统视为两个独立的应用，因此无法直接更新。\n\n您可以点按“迁移设置”，使用 Root 权限从旧版本复制设置，然后将旧版本卸载。]]></string>
+    <string name="migration_dialog_message"><![CDATA[ReShizukuX 已将包名从 moe.shizuku.privileged.api 更改为 xyz.shizuku.extra.api。旧版本和当前版本会被系统视为两个独立的应用，因此无法直接更新。\n\n您可以先从旧版本迁移设置，然后将旧版本卸载。]]></string>
+    <string name="migration_dialog_message_root"><![CDATA[ReShizukuX 已将包名从 moe.shizuku.privileged.api 更改为 xyz.shizuku.extra.api。旧版本和当前版本会被系统视为两个独立的应用，因此无法直接更新。\n\n您可以点按“迁移设置”，使用 Root 权限从旧版本复制设置，然后将旧版本卸载。]]></string>
     <string name="migration_migrate_settings"><![CDATA[迁移设置]]></string>
     <string name="migration_uninstall_old"><![CDATA[卸载旧版本]]></string>
     <string name="migration_dismiss"><![CDATA[稍后处理]]></string>
@@ -999,7 +999,7 @@
     <string name="shell_export_partial"><![CDATA[%1$d的%2$d导出的文件（部分失败）]]></string>
     <string name="settings_backup_category"><![CDATA[备份与恢复]]></string>
     <string name="settings_export_title"><![CDATA[导出设置]]></string>
-    <string name="settings_export_summary"><![CDATA[将所有 ShizukuX 设置保存到 JSON 文件]]></string>
+    <string name="settings_export_summary"><![CDATA[将所有 ReShizukuX 设置保存到 JSON 文件]]></string>
     <string name="settings_import_title"><![CDATA[导入设置]]></string>
     <string name="settings_import_summary"><![CDATA[从之前导出的 JSON 文件恢复设置]]></string>
     <string name="settings_export_success"><![CDATA[设置导出成功]]></string>
@@ -1007,35 +1007,35 @@
     <string name="settings_import_success"><![CDATA[设置已导入，请重启应用以应用所有更改]]></string>
     <string name="settings_import_failed"><![CDATA[导入失败：文件无效或不兼容]]></string>
     <string name="adb_native_unavailable"><![CDATA[ADB 配对在此设备上不可用]]></string>
-    <string name="shizuku_not_available"><![CDATA[Shizuku 服务不可用]]></string>
+    <string name="shizuku_not_available"><![CDATA[ReShizukuX 服务不可用]]></string>
     <string name="su_bridge_magic_setup_success_global_setting"><![CDATA[Magic Setup 已完成！系统全局设置已配置。]]></string>
     <string name="changelog_title"><![CDATA[更新内容]]></string>
     <string name="changelog_close"><![CDATA[关闭]]></string>
     <string name="changelog_view_on_github"><![CDATA[在 GitHub 上查看]]></string>
     <string name="changelog_fallback_message"><![CDATA[无法加载此更新的发行说明（您可能处于离线状态）。点击“在 GitHub 上查看”以查看更改的内容。]]></string>
     <string name="aicore_extra_label"><![CDATA[AICore+自动化桥]]></string>
-    <string name="aicore_extra_description"><![CDATA[ShizukuX AICore+ 功能所需。为 AI 驱动的自动化提供特权 UI 层次结构转储和物理输入模拟。不观察密码或个人数据。]]></string>
+    <string name="aicore_extra_description"><![CDATA[ReShizukuX AICore+ 功能所需。为 AI 驱动的自动化提供特权 UI 层次结构转储和物理输入模拟。不观察密码或个人数据。]]></string>
     <string name="action_clear_all"><![CDATA[全部清除]]></string>
     <string name="action_continue"><![CDATA[继续]]></string>
     <string name="action_open_github"><![CDATA[GitHub]]></string>
     <string name="service_doctor_fix_phantom_attempted"><![CDATA[幻影进程限制已禁用。如有需要，请重新启动服务。]]></string>
-    <string name="service_doctor_fix_requires_service"><![CDATA[Shizuku 必须运行才能自动应用此修复。]]></string>
+    <string name="service_doctor_fix_requires_service"><![CDATA[ReShizukuX 必须运行才能自动应用此修复。]]></string>
     <string name="service_doctor_fix_failed"><![CDATA[自动修复失败：%1$s]]></string>
     <string name="adb_foreground_op_denied"><![CDATA[无法启动前台服务 — START_FOREGROUND 权限被拒绝。请检查设备的应用权限。]]></string>
     <string name="update_no_release_notes"><![CDATA[没有可用的发行说明。]]></string>
     <string name="accessibility_service_monitoring"><![CDATA[辅助功能服务处于活动状态：监控配对代码……]]></string>
     <string name="dhizuku_setup_title"><![CDATA[设置设备所有者]]></string>
-    <string name="dhizuku_setup_message"><![CDATA[Dhizuku 模式需要将 ShizukuX 设置为设备所有者。在启用 USB 调试的情况下通过 ADB 运行此命令一次：\n\n%1$s\n\n运行命令后，重新启动 Shizuku。]]></string>
+    <string name="dhizuku_setup_message"><![CDATA[Dhizuku 模式需要将 ReShizukuX 设置为设备所有者。在启用 USB 调试的情况下通过 ADB 运行此命令一次：\n\n%1$s\n\n运行命令后，重新启动 ReShizukuX。]]></string>
     <string name="dhizuku_setup_copy"><![CDATA[复制命令]]></string>
     <string name="dhizuku_setup_copied"><![CDATA[命令已复制到剪贴板]]></string>
     <string name="dhizuku_setup_run_root"><![CDATA[一键执行（需要Root）]]></string>
     <string name="dhizuku_setup_root_required"><![CDATA[需要 Root 权限才能一键执行。请先授予 Root 权限，或手动在电脑上运行上方命令。]]></string>
     <string name="dhizuku_setup_running"><![CDATA[正在执行...]]></string>
-    <string name="dhizuku_setup_root_success"><![CDATA[设备所有者设置成功！请重启 ShizukuX。]]></string>
+    <string name="dhizuku_setup_root_success"><![CDATA[设备所有者设置成功！请重启 ReShizukuX。]]></string>
     <string name="dhizuku_setup_root_failure"><![CDATA[执行失败：%1$s\n请手动在电脑上运行上方命令。]]></string>
     <string name="dhizuku_setup_via_dhizuku"><![CDATA[通过 Dhizuku 激活]]></string>
-    <string name="dhizuku_setup_via_shizukux"><![CDATA[通过 ShizukuX 激活]]></string>
-    <string name="dhizuku_setup_shizukux_not_running"><![CDATA[ShizukuX 服务未运行。请先启动 ShizukuX（通过 ADB 或 Root），再使用此功能。]]></string>
+    <string name="dhizuku_setup_via_shizukux"><![CDATA[通过 ReShizukuX 激活]]></string>
+    <string name="dhizuku_setup_shizukux_not_running"><![CDATA[ReShizukuX 服务未运行。请先启动 ReShizukuX（通过 ADB 或 Root），再使用此功能。]]></string>
     <string name="dhizuku_setup_shizukux_success"><![CDATA[设备所有者设置成功！Dhizuku 模式已启用。]]></string>
     <string name="dhizuku_setup_shizukux_failure"><![CDATA[执行失败：%1$s
 请尝试使用命令行方式激活。]]></string>
@@ -1046,25 +1046,25 @@
     <string name="dhizuku_status_active"><![CDATA[设备所有者：已启用]]></string>
     <string name="dhizuku_status_not_set"><![CDATA[设备所有者未设置 — 点击查看设置说明]]></string>
     <string name="settings_clear_device_owner"><![CDATA[删除设备所有者]]></string>
-    <string name="settings_clear_device_owner_summary"><![CDATA[解除 ShizukuX 的设备所有者状态。卸载或降级之前需要。]]></string>
+    <string name="settings_clear_device_owner_summary"><![CDATA[解除 ReShizukuX 的设备所有者状态。卸载或降级之前需要。]]></string>
     <string name="dhizuku_clear_owner_title"><![CDATA[删除设备所有者？]]></string>
-    <string name="dhizuku_clear_owner_message"><![CDATA[这会移除 ShizukuX 的设备所有者身份。Dhizuku 模式将被禁用，依赖委派设备所有者权限的应用会失去访问权限。\n\n您可以随时运行设置对话框中显示的 ADB 命令，重新启用设备所有者。]]></string>
+    <string name="dhizuku_clear_owner_message"><![CDATA[这会移除 ReShizukuX 的设备所有者身份。Dhizuku 模式将被禁用，依赖委派设备所有者权限的应用会失去访问权限。\n\n您可以随时运行设置对话框中显示的 ADB 命令，重新启用设备所有者。]]></string>
     <string name="dhizuku_clear_owner_confirm"><![CDATA[移除]]></string>
-    <string name="dhizuku_clear_owner_success"><![CDATA[设备所有者状态已删除。您现在可以卸载或降级 ShizukuX。]]></string>
+    <string name="dhizuku_clear_owner_success"><![CDATA[设备所有者状态已删除。您现在可以卸载或降级 ReShizukuX。]]></string>
     <string name="dhizuku_clear_owner_failure"><![CDATA[无法删除设备所有者状态。该服务可能需要首先运行。]]></string>
     <string name="settings_transfer_device_owner"><![CDATA[转移设备所有者]]></string>
-    <string name="settings_transfer_device_owner_summary"><![CDATA[将设备所有者身份转移给其他支持所有权转移的应用。转移后 ShizukuX 将失去设备所有者权限。]]></string>
+    <string name="settings_transfer_device_owner_summary"><![CDATA[将设备所有者身份转移给其他支持所有权转移的应用。转移后 ReShizukuX 将失去设备所有者权限。]]></string>
     <string name="dhizuku_transfer_title"><![CDATA[选择目标应用]]></string>
     <string name="dhizuku_transfer_message"><![CDATA[选择要接收设备所有者身份的应用。目标应用必须在其 device_admin.xml 中声明支持所有权转移。]]></string>
     <string name="dhizuku_transfer_no_targets"><![CDATA[未找到支持所有权转移的应用。]]></string>
     <string name="dhizuku_transfer_confirm_title"><![CDATA[确认转移？]]></string>
-    <string name="dhizuku_transfer_confirm_message"><![CDATA[设备所有者身份将转移给「%1$s」。\n\n转移后 ShizukuX 将失去设备所有者权限，Dhizuku 模式将被禁用。此操作不可撤销。]]></string>
+    <string name="dhizuku_transfer_confirm_message"><![CDATA[设备所有者身份将转移给「%1$s」。\n\n转移后 ReShizukuX 将失去设备所有者权限，Dhizuku 模式将被禁用。此操作不可撤销。]]></string>
     <string name="dhizuku_transfer_success"><![CDATA[设备所有者已成功转移给「%1$s」。]]></string>
     <string name="dhizuku_transfer_failure"><![CDATA[转移失败：%1$s]]></string>
-    <string name="dhizuku_transfer_not_owner"><![CDATA[仅当 ShizukuX 是当前设备所有者时才能转移。]]></string>
+    <string name="dhizuku_transfer_not_owner"><![CDATA[仅当 ReShizukuX 是当前设备所有者时才能转移。]]></string>
     <string name="toast_pair_notifications_required"><![CDATA[通知被阻止——使用手动配对。进入开发者选项 → 无线调试 → 将设备与配对代码配对以获取代码，然后在此处输入。]]></string>
     <string name="dialog_notif_permission_title"><![CDATA[需要通知]]></string>
-    <string name="dialog_notif_permission_message"><![CDATA[配对代码在通知中传递。允许 ShizukuX 发布通知以完成 ADB 配对。]]></string>
+    <string name="dialog_notif_permission_message"><![CDATA[配对代码在通知中传递。允许 ReShizukuX 发布通知以完成 ADB 配对。]]></string>
     <string name="dialog_notif_permission_allow"><![CDATA[允许通知]]></string>
     <string name="dialog_notif_permission_manual"><![CDATA[手动配对]]></string>
     <string name="dialog_notif_permission_open_settings"><![CDATA[打开设置]]></string>
@@ -1077,7 +1077,7 @@
     <string name="settings_shadow_binder"><![CDATA[Shadow Binder]]></string>
     <string name="settings_shadow_binder_summary"><![CDATA[拦截并模拟系统服务调用，以隐藏设备信息或应用状态。]]></string>
     <string name="settings_shadow_binder_hidden_packages"><![CDATA[隐藏的应用包]]></string>
-    <string name="settings_shadow_binder_hidden_packages_summary"><![CDATA[以逗号分隔的包名列表，这些应用将无法看到被隐藏的信息。如果同时安装了原版 Shizuku 和 ShizukuX，请添加 moe.shizuku.privileged.api,af.shizuku.manager，以避免冲突。]]></string>
+    <string name="settings_shadow_binder_hidden_packages_summary"><![CDATA[以逗号分隔的包名列表，这些应用将无法看到被隐藏的信息。如果同时安装了原版 Shizuku 和 ReShizukuX，请添加 moe.shizuku.privileged.api,af.shizuku.manager，以避免冲突。]]></string>
     <string name="settings_category_companion"><![CDATA[伴侣模式]]></string>
     <string name="settings_companion_mode"><![CDATA[显示伴侣卡片]]></string>
     <string name="settings_companion_mode_summary"><![CDATA[显示一张用于快速打开原版 Shizuku 的卡片。注意：同一时间只能运行一个 Shizuku 服务，请使用它在两者之间切换。]]></string>
@@ -1103,7 +1103,7 @@
     <string name="scripting_title"><![CDATA[脚本编写]]></string>
     <string name="scripting_summary"><![CDATA[保存、共享和运行特权 Shell 片段]]></string>
     <string name="scripting_empty_title"><![CDATA[还没有片段]]></string>
-    <string name="scripting_empty_description"><![CDATA[保存特权 shell 片段以便随时通过 ShizukuX 运行它。]]></string>
+    <string name="scripting_empty_description"><![CDATA[保存特权 shell 片段以便随时通过 ReShizukuX 运行它。]]></string>
     <string name="scripting_add"><![CDATA[添加片段]]></string>
     <string name="scripting_edit"><![CDATA[编辑片段]]></string>
     <string name="scripting_run"><![CDATA[运行]]></string>
@@ -1120,18 +1120,18 @@
     <string name="scripting_delete"><![CDATA[删除]]></string>
     <string name="scripting_auto_run_label"><![CDATA[服务启动时自动运行]]></string>
     <string name="scripting_auto_run_badge_desc"><![CDATA[服务启动时自动运行]]></string>
-    <string name="automation_plugin_action_label"><![CDATA[ShizukuX 服务]]></string>
+    <string name="automation_plugin_action_label"><![CDATA[ReShizukuX 服务]]></string>
     <string name="automation_plugin_action_edit_title"><![CDATA[选择操作]]></string>
-    <string name="automation_plugin_action_start"><![CDATA[启动 ShizukuX 服务]]></string>
-    <string name="automation_plugin_action_stop"><![CDATA[停止 ShizukuX 服务]]></string>
-    <string name="automation_plugin_blurb_start"><![CDATA[启动 ShizukuX 服务]]></string>
-    <string name="automation_plugin_blurb_stop"><![CDATA[停止 ShizukuX 服务]]></string>
-    <string name="automation_plugin_condition_label"><![CDATA[ShizukuX 服务运行状态]]></string>
-    <string name="automation_plugin_condition_title"><![CDATA[ShizukuX 服务运行状态]]></string>
-    <string name="automation_plugin_condition_description"><![CDATA[只要 ShizukuX 服务运行，就会满足此条件。]]></string>
-    <string name="automation_plugin_condition_blurb"><![CDATA[ShizukuX 服务正在运行]]></string>
+    <string name="automation_plugin_action_start"><![CDATA[启动 ReShizukuX 服务]]></string>
+    <string name="automation_plugin_action_stop"><![CDATA[停止 ReShizukuX 服务]]></string>
+    <string name="automation_plugin_blurb_start"><![CDATA[启动 ReShizukuX 服务]]></string>
+    <string name="automation_plugin_blurb_stop"><![CDATA[停止 ReShizukuX 服务]]></string>
+    <string name="automation_plugin_condition_label"><![CDATA[ReShizukuX 服务运行状态]]></string>
+    <string name="automation_plugin_condition_title"><![CDATA[ReShizukuX 服务运行状态]]></string>
+    <string name="automation_plugin_condition_description"><![CDATA[只要 ReShizukuX 服务运行，就会满足此条件。]]></string>
+    <string name="automation_plugin_condition_blurb"><![CDATA[ReShizukuX 服务正在运行]]></string>
     <string name="settings_themed_icon"><![CDATA[主题图标]]></string>
-    <string name="settings_themed_icon_summary"><![CDATA[当启动器支持主题图标时，使用 Material You 着色的 ShizukuX 图标。]]></string>
+    <string name="settings_themed_icon_summary"><![CDATA[当启动器支持主题图标时，使用 Material You 着色的 ReShizukuX 图标。]]></string>
     <string name="settings_themed_icon_open_settings"><![CDATA[打开图标设置]]></string>
     <string name="update_download_failed_storage"><![CDATA[可用存储空间不足，无法下载更新。]]></string>
     <string name="update_download_failed_cannot_resume"><![CDATA[下载中断后无法继续。请重试。]]></string>
@@ -1147,7 +1147,7 @@
         <item quantity="one"><![CDATA[已选择 %d 个应用]]></item>
         <item quantity="other"><![CDATA[已选择 %d 个应用]]></item>
     </plurals>
-    <string name="accessibility_service_label"><![CDATA[ShizukuX 配对助手]]></string>
+    <string name="accessibility_service_label"><![CDATA[ReShizukuX 配对助手]]></string>
     <string name="accessibility_state_collapsed"><![CDATA[已收起]]></string>
     <string name="accessibility_state_expanded"><![CDATA[已展开]]></string>
     <string name="dhizuku_allow_access"><![CDATA[允许访问 Dhizuku]]></string>
@@ -1167,12 +1167,12 @@
     <string name="diagnostics_disable_title"><![CDATA[禁用诊断？]]></string>
     <string name="diagnostics_dismiss"><![CDATA[忽略]]></string>
     <string name="diagnostics_shadow_binder_navigate_hint"><![CDATA[前往 功能中心 → 安全与访问 → 影子 Binder 选择应用]]></string>
-    <string name="diagnostics_warning_battery_optimization"><![CDATA[电池优化已启用。Shizuku 可能在后台被杀。点击豁免。]]></string>
+    <string name="diagnostics_warning_battery_optimization"><![CDATA[电池优化已启用。ReShizukuX 可能在后台被杀。点击豁免。]]></string>
     <string name="diagnostics_warning_dhizuku_not_owner"><![CDATA[Dhizuku 模式已启用，但设备所有者组件未激活。点击解决。]]></string>
     <string name="diagnostics_warning_shadow_binder_no_apps"><![CDATA[影子 Binder 已启用，但未选择要隐藏的应用。点击选择。]]></string>
     <string name="fake_adb_pairing_allow"><![CDATA[允许]]></string>
     <string name="fake_adb_pairing_deny"><![CDATA[拒绝]]></string>
-    <string name="fake_adb_pairing_message"><![CDATA[一个应用正尝试通过本地假 ADB 服务器连接 ShizukuX。\n\nRSA 密钥指纹：\n%1$s]]></string>
+    <string name="fake_adb_pairing_message"><![CDATA[一个应用正尝试通过本地假 ADB 服务器连接 ReShizukuX。\n\nRSA 密钥指纹：\n%1$s]]></string>
     <string name="fake_adb_pairing_title"><![CDATA[允许假 ADB 连接？]]></string>
     <string name="home_banner_description"><![CDATA[主题横幅]]></string>
     <string name="settings_accent_crimson_applied"><![CDATA[已应用 绯红玫瑰]]></string>
@@ -1242,7 +1242,7 @@
     <string name="rsx_settings_group_advanced">高级</string>
     <string name="rsx_settings_group_about">关于</string>
     <string name="rsx_settings_start_on_boot">开机自启</string>
-    <string name="rsx_settings_start_on_boot_desc">设备启动后自动拉起 Shizuku 服务</string>
+    <string name="rsx_settings_start_on_boot_desc">设备启动后自动拉起 ReShizukuX 服务</string>
     <string name="rsx_settings_watchdog">守护模式</string>
     <string name="rsx_settings_watchdog_desc">服务掉线后定时检查自动恢复</string>
     <string name="rsx_settings_wifi_reassert">无线调试守护</string>
@@ -1264,7 +1264,7 @@
     <string name="rsx_settings_lottie">动画效果</string>
     <string name="rsx_settings_lottie_desc">Lottie 动画与过渡效果</string>
     <string name="rsx_settings_widget">桌面小部件</string>
-    <string name="rsx_settings_widget_desc">添加 Shizuku 状态小部件到桌面</string>
+    <string name="rsx_settings_widget_desc">添加 ReShizukuX 状态小部件到桌面</string>
     <string name="rsx_settings_backup">备份与恢复</string>
     <string name="rsx_settings_backup_desc">备份设置与模块数据</string>
     <string name="rsx_settings_ai">AI 助手</string>
@@ -1289,12 +1289,12 @@
     <string name="rsx_home_activation_adb">无线 ADB</string>
     <string name="rsx_home_guard_selfheal">自愈模式</string>
     <string name="rsx_home_guard_dual">双进程</string>
-    <string name="rsx_home_ready">Shizuku 服务已就绪，可授权应用使用。</string>
+    <string name="rsx_home_ready">ReShizukuX 服务已就绪，可授权应用使用。</string>
     <string name="rsx_home_crashed">服务已崩溃</string>
     <string name="rsx_home_starting">启动中…</string>
     <string name="rsx_home_stopping">停止中…</string>
-    <string name="rsx_home_stop_confirm_title">停止 Shizuku 服务？</string>
-    <string name="rsx_home_stop_confirm_msg">停止后依赖 Shizuku 的应用将失去授权。看门狗 Alarm 也会被取消，直到下次手动开启。</string>
+    <string name="rsx_home_stop_confirm_title">停止 ReShizukuX 服务？</string>
+    <string name="rsx_home_stop_confirm_msg">停止后依赖 ReShizukuX 的应用将失去授权。看门狗 Alarm 也会被取消，直到下次手动开启。</string>
     <string name="rsx_home_stop">停止</string>
     <string name="rsx_home_cancel">取消</string>
     <string name="rsx_home_ok">知道了</string>
@@ -1320,7 +1320,7 @@
     <string name="rsx_acc_disabled">未启用</string>
     <string name="rsx_acc_open_settings">前往无障碍设置</string>
     <string name="rsx_acc_toggle">开启无障碍保活</string>
-    <string name="rsx_acc_desc1">开启后，ReShizukuX 会作为无障碍服务在后台持续运行，提升 Shizuku 服务在国产 ROM 上的存活率。</string>
+    <string name="rsx_acc_desc1">开启后，ReShizukuX 会作为无障碍服务在后台持续运行，提升 ReShizukuX 服务在国产 ROM 上的存活率。</string>
     <string name="rsx_acc_desc2">本服务不读取、不收集、不上报任何窗口内容或用户数据，仅用于保活。</string>
     <string name="rsx_wiz_acc_on">配对辅助无障碍服务（已开启，自动确认弹窗）</string>
     <string name="rsx_wiz_code_label_shade">配对码（6 位数字）— 请用通知栏输入</string>
@@ -1339,14 +1339,14 @@
     <string name="rsx_wiz_open_pair_window">请在「无线调试」界面点击「使用配对码配对设备」。</string>
     <string name="rsx_wiz_pair_window_done">已打开配对码界面</string>
     <string name="rsx_wiz_system_dialog">系统会弹出一个窗口，显示 6 位配对码和 IP:端口。</string>
-    <string name="rsx_wiz_notification_method">也可以下拉通知栏，在 Shizuku 配对通知中输入配对码发送。</string>
-    <string name="rsx_wiz_notification_method2">下拉通知栏，在 Shizuku 配对通知中直接输入配对码发送，避免切换应用导致配对中断。</string>
+    <string name="rsx_wiz_notification_method">也可以下拉通知栏，在 ReShizukuX 配对通知中输入配对码发送。</string>
+    <string name="rsx_wiz_notification_method2">下拉通知栏，在 ReShizukuX 配对通知中直接输入配对码发送，避免切换应用导致配对中断。</string>
     <string name="rsx_wiz_input_code">输入配对码</string>
     <string name="rsx_wiz_code_notif">配对码（6 位数字）— 请用通知栏输入</string>
     <string name="rsx_wiz_code_plain">配对码（6 位数字）</string>
     <string name="rsx_wiz_code_hint">请输入系统配对窗口中显示的 6 位数字配对码。输入满 6 位后自动开始配对。</string>
     <string name="rsx_wiz_code_progress">已输入 %1$d / 6 位</string>
-    <string name="rsx_wiz_keep_window">请保持「无线调试」配对窗口在屏幕上，直接下拉通知栏，在 ShizukuX 配对通知中输入 6 位配对码并发送。输码后本页会自动继续，无需返回。</string>
+    <string name="rsx_wiz_keep_window">请保持「无线调试」配对窗口在屏幕上，直接下拉通知栏，在 ReShizukuX 配对通知中输入 6 位配对码并发送。输码后本页会自动继续，无需返回。</string>
     <string name="rsx_wiz_pair">配对</string>
     <string name="rsx_wiz_pairing">配对中…</string>
     <string name="rsx_wiz_pairing_success">配对成功</string>
@@ -1386,14 +1386,14 @@
     <string name="external_relay_auto_battery_off">电池优化已开启——系统可能杀掉此服务</string>
     <string name="external_relay_auto_battery_ok">已关闭电池优化（服务将保持存活）</string>
     <string name="external_relay_auto_battery_optimize">关闭电池优化</string>
-    <string name="external_relay_auto_battery_hint">提示：也请在最近任务中锁定 ShizukuX，防止系统杀掉服务。</string>
+    <string name="external_relay_auto_battery_hint">提示：也请在最近任务中锁定 ReShizukuX，防止系统杀掉服务。</string>
     <string name="home_backup_title">应用备份</string>
     <string name="home_backup_summary">免 Root 备份和恢复应用数据</string>
     <string name="backup_activity_title">应用备份</string>
     <string name="backup_action_backup">备份</string>
     <string name="backup_action_freeze">冻结</string>
     <string name="backup_action_unfreeze">解冻</string>
-    <string name="backup_service_required">Shizuku 服务未运行</string>
+    <string name="backup_service_required">ReShizukuX 服务未运行</string>
     <string name="backup_in_progress">备份中…</string>
     <string name="backup_app_complete">已备份 %1$s → %2$s</string>
     <string name="backup_app_failed">备份失败：%1$s</string>
@@ -1413,7 +1413,7 @@
     <string name="tile_action_restart">重启服务</string>
     <string name="tile_action_start">启动服务</string>
     <string name="tile_action_stop">停止服务</string>
-    <string name="tile_state_update_failed">更新 Shizuku 状态失败：%1$s</string>
+    <string name="tile_state_update_failed">更新 ReShizukuX 状态失败：%1$s</string>
     <string name="rsx_wiz_error">错误：%1$s</string>
     <string name="rsx_ai_title">AI 助手</string>
     <string name="rsx_ai_settings">设置</string>
@@ -1457,7 +1457,7 @@
     <string name="rsx_apps_empty">暂无应用</string>
     <string name="rsx_apps_no_match">没有匹配的应用</string>
     <string name="rsx_apps_not_running">服务未启动</string>
-    <string name="rsx_apps_go_start">请先在「状态」页启动 Shizuku 服务</string>
+    <string name="rsx_apps_go_start">请先在「状态」页启动 ReShizukuX 服务</string>
     <!-- 自动化 -->
     <string name="rsx_auto_title">自动化</string>
     <string name="rsx_auto_rules">规则</string>
@@ -1467,8 +1467,8 @@
     <string name="rsx_auto_no_rules">暂无规则</string>
     <string name="rsx_auto_enabled">已启用</string>
     <string name="rsx_auto_disabled">已禁用</string>
-    <string name="rsx_auto_hint">自动化规则在 Shizuku 服务运行时生效。规则引擎监听网络变化和前台应用切换。</string>
-    <string name="rsx_auto_engine_hint">默认规则在应用启动时注册进 AutomationEngine；开关为界面状态，事件派发由 Shizuku 服务驱动。</string>
+    <string name="rsx_auto_hint">自动化规则在 ReShizukuX 服务运行时生效。规则引擎监听网络变化和前台应用切换。</string>
+    <string name="rsx_auto_engine_hint">默认规则在应用启动时注册进 AutomationEngine；开关为界面状态，事件派发由 ReShizukuX 服务驱动。</string>
     <string name="rsx_auto_firewall_title">网络防火墙规则</string>
     <string name="rsx_auto_firewall_desc">安全网络时关闭 Binder 防火墙，不可信网络时开启</string>
     <string name="rsx_auto_profile_title">应用配置文件规则</string>
@@ -1634,8 +1634,8 @@
     <string name="rsx_biometric_failed">验证失败：%1$s</string>
     <string name="rsx_biometric_not_passed">验证未通过</string>
     <!-- 终端 -->
-    <string name="rsx_term_not_running">Shizuku 服务未运行，请先在状态页启动</string>
-    <string name="rsx_term_running">Shizuku 服务运行中（shell 权限）</string>
+    <string name="rsx_term_not_running">ReShizukuX 服务未运行，请先在状态页启动</string>
+    <string name="rsx_term_running">ReShizukuX 服务运行中（shell 权限）</string>
     <string name="rsx_term_stopping">停止中…</string>
     <string name="rsx_term_empty">暂无输出。输入 shell 命令后点「执行」。</string>
     <string name="rsx_term_hint">输入 shell 命令…</string>
@@ -1649,7 +1649,7 @@
     <string name="rsx_term_shell_form">若目标是以 shell 权限执行命令，请使用 adb shell 命令 形式，</string>
     <string name="rsx_term_no_output">（无输出，退出码=%1$d）</string>
     <string name="rsx_term_exec_failed">执行失败：%1$s: %2$s</string>
-    <string name="rsx_term_error_not_running">（错误）Shizuku 服务未运行\n</string>
+    <string name="rsx_term_error_not_running">（错误）ReShizukuX 服务未运行\n</string>
     <string name="rsx_term_killed">（命令执行超过 15s，已强制终止）\n</string>
     <string name="rsx_theme_mode_system">跟随系统</string>
     <string name="rsx_theme_mode_light">浅色</string>
@@ -1664,17 +1664,17 @@
     <string name="rsx_theme_sample_text">这是一段正文，展示 primary / onSurfaceVariant 配色效果。</string>
     <string name="rsx_theme_container">容器卡片 · secondaryContainer</string>
     <!-- 小部件 -->
-    <string name="rsx_widget_running">Shizuku 运行中</string>
-    <string name="rsx_widget_not_running">Shizuku 未运行</string>
+    <string name="rsx_widget_running">ReShizukuX 运行中</string>
+    <string name="rsx_widget_not_running">ReShizukuX 未运行</string>
     <string name="rsx_widget_start">启动</string>
-    <string name="rsx_widget_desc">在桌面显示 Shizuku 服务运行状态，点击可快速启动服务。</string>
+    <string name="rsx_widget_desc">在桌面显示 ReShizukuX 服务运行状态，点击可快速启动服务。</string>
     <string name="rsx_widget_features">小部件功能</string>
     <string name="rsx_widget_feature1">• 实时显示服务状态（运行中 / 未运行）</string>
     <string name="rsx_widget_feature2">• 每 30 分钟自动刷新状态</string>
-    <string name="rsx_widget_feature3">• 点击「启动」按钮快速拉起 Shizuku 服务</string>
+    <string name="rsx_widget_feature3">• 点击「启动」按钮快速拉起 ReShizukuX 服务</string>
     <string name="rsx_widget_add">添加方法</string>
     <string name="rsx_widget_add1">1. 长按桌面空白处</string>
     <string name="rsx_widget_add2">2. 选择「小部件」或「Widgets」</string>
     <string name="rsx_widget_add3">3. 找到 ReShizukuX</string>
-    <string name="rsx_widget_add4">4. 拖拽「Shizuku 状态」小部件到桌面</string>
-    <string name="rsx_widget_status_widget">Shizuku 状态小部件</string></resources>
+    <string name="rsx_widget_add4">4. 拖拽「ReShizukuX 状态」小部件到桌面</string>
+    <string name="rsx_widget_status_widget">ReShizukuX 状态小部件</string></resources>

@@ -98,7 +98,7 @@ object AdbStarter {
                     log?.invoke("Successfully connected on port $activePort...\n")
                     client.runCommand("shell:${Starter.internalCommand}")
                     ShizukuSettings.setLastPort(activePort)
-                    ActivityLogManager.log("Shizuku", context.packageName, "Service started via ADB on port $activePort")
+                    ActivityLogManager.log("ReShizukuX", context.packageName, "Service started via ADB on port $activePort")
                     ShizukuStateMachine.update()
                 }
             }

@@ -18,7 +18,7 @@ android {
         applicationId = "moe.shizuku.privileged.api"
         versionCode rootProject.ext.versionCode
         versionName rootProject.ext.versionName
-        resValue "string", "app_name", "Shizuku"
+        resValue "string", "app_name", "ReShizukuX"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
         multiDexKeepProguard file("multidex-keep.pro")

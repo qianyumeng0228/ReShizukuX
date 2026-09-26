@@ -32,7 +32,7 @@ object DiagnosticsExporter {
             "err:${e.javaClass.simpleName}"
         }
 
-        sb.append("==== ShizukuX Diagnostics ====").append('\n')
+        sb.append("==== ReShizukuX Diagnostics ====").append('\n')
         line("Time", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(Date()))
         sb.append('\n')
 
@@ -64,7 +64,7 @@ object DiagnosticsExporter {
         }.joinToString("/").ifEmpty { "generic" })
         sb.append('\n')
 
-        sb.append("[Shizuku Server]").append('\n')
+        sb.append("[ReShizukuX Server]").append('\n')
         line("pingBinder", tryGet { Shizuku.pingBinder() })
         line("Running", tryGet { ShizukuStateMachine.isRunning() })
         line("ServerUid", tryGet { Shizuku.getUid() })
@@ -176,14 +176,14 @@ object DiagnosticsExporter {
         val sb = StringBuilder()
         if (!Shizuku.pingBinder()) {
             sb.append("\n\n==== Deep Shell Diagnostics ====\n")
-            sb.append("(Shizuku is not running — shell diagnostics skipped. Start Shizuku, reproduce the issue, then re-export.)\n")
+            sb.append("(ReShizukuX is not running — shell diagnostics skipped. Start ReShizukuX, reproduce the issue, then re-export.)\n")
             return sb.toString()
         }
         fun block(title: String, cmd: String) {
             sb.append("\n--- ").append(title).append(" ---\n")
             sb.append(runShell(cmd)).append('\n')
         }
-        sb.append("\n\n==== Deep Shell Diagnostics (via Shizuku) ====")
+        sb.append("\n\n==== Deep Shell Diagnostics (via ReShizukuX) ====")
         block("ABI", "getprop ro.product.cpu.abi; getprop ro.product.cpu.abilist")
         block("SELinux / uid", "getenforce; id")
         // set-device-owner prerequisites: Android refuses to set a device owner when the device

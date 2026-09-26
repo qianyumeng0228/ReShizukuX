@@ -174,7 +174,7 @@ class AdbStartWorker(context: Context, params: WorkerParameters) : CoroutineWork
             // when the server was auto-started by this background worker (NetworkCallback /
             // boot), not via the manual switch / StarterActivity.
             ShizukuSettings.setLastLaunchMode(ShizukuSettings.LaunchMethod.ADB)
-            ActivityLogManager.log("Shizuku", applicationContext.packageName, "Service started via background ADB worker on port $port")
+            ActivityLogManager.log("ReShizukuX", applicationContext.packageName, "Service started via background ADB worker on port $port")
 
             val nm = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             nm.cancel(ShizukuReceiverStarter.NOTIFICATION_ID)

@@ -18,7 +18,7 @@ object CrashReporter {
         val sb = StringBuilder()
 
         // 1. Header
-        sb.append("## ShizukuX Manual Crash Report\n\n")
+        sb.append("## ReShizukuX Manual Crash Report\n\n")
         sb.append("Please describe what you were doing when the crash occurred.\n\n")
 
         // 2. Persistent Crash (if available)
@@ -46,7 +46,7 @@ object CrashReporter {
         if (EnvironmentUtils.isTCL()) {
             sb.append("- **TCL Device Detected**\n")
         }
-        sb.append("- **ShizukuX Version:** ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})\n")
+        sb.append("- **ReShizukuX Version:** ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})\n")
         sb.append("- **Rooted:** ${Shell.isAppGrantedRoot()}\n")
 
         // Detailed Diagnostics (from Service Doctor logic)
@@ -70,8 +70,8 @@ object CrashReporter {
             sb.append("_No activity logs recorded._\n\n")
         }
 
-        // 5. Shizuku State
-        sb.append("### Shizuku State\n")
+        // 5. ReShizukuX State
+        sb.append("### ReShizukuX State\n")
         sb.append("- **State:** ${ShizukuStateMachine.get()}\n")
         sb.append("- **Watchdog Enabled:** ${ShizukuSettings.getWatchdog()}\n\n")
 

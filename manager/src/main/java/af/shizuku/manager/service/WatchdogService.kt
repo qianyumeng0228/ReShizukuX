@@ -101,7 +101,7 @@ class WatchdogService : Service() {
                         consecutiveCrashes++
                         lastRestartMs = now
                         showCrashNotification()
-                        ActivityLogManager.log("Shizuku", applicationContext.packageName, "Watchdog: restarting after crash #$consecutiveCrashes")
+                        ActivityLogManager.log("ReShizukuX", applicationContext.packageName, "Watchdog: restarting after crash #$consecutiveCrashes")
                         ShizukuReceiverStarter.start(applicationContext)
                         Timber.tag(TAG).d("Watchdog: restart #$consecutiveCrashes (cooldown was ${cooldown}ms)")
                     } else {

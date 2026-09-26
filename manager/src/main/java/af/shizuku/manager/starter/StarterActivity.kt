@@ -1197,7 +1197,7 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
                     if (cont.isActive) {
                         if (it.isSuccess) {
                             ShizukuStateMachine.update()
-                            ActivityLogManager.log("Shizuku", appContext.packageName, "Service started via root")
+                            ActivityLogManager.log("ReShizukuX", appContext.packageName, "Service started via root")
                             cont.resume(Unit)
                         } else {
                             cont.resumeWithException(Exception("Failed to start with root"))
@@ -1260,7 +1260,7 @@ class ViewModel(application: Application) : AndroidViewModel(application) {
                 if (exitCode == 0) {
                     log("\n=== SU strategy succeeded: $strategyName ===\n")
                     ShizukuStateMachine.update()
-                    ActivityLogManager.log("Shizuku", appContext.packageName,
+                    ActivityLogManager.log("ReShizukuX", appContext.packageName,
                         "Service started via root (custom su: $suPath, strategy: $strategyName)")
                     return
                 }

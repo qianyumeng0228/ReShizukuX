@@ -4,10 +4,13 @@
     <string name="server_uptime">Tempo de atividade do servidor</string>
     <string name="active_connections">Conexões ativas</string>
     <string name="server_memory_usage">Uso de memória do servidor</string>
+    <string name="server_memory_uncapped">Sem limite</string>
     <string name="server_clients_connected" formatted="true">%1$d aplicativos conectados</string>
-    <string name="extra_dashboard_title">Painel do ShizukuX</string>
+    <string name="extra_dashboard_title">Painel do ReShizukuX</string>
     <string name="error_unknown">Erro desconhecido</string>
-    <string name="translation_url">https://github.com/qianyumeng0228/ShizukuX</string>
+    <string name="translation_contributors">thejaustin</string>
+    <string name="translation_url">https://github.com/qianyumeng0228/ReShizukuX</string>
+    <string name="settings_expressive_title">Design Expressivo (M3E)</string>
     <string name="settings_expressive_shapes">Formas de ícones expressivas</string>
     <string name="settings_expressive_shapes_summary">Usar formas assimétricas de folha e gota para ícones</string>
     <string name="settings_expressive_animations">Animações elásticas</string>
@@ -15,18 +18,23 @@
     <string name="settings_haptic_feedback">Feedback tátil</string>
     <string name="settings_haptic_feedback_summary">Vibrar em toques e gestos</string>
     <string name="settings_icon_style">Estilo do ícone</string>
+    <string name="settings_icon_style_summary">Escolha o estilo visual dos ícones do sistema</string>
     <string name="settings_shape_style">Estilo de forma do contêiner</string>
+    <string name="settings_shape_style_summary">Personalize o arredondamento dos cantos dos cartões e diálogos</string>
     <string name="settings_animation_intensity">Intensidade da animação</string>
+    <string name="settings_animation_intensity_summary">Ajuste a velocidade e o "efeito de mola" das transições da interface</string>
     <string name="settings_display_category">Exibição</string>
     <string name="settings_edge_to_edge">Layout de ponta a ponta</string>
     <string name="settings_edge_to_edge_summary">Estender o conteúdo atrás das barras do sistema. Desative se as barras do sistema sobrepuserem controles importantes</string>
     <string name="settings_blur_ui">Efeito vidro fosco</string>
     <string name="settings_blur_ui_summary">Aplicar desfoque e transparência a diálogos e à barra superior. Melhor no Android 12+</string>
     <string name="settings_wallpaper">Papel de parede</string>
+    <string name="settings_wallpaper_summary">Tema do papel de parede de fundo</string>
     <string name="settings_wallpaper_original">Original</string>
     <string name="settings_wallpaper_white_miku">Miku branca</string>
     <string name="settings_wallpaper_black_miku">Miku preta</string>
     <string name="settings_icon_color_mode">Cores de ícone em dois tons</string>
+    <string name="settings_icon_color_mode_summary">Como o fundo do ícone em dois tons é colorido</string>
     <string name="home_status_service_running_tile_sublabel">Em execução</string>
     <string name="home_status_service_stopped_tile_sublabel">Parado</string>
     <string name="home_status_service_is_running" formatted="true">%1$s está em execução</string>
@@ -38,7 +46,7 @@
     <string name="home_status_service_version_update" formatted="true"><![CDATA[Versão %2$s, %1$s<br>Inicie novamente para atualizar para a versão %3$s]]></string>
     <string name="home_status_service_version_unknown" formatted="true"><![CDATA[Versão desconhecida, %1$s<br>O serviço não informou sua versão. Ele pode não ter iniciado corretamente ou estar sendo restringido pelo sistema. Tente uma parada completa e reinício, ou verifique o "Diagnóstico de serviço".]]></string>
     <string name="home_adb_title"><![CDATA[Inicie conectando-se a um computador]]></string>
-    <string name="home_adb_description" formatted="true"><![CDATA[Para dispositivos sem root, você precisa usar adb para iniciar o Shizuku (exige conexão com o computador). Este processo precisa ser repetido toda vez que o dispositivo for reiniciado. <b><a href=\"%1$s\">Leia a ajuda</a></b>.]]></string>
+    <string name="home_adb_description" formatted="true"><![CDATA[Para dispositivos sem root, você precisa usar adb para iniciar o ReShizukuX (exige conexão com o computador). Este processo precisa ser repetido toda vez que o dispositivo for reiniciado. <b><a href=\"%1$s\">Leia a ajuda</a></b>.]]></string>
     <string name="home_adb_button_view_help">Ler ajuda</string>
     <string name="home_adb_button_go_settings">Abrir configurações</string>
     <string name="dialog_enable_auto_pairing_title">Ativar pareamento automático?</string>
@@ -64,8 +72,8 @@
     <string name="one_tap_step_pairing_manual">Conclua o pareamento na página de depuração sem fio; o fluxo continua automaticamente</string>
     <string name="one_tap_step_auth_running">Conectando e autorizando…</string>
     <string name="one_tap_step_auth_done">ADB autorizado</string>
-    <string name="one_tap_step_start_running">Iniciando Shizuku…</string>
-    <string name="one_tap_step_complete_desc">O Shizuku está em execução via depuração sem fio</string>
+    <string name="one_tap_step_start_running">Iniciando ReShizukuX…</string>
+    <string name="one_tap_step_complete_desc">O ReShizukuX está em execução via depuração sem fio</string>
     <string name="adb_permission_guide_title">Corrigir permissão ADB restrita</string>
     <string name="adb_permission_guide_xiaomi"><![CDATA[A permissão ADB está restrita pelo sistema. Ative:
 
@@ -81,7 +89,7 @@ Depois volte aqui e tente novamente.]]></string>
     <string name="adb_permission_guide_oppo"><![CDATA[OPPO/OnePlus pode restringir o ADB e o servidor via monitor de permissões. Vá para as opções do desenvolvedor:
 ① Desative o "Monitor de permissões" (interruptor exclusivo do ColorOS 12+; diferente de "Desativar otimização do sistema")
 ② Se não houver item "Monitor de permissões", mude o idioma do dispositivo para inglês e desative "Desativar otimização do sistema"
-③ Depois reinicie o telefone (reiniciar apenas o Shizuku pode não funcionar)]]></string>
+③ Depois reinicie o telefone (reiniciar apenas o ReShizukuX pode não funcionar)]]></string>
     <string name="adb_permission_guide_go_developer">Ir para opções do desenvolvedor</string>
     <string name="settings_auto_pairing">Pareamento automático</string>
     <string name="settings_auto_pairing_summary">Ativar o assistente de pareamento para ler e inserir códigos de pareamento da depuração sem fio automaticamente</string>
@@ -89,30 +97,32 @@ Depois volte aqui e tente novamente.]]></string>
     <string name="settings_auto_restore_dev_options_summary">Após reiniciar, reative opções do desenvolvedor, depuração USB e depuração sem fio (requer WRITE_SECURE_SETTINGS)</string>
     <string name="settings_auto_restore_dev_options_no_permission">WRITE_SECURE_SETTINGS ausente, então a restauração automática não pode ter efeito. Conceda via adb: adb shell pm grant &lt;package&gt; android.permission.WRITE_SECURE_SETTINGS</string>
     <string name="settings_auto_restore_dev_options_no_permission_title">Permissão ausente</string>
-    <string name="settings_auto_restore_dev_options_auto_grant">Concessão automática via Shizuku</string>
-    <string name="settings_auto_restore_dev_options_granted">WRITE_SECURE_SETTINGS concedida via Shizuku</string>
+    <string name="settings_auto_restore_dev_options_auto_grant">Concessão automática via ReShizukuX</string>
+    <string name="settings_auto_restore_dev_options_granted">WRITE_SECURE_SETTINGS concedida via ReShizukuX</string>
     <string name="settings_auto_restore_dev_options_grant_failed">Falha na concessão automática; use o comando adb manualmente</string>
     <string name="settings_restore_dev_options_now">Restaurar opções do desenvolvedor agora</string>
     <string name="settings_restore_dev_options_now_summary">Reative opções do desenvolvedor, depuração USB e depuração sem fio</string>
     <string name="settings_restore_dev_options_ok">Opções do desenvolvedor, depuração USB e depuração sem fio restauradas</string>
     <string name="settings_restore_wifi_notification_title">Depuração sem fio não restaurada</string>
-    <string name="settings_restore_wifi_notification_text">O Wi-Fi estava desativado durante a restauração automática, então a depuração sem fio e o início automático do Shizuku estão aguardando. Ative o Wi-Fi e o Shizuku iniciará automaticamente.</string>
+    <string name="settings_restore_wifi_notification_text">O Wi-Fi estava desativado durante a restauração automática, então a depuração sem fio e o início automático do ReShizukuX estão aguardando. Ative o Wi-Fi e o ReShizukuX iniciará automaticamente.</string>
     <string name="settings_restore_wifi_notification_action">Ativar Wi-Fi</string>
     <string name="settings_adb_security_notification_title">A depuração USB (configurações de segurança) está desativada</string>
+    <string name="settings_adb_security_notification_text">Toque para abrir as opções do desenvolvedor e ativá-las para que o ReShizukuX possa iniciar</string>
     <string name="settings_adb_security_notification_text_usb_on">Abra Opções do desenvolvedor → Depuração → Depuração USB (configurações de segurança)</string>
     <string name="settings_adb_security_notification_text_usb_off">Abra Opções do desenvolvedor → ative a depuração USB e depois a depuração USB (configurações de segurança)</string>
     <string name="settings_adb_security_notification_action">Abrir</string>
     <string name="settings_restore_adb_security_hint">A depuração USB (configurações de segurança) está desativada; abri as opções do desenvolvedor, ative o interruptor</string>
+    <string name="doctor_fix_open_developer_options_failed">Não foi possível abrir as opções do desenvolvedor</string>
     <string name="home_adb_button_view_command">Ver comando</string>
     <string name="home_adb_dialog_view_command_message" formatted="true"><![CDATA[<font face="monospace">%1$s</font><br><br>* Há algumas outras considerações; confirme que você leu a ajuda primeiro.]]></string>
     <string name="home_adb_dialog_view_command_copy_button">Copiar</string>
     <string name="home_adb_dialog_view_command_button_send">Enviar</string>
     <string name="home_wireless_adb_title"><![CDATA[Iniciar via depuração sem fio]]></string>
-    <string name="home_wireless_adb_description"><![CDATA[No Android 11 ou superior, você pode ativar a depuração sem fio e iniciar o Shizuku diretamente do dispositivo, sem conectar ao computador.<p>Veja o guia passo a passo primeiro.]]></string>
+    <string name="home_wireless_adb_description"><![CDATA[No Android 11 ou superior, você pode ativar a depuração sem fio e iniciar o ReShizukuX diretamente do dispositivo, sem conectar ao computador.<p>Veja o guia passo a passo primeiro.]]></string>
     <string name="home_wireless_adb_description_pre_11"><![CDATA[Antes do Android 11, conectar-se a um computador é necessário para ativar a depuração sem fio.]]></string>
     <string name="home_wireless_adb_view_guide_button">Guia passo a passo</string>
     <string name="dialog_adb_discovery">Procurando serviço de depuração sem fio</string>
-    <string name="dialog_adb_discovery_message">Ative \"Depuração sem fio\" em \"Opções do desenvolvedor\". A \"Depuração sem fio\" é desativada automaticamente quando a rede muda.\n\nNota: não desative \"Opções do desenvolvedor\" nem \"Depuração USB\", caso contrário o Shizuku será parado.</string>
+    <string name="dialog_adb_discovery_message">Ative \"Depuração sem fio\" em \"Opções do desenvolvedor\". A \"Depuração sem fio\" é desativada automaticamente quando a rede muda.\n\nNota: não desative \"Opções do desenvolvedor\" nem \"Depuração USB\", caso contrário o ReShizukuX será parado.</string>
     <string name="dialog_adb_discovery_message_toggle_wireless_debugging">Tente desativar e reativar a \"Depuração sem fio\" se ela continuar procurando.</string>
     <string name="dialog_adb_port">Porta</string>
     <string name="dialog_adb_invalid_port">A porta é um número inteiro entre 1 e 65535.</string>
@@ -123,27 +133,32 @@ Depois volte aqui e tente novamente.]]></string>
     <string name="dialog_adb_pairing_legacy_guide">Neste sistema, a sessão de pareamento termina assim que o pop-up do sistema fecha, então um código digitado aqui depois nunca terá sucesso.
 
 Para parear de forma confiável:
-1. Ative o serviço de pareamento do Shizuku nas configurações de acessibilidade (botão abaixo).
+1. Ative o serviço de pareamento do ReShizukuX nas configurações de acessibilidade (botão abaixo).
 2. Abra "Depuração sem fio" e toque em "Parear dispositivo com código de pareamento".
-3. Mantenha o pop-up aberto — o Shizuku lê o código de pareamento automaticamente e conclui o pareamento.
+3. Mantenha o pop-up aberto — o ReShizukuX lê o código de pareamento automaticamente e conclui o pareamento.
 
 Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o código na entrada da notificação.</string>
     <string name="dialog_adb_pairing_enable_auto">Ativar pareamento automático por acessibilidade</string>
     <string name="notification_adb_pairing_help">Ajuda de pareamento</string>
     <string name="paring_code_is_wrong">O código de pareamento está errado.</string>
-    <string name="cannot_connect_port">Não é possível conectar ao serviço de depuração sem fio.\n\nCertifique-se de que o Shizuku está na lista de permissões de todos os firewalls, bloqueadores de anúncios, VPNs ou apps similares que possam restringir o acesso à rede.</string>
+    <string name="cannot_connect_port">Não é possível conectar ao serviço de depuração sem fio.\n\nCertifique-se de que o ReShizukuX está na lista de permissões de todos os firewalls, bloqueadores de anúncios, VPNs ou apps similares que possam restringir o acesso à rede.</string>
     <string name="dialog_wireless_adb_not_enabled">A depuração sem fio não está ativada.\nNota: antes do Android 11, para ativar a depuração sem fio, é obrigatória a conexão com o computador.</string>
     <string name="dialog_usb_debugging_not_enabled">A depuração USB não está ativada.\nAtive-a em \"Opções do desenvolvedor\".</string>
     <string name="dialog_adb_pairing_message">Inicie o pareamento seguindo os passos:\n- Vá para \"Opções do desenvolvedor\"\n- Ative \"Depuração USB\" e \"Depuração sem fio\"\n- Toque no lado esquerdo de \"Depuração sem fio\"\n- Toque em \"Parear dispositivo com código de pareamento\"\n- Insira o código de pareamento na notificação</string>
-    <string name="dialog_adb_pairing_accessibility_permission" formatted="true">No Android 14, instalar/atualizar o Shizuku com o instalador de pacotes revoga a permissão %1$s, necessária para ativar o serviço de acessibilidade para pareamento.\n\nPara concedê-la, execute o seguinte comando ADB:\n\n%2$s\n\nApós executar o comando, você pode continuar o processo de pareamento.\n\nNota: você pode contornar isso instalando/atualizando o Shizuku com ADB.</string>
-    <string name="dialog_adb_pairing_accessibility_permission_template">No Android 14, instalar/atualizar o Shizuku com o instalador de pacotes revoga a permissão ^1, necessária para ativar o serviço de acessibilidade para pareamento.\n\nPara concedê-la, execute o seguinte comando ADB:\n\n^2\n\nApós executar o comando, você pode continuar o processo de pareamento.\n\nNota: você pode contornar isso instalando/atualizando o Shizuku com ADB.</string>
+    <string name="dialog_adb_pairing_accessibility_permission" formatted="true">No Android 14, instalar/atualizar o ReShizukuX com o instalador de pacotes revoga a permissão %1$s, necessária para ativar o serviço de acessibilidade para pareamento.\n\nPara concedê-la, execute o seguinte comando ADB:\n\n%2$s\n\nApós executar o comando, você pode continuar o processo de pareamento.\n\nNota: você pode contornar isso instalando/atualizando o ReShizukuX com ADB.</string>
+    <string name="dialog_adb_pairing_accessibility_permission_template">No Android 14, instalar/atualizar o ReShizukuX com o instalador de pacotes revoga a permissão ^1, necessária para ativar o serviço de acessibilidade para pareamento.\n\nPara concedê-la, execute o seguinte comando ADB:\n\n^2\n\nApós executar o comando, você pode continuar o processo de pareamento.\n\nNota: você pode contornar isso instalando/atualizando o ReShizukuX com ADB.</string>
     <string name="doctor_check_secondary_user">Usuário secundário / pasta segura</string>
     <string name="doctor_check_phantom_process">Phantom Process Killer</string>
+    <string name="doctor_tips_title">Dicas de solução de problemas</string>
     <string name="doctor_status_manual_check">Exige verificação manual</string>
     <string name="doctor_status_detected">Detectado</string>
-    <string name="doctor_tip_secure_folder"><b>Pasta segura detectada</b>: o Shizuku funciona melhor no usuário principal (proprietário). Executar dentro da pasta segura ou de um perfil de trabalho pode exigir iniciar o servidor primeiro no usuário principal.</string>
-    <string name="doctor_tip_phantom_process"><b>Phantom Process Killer</b>: o Android 12-15+ pode matar o Shizuku se muitos comandos forem executados. O botão 「Corrigir」 tenta desativar esse limite.</string>
-    <string name="doctor_system_well_configured">Seu sistema parece bem configurado para o ShizukuX.</string>
+    <string name="doctor_status_review">Requer revisão</string>
+    <string name="doctor_tip_s22_ultra"><b>Dica para S22 Ultra</b>: para um ADB estável, disque `*#0808#` e selecione `MTP + ADB` se houver quedas de conexão.</string>
+    <string name="doctor_tip_secure_folder"><b>Pasta segura detectada</b>: o ReShizukuX funciona melhor no usuário principal (proprietário). Executar dentro da pasta segura ou de um perfil de trabalho pode exigir iniciar o servidor primeiro no usuário principal.</string>
+    <string name="doctor_tip_phantom_process"><b>Phantom Process Killer</b>: o Android 12-15+ pode matar o ReShizukuX se muitos comandos forem executados. O botão 「Corrigir」 tenta desativar esse limite.</string>
+    <string name="doctor_tip_s22_ultra_exynos"><b>S22 Ultra (Exynos)</b>: se a resposta do serviço estiver lenta, tente desativar o <b>「RAM Plus」</b> em Cuidado do dispositivo > Memória.</string>
+    <string name="doctor_tip_s22_ultra_snapdragon"><b>S22 Ultra (Snapdragon)</b>: certifique-se de que Processamento aprimorado esteja ativado nas Configurações rápidas para máxima taxa de comandos.</string>
+    <string name="doctor_system_well_configured">Seu sistema parece bem configurado para o ReShizukuX.</string>
     <string name="su_bridge_other_detected_apps">Outros apps root detectados</string>
     <string name="su_bridge_installed_root_app">App root instalado</string>
     <string name="su_bridge_suggested_root_app">App root sugerido</string>
@@ -156,34 +171,36 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="adb_pairing_status_pairing">Pareando com o dispositivo…</string>
     <string name="adb_pairing_status_failed">Falha no pareamento.</string>
     <string name="app_management_badge_format" formatted="true">&lt;b&gt;&lt;font color=\"%1$s\"&gt;[%2$s]&lt;/font&gt;&lt;/b&gt; %3$s</string>
-    <string name="dialog_adb_pairing_accessibility_enable">Ative o serviço de acessibilidade para iniciar o processo de pareamento. Isso permite que o Shizuku detecte o código de pareamento.\n\nO serviço de acessibilidade será desativado quando o código for encontrado ou após 1 minuto para economizar energia.</string>
-    <string name="dialog_adb_pairing_accessibility_navigate">Inicie o pareamento seguindo os passos:\n- Vá para \"Opções do desenvolvedor\"\n- Ative \"Depuração USB\" e \"Depuração sem fio\"\n- Toque no lado esquerdo de \"Depuração sem fio\"\n- Toque em \"Parear dispositivo com código de pareamento\". O Shizuku detectará automaticamente o código.</string>
+    <string name="dialog_adb_pairing_accessibility_enable">Ative o serviço de acessibilidade para iniciar o processo de pareamento. Isso permite que o ReShizukuX detecte o código de pareamento.\n\nO serviço de acessibilidade será desativado quando o código for encontrado ou após 1 minuto para economizar energia.</string>
+    <string name="dialog_adb_pairing_accessibility_navigate">Inicie o pareamento seguindo os passos:\n- Vá para \"Opções do desenvolvedor\"\n- Ative \"Depuração USB\" e \"Depuração sem fio\"\n- Toque no lado esquerdo de \"Depuração sem fio\"\n- Toque em \"Parear dispositivo com código de pareamento\". O ReShizukuX detectará automaticamente o código.</string>
     <string name="adb_pairing_requires_multi_window">Ative o modo de tela dividida (multijanela) primeiro.</string>
     <string name="adb_pairing_requires_multi_window_reason">O sistema exige que o diálogo de pareamento permaneça visível. Somente no modo multijanela você pode ver o app e o diálogo do sistema ao mesmo tempo.</string>
     <string name="adb_error_key_store">Não foi possível gerar chaves para o depuração sem fio.\nO mecanismo de KeyStore deste dispositivo pode estar corrompido.</string>
+    <string name="adb_stopping_tcp">Fechando a porta TCP</string>
     <string name="adb_error_stop_tcp">Falha ao parar o ADB via TCP</string>
     <string name="adb_pair_required">Conclua a etapa de pareamento primeiro.</string>
     <string name="enable">Ativar</string>
     <string name="development_settings">Opções do desenvolvedor</string>
     <string name="notification_settings">Opções de notificação</string>
-    <string name="adb_pairing_tutorial_content_notification">A notificação do Shizuku ajuda a concluir o pareamento.</string>
+    <string name="adb_pairing_tutorial_title">Parear o ReShizukuX com seu dispositivo</string>
+    <string name="adb_pairing_tutorial_content_notification">A notificação do ReShizukuX ajuda a concluir o pareamento.</string>
     <string name="adb_pairing_tutorial_content_steps">Vá para "Opções do desenvolvedor" e ative "Depuração USB" e "Depuração sem fio".</string>
-    <string name="adb_pairing_tutorial_content_enter_pairing_code">Toque no lado esquerdo de "Depuração sem fio" e depois em "Parear dispositivo com código de pareamento". O pop-up do sistema mostrará um código de 6 dígitos — memorize-o e insira-o na notificação ou no diálogo do Shizuku. Se o pop-up fechar ao abaixar o painel, reabra as configurações de depuração sem fio e toque novamente em "Parear dispositivo com código de pareamento".</string>
-    <string name="adb_pairing_tutorial_content_notification_blocked">O processo de pareamento exige interação com as notificações do Shizuku. Permita que o Shizuku publique notificações.</string>
+    <string name="adb_pairing_tutorial_content_enter_pairing_code">Toque no lado esquerdo de "Depuração sem fio" e depois em "Parear dispositivo com código de pareamento". O pop-up do sistema mostrará um código de 6 dígitos — memorize-o e insira-o na notificação ou no diálogo do ReShizukuX. Se o pop-up fechar ao abaixar o painel, reabra as configurações de depuração sem fio e toque novamente em "Parear dispositivo com código de pareamento".</string>
+    <string name="adb_pairing_tutorial_content_notification_blocked">O processo de pareamento exige interação com as notificações do ReShizukuX. Permita que o ReShizukuX publique notificações.</string>
     <string name="adb_pairing_tutorial_content_miui">Usuários MIUI podem precisar alternar o estilo de notificação para "Android" em Configurações do sistema → "Notificações" → "Painel de notificações".</string>
     <string name="adb_pairing_tutorial_content_miui_2">Caso contrário, talvez você não consiga digitar o código de pareamento na notificação.</string>
-    <string name="adb_pairing_tutorial_content_finish">Volte ao Shizuku e inicie o Shizuku.</string>
-    <string name="adb_pairing_tutorial_content_network">O Shizuku precisa acessar a rede local. Isso é controlado pela permissão de rede.</string>
-    <string name="adb_pairing_tutorial_content_network_limation_not_foreground">Alguns sistemas (ex.: MIUI) não permitem que apps invisíveis na tela acessem a rede, mesmo com serviço em primeiro plano. Nesses sistemas, desative a otimização de bateria do Shizuku.</string>
+    <string name="adb_pairing_tutorial_content_finish">Volte ao ReShizukuX e inicie o ReShizukuX.</string>
+    <string name="adb_pairing_tutorial_content_network">O ReShizukuX precisa acessar a rede local. Isso é controlado pela permissão de rede.</string>
+    <string name="adb_pairing_tutorial_content_network_limation_not_foreground">Alguns sistemas (ex.: MIUI) não permitem que apps invisíveis na tela acessem a rede, mesmo com serviço em primeiro plano. Nesses sistemas, desative a otimização de bateria do ReShizukuX.</string>
     <string name="home_root_title"><![CDATA[Iniciar (para dispositivos com root)]]></string>
-    <string name="home_root_description" formatted="true"><![CDATA[Se você usa o Magisk, pode tentar o %1$s. Para usuários root, ele acabará substituindo o Shizuku. Nota: os aplicativos existentes precisam mudar um pouco para usar o %2$s.]]></string>
+    <string name="home_root_description" formatted="true"><![CDATA[Se você usa o Magisk, pode tentar o %1$s. Para usuários root, ele acabará substituindo o ReShizukuX. Nota: os aplicativos existentes precisam mudar um pouco para usar o %2$s.]]></string>
     <string name="home_root_button_start">Iniciar</string>
     <string name="home_root_button_restart">Reiniciar</string>
     <string name="home_app_management_title">Gerenciamento de aplicativos</string>
     <string name="home_app_management_view_authorized_apps"><![CDATA[Toque para gerenciar apps autorizados]]></string>
     <string name="home_app_management_empty">Apps que solicitaram ou declararam a permissão do Shizuku aparecerão aqui.</string>
-    <string name="home_automation_title">Controle o Shizuku com apps de automação</string>
-    <string name="home_automation_description">Apps como Tasker e MacroDroid podem enviar intents para iniciar/parar o Shizuku automaticamente.</string>
+    <string name="home_automation_title">Controle o ReShizukuX com apps de automação</string>
+    <string name="home_automation_description">Apps como Tasker e MacroDroid podem enviar intents para iniciar/parar o ReShizukuX automaticamente.</string>
     <string name="home_automation_description_device_restriction" formatted="true">Para usar o intent de início no seu dispositivo, primeiro é necessário ativar o ADB over TCP executando %1$s de um PC.</string>
     <string name="home_automation_button_view_intents">Ver intents</string>
     <string name="home_automation_bottom_sheet_intents">Intents</string>
@@ -197,7 +214,7 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="home_learn_more_title">Guia do desenvolvedor</string>
     <string name="home_learn_more_description">Aprenda a desenvolver com o Shizuku</string>
     <string name="home_adb_is_limited_title">Você precisa de uma etapa extra</string>
-    <string name="home_adb_is_limited_description">Seu fabricante restringiu as permissões do adb e os apps que usam o Shizuku não funcionarão corretamente.\n\nNormalmente, essa limitação pode ser removida ajustando algumas opções em \"Opções do desenvolvedor\". Leia a ajuda para detalhes de como fazer isso.\n\nTalvez seja necessário reiniciar o Shizuku para que a operação tenha efeito.</string>
+    <string name="home_adb_is_limited_description">Seu fabricante restringiu as permissões do adb e os apps que usam o ReShizukuX não funcionarão corretamente.\n\nNormalmente, essa limitação pode ser removida ajustando algumas opções em \"Opções do desenvolvedor\". Leia a ajuda para detalhes de como fazer isso.\n\nTalvez seja necessário reiniciar o ReShizukuX para que a operação tenha efeito.</string>
     <string name="app_management_context_open_app">Abrir app</string>
     <string name="app_management_context_app_info">Informações do app</string>
     <string name="app_management_context_grant">Permitir</string>
@@ -206,6 +223,8 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="app_management_no_launcher">Este app não tem launcher</string>
     <string name="app_management_package_copied">Nome do pacote copiado</string>
     <string name="app_management_log_permission_toggle">Alternar permissão: %s</string>
+    <string name="app_management_log_hide">Ocultar da lista</string>
+    <string name="app_management_log_unhide">Reexibir na lista</string>
     <string name="app_management_hidden">Apps ocultos</string>
     <string name="app_management_selected">%d selecionados</string>
     <string name="app_management_undo">Desfazer</string>
@@ -221,10 +240,11 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="app_management_sort_last_updated">Atualizado recentemente</string>
     <string name="app_management_dialog_adb_is_limited_title">Permissão do adb restrita</string>
     <string name="app_management_dialog_adb_is_limited_message" formatted="true"><![CDATA[É provável que o fabricante do dispositivo tenha restringido a permissão do adb.<p>Pode haver uma solução para o seu sistema: consulte <b><a href=\"%1$s\">este documento</a></b>.]]></string>
-    <string name="app_management_dialog_adb_is_limited_oppo"><![CDATA[OPPO/OnePlus restringe a permissão do ADB (sem concessão de sistema ao servidor), então os apps não podem receber a permissão do Shizuku. Nas opções do desenvolvedor, desative o "Monitor de permissões" (interruptor exclusivo do ColorOS 12+; se não houver botão, mude o idioma do dispositivo para inglês e desative "Desativar otimização do sistema") e <b>reinicie o telefone</b>. Após reiniciar, reinicie o Shizuku para que as permissões funcionem.]]></string>
-    <string name="app_management_item_summary_requires_root">* Requer Shizuku em execução com root</string>
-    <string name="app_management_item_summary_partial_root">⚠ Suporte parcial — alguns recursos exigem Shizuku com root</string>
-    <string name="app_management_item_summary_requires_plus">* Requer ShizukuX Enhanced API</string>
+    <string name="app_management_dialog_adb_is_limited_oppo"><![CDATA[OPPO/OnePlus restringe a permissão do ADB (sem concessão de sistema ao servidor), então os apps não podem receber a permissão do ReShizukuX. Nas opções do desenvolvedor, desative o "Monitor de permissões" (interruptor exclusivo do ColorOS 12+; se não houver botão, mude o idioma do dispositivo para inglês e desative "Desativar otimização do sistema") e <b>reinicie o telefone</b>. Após reiniciar, reinicie o ReShizukuX para que as permissões funcionem.]]></string>
+    <string name="app_management_item_summary_requires_root">* Requer ReShizukuX em execução com root</string>
+    <string name="app_management_item_summary_partial_root">⚠ Suporte parcial — alguns recursos exigem ReShizukuX com root</string>
+    <string name="app_management_item_summary_requires_plus">* Requer ReShizukuX Enhanced API</string>
+    <string name="app_management_item_context">Sobre este app: %s</string>
     <string name="app_management_enhancements">Aprimoramentos</string>
     <string name="app_management_enhancements_desc">Ative os aprimoramentos deste app para melhorar desempenho e compatibilidade.</string>
     <string name="app_management_badge_enhanced">Aprimorado</string>
@@ -234,16 +254,16 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="app_management_bulk_revoke">Negar selecionados</string>
     <string name="app_management_bulk_hide">Ocultar selecionados</string>
     <string name="app_management_bulk_select_all">Selecionar tudo</string>
-    <string name="home_terminal_title">Use o Shizuku em apps de terminal</string>
-    <string name="home_terminal_description">Execute comandos shell em apps de terminal através do Shizuku</string>
+    <string name="home_terminal_title">Use o ReShizukuX em apps de terminal</string>
+    <string name="home_terminal_description">Execute comandos shell em apps de terminal através do ReShizukuX</string>
     <string name="terminal_tutorial_miui">Usuários relataram que o MIUI quebra o Storage Access Framework, usado pela função de exportação.</string>
-    <string name="terminal_tutorial_miui_2">Se você usa MIUI, talvez seja necessário extrair o arquivo da pasta assets do APK do Shizuku.</string>
+    <string name="terminal_tutorial_miui_2">Se você usa MIUI, talvez seja necessário extrair o arquivo da pasta assets do APK do ReShizukuX.</string>
     <string name="terminal_tutorial_1">Exporte os arquivos para uma nova pasta.</string>
     <string name="terminal_tutorial_1_description" formatted="true">Dois arquivos serão exportados: %1$s e %2$s. Se os arquivos já existirem na pasta selecionada, serão excluídos.</string>
     <string name="terminal_export_files">Exportar arquivos</string>
     <string name="terminal_tutorial_2">Use seu app de terminal para copiar os arquivos para o diretório de arquivos privados dele.</string>
     <string name="terminal_tutorial_2_description" formatted="true">Dica: se o diretório inicial (~) do seu app de terminal estiver no diretório de arquivos privados, colocar os arquivos lá permitirá executar %1$s sem escrever o caminho.\n\nCaso contrário, você pode criar um alias para %2$s no arquivo de configuração %3$s do seu app de terminal.</string>
-    <string name="terminal_tutorial_3">Abra um shell ou execute um comando do ShizukuX:</string>
+    <string name="terminal_tutorial_3">Abra um shell ou execute um comando do ReShizukuX:</string>
     <string name="rish_description" formatted="true"><![CDATA[Com o %1$s, você pode executar comandos shell em qualquer app de terminal.<p>Toque para saber mais sobre como usá-lo.]]></string>
     <string name="settings_swipe_right">Ação de deslizar para a direita</string>
     <string name="settings_swipe_left">Ação de deslizar para a esquerda</string>
@@ -252,31 +272,51 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="settings_action_app_info">Informações do app</string>
     <string name="settings_action_toggle_permission">Alternar permissão</string>
     <string name="settings_action_hide_from_list">Ocultar da lista</string>
+    <string name="settings_app_management">Gerenciamento de apps</string>
     <string name="settings_lp_category_summary">Escolha quais ações aparecem ao pressionar e segurar um app na lista de gerenciamento. Se apenas uma estiver ativada, ela dispara diretamente — sem menu.</string>
     <string name="settings_lp_open_app">Abrir app</string>
     <string name="settings_lp_app_info">Informações do app</string>
     <string name="settings_lp_toggle_permission">Alternar permissão do Shizuku</string>
     <string name="settings_lp_hide_from_list">Ocultar da lista</string>
+    <string name="onboarding_welcome_title">Bem-vindo ao ReShizukuX</string>
+    <string name="onboarding_welcome_desc">Um Shizuku aprimorado com recursos poderosos de gerenciamento de apps. Gestos de deslizar, ações rápidas e experiências personalizáveis — tudo em um só lugar.</string>
+    <string name="onboarding_swipe_title">Gestos padrão</string>
+    <string name="onboarding_swipe_desc">Por padrão, na lista de gerenciamento de apps, deslize para a direita para abrir um app ou para a esquerda para ver a página de configurações do sistema dele.</string>
+    <string name="onboarding_gestures_title">Gestos personalizados</string>
+    <string name="onboarding_gestures_desc">Você pode personalizar totalmente esses gestos em Configurações. Escolha entre Abrir app, Informações do app, Alternar permissão ou Ocultar da lista.</string>
+    <string name="onboarding_longpress_title">Personalizar experiência</string>
+    <string name="onboarding_longpress_desc">Escolha quais ações aparecem ao pressionar e segurar um app, ou ative recursos exclusivos do ReShizukuX, como o Modo Dhizuku.</string>
+    <string name="onboarding_next">Avançar</string>
+    <string name="onboarding_skip">Pular</string>
+    <string name="onboarding_get_started">Começar</string>
+    <string name="onboarding_setup_title">Iniciar o ReShizukuX</string>
+    <string name="onboarding_setup_desc">Escolha como iniciar o ReShizukuX neste dispositivo. Você também pode fazer isso depois na tela principal.</string>
+    <string name="onboarding_setup_running">O ReShizukuX está em execução</string>
+    <string name="onboarding_setup_later">Eu faço isso depois</string>
+    <string name="onboarding_setup_wadb_desc">Android 11+, sem necessidade de computador. Usa depuração sem fio.</string>
+    <string name="onboarding_setup_root_desc">Seu dispositivo tem root. Inicie o ReShizukuX com acesso root.</string>
+    <string name="onboarding_setup_adb_desc">Qualquer dispositivo. Execute um comando ADB de um computador para começar.</string>
     <string name="swipe_hint_title">Gestos de deslizar</string>
     <string name="swipe_hint_right">Deslize para a direita para ação rápida</string>
     <string name="swipe_hint_left">Deslize para a esquerda para ação rápida</string>
     <string name="swipe_hint_dismiss">Toque em qualquer lugar para dispensar</string>
     <string name="settings_title">Configurações</string>
+    <string name="settings_behavior">Comportamento</string>
     <string name="settings_start_on_boot">Iniciar na inicialização</string>
     <string name="settings_start_on_boot_summary">Requer Android 11+ ou root</string>
     <string name="settings_start_on_boot_bug">Devido a um bug no Android 11-12, a depuração sem fio não lembra nenhuma rede autorizada.\n\nVocê precisará reautorizar a rede a cada reinicialização tocando em \"Permitir\" quando o diálogo de autorização aparecer.</string>
     <string name="settings_use_system_color">Usar cor de tema do sistema</string>
     <string name="settings_watchdog">Watchdog</string>
-    <string name="settings_watchdog_summary">Reinicie o Shizuku automaticamente após um crash ou parada inesperada. Não é possível reconectar quando a rede subjacente desconecta (ex.: cabo USB removido ao usar RNDIS/ADB USB).</string>
+    <string name="settings_watchdog_summary">Reinicie o ReShizukuX automaticamente após um crash ou parada inesperada. Não é possível reconectar quando a rede subjacente desconecta (ex.: cabo USB removido ao usar RNDIS/ADB USB).</string>
     <string name="settings_anti_kill_guide">Guia de configuração anti-morte</string>
-    <string name="settings_anti_kill_guide_summary">Mantenha o ShizukuX vivo em segundo plano para que o servidor e as autorizações de apps sobrevivam à limpeza do sistema</string>
-    <string name="anti_kill_dialog_title">Evite que o sistema mate o ShizukuX</string>
-    <string name="anti_kill_dialog_message">Se o sistema matar o ShizukuX, o servidor Shizuku para e os apps (ex.: GKD) perdem a autorização até reiniciarem. Com o interruptor Watchdog acima ativado, o servidor reinicia automaticamente e as autorizações são recarregadas do disco.\n\nPermita que o ShizukuX continue em segundo plano para o Watchdog sobreviver:
-1. Configurações do sistema → Apps → ShizukuX → Bateria → Sem restrições
-2. Configurações do sistema → Apps → ShizukuX → Início automático → Permitir
-3. Apps recentes → pressione e segure ShizukuX → Bloquear
+    <string name="settings_anti_kill_guide_summary">Mantenha o ReShizukuX vivo em segundo plano para que o servidor e as autorizações de apps sobrevivam à limpeza do sistema</string>
+    <string name="anti_kill_dialog_title">Evite que o sistema mate o ReShizukuX</string>
+    <string name="anti_kill_dialog_message">Se o sistema matar o ReShizukuX, o servidor ReShizukuX para e os apps (ex.: GKD) perdem a autorização até reiniciarem. Com o interruptor Watchdog acima ativado, o servidor reinicia automaticamente e as autorizações são recarregadas do disco.\n\nPermita que o ReShizukuX continue em segundo plano para o Watchdog sobreviver:
+1. Configurações do sistema → Apps → ReShizukuX → Bateria → Sem restrições
+2. Configurações do sistema → Apps → ReShizukuX → Início automático → Permitir
+3. Apps recentes → pressione e segure ReShizukuX → Bloquear
 4. MIUI/HyperOS: Configurações → Configurações de apps → Permissões → Pop-up em segundo plano → Permitir
-5. Outras marcas (ColorOS/OriginOS etc.): desative "Gerenciamento de consumo de energia" / "Desativar otimização do sistema" do ShizukuX</string>
+5. Outras marcas (ColorOS/OriginOS etc.): desative "Gerenciamento de consumo de energia" / "Desativar otimização do sistema" do ReShizukuX</string>
     <string name="anti_kill_dialog_open_battery">Abrir configurações de otimização de bateria</string>
     <string name="external_relay_auto_title">Autorização automática</string>
     <string name="external_relay_auto_summary">Quando ativado, tocar no botão de autorização ADB do Scene ou abrir o Brevent ativa automaticamente (sem precisar voltar aqui). Requer o serviço de acessibilidade.</string>
@@ -286,29 +326,33 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="external_relay_auto_accessibility_on">Serviço de acessibilidade ativado</string>
     <string name="external_relay_auto_accessibility_off">Serviço de acessibilidade não ativado</string>
     <string name="external_relay_auto_accessibility_label">Autorização automática de relé externo</string>
-    <string name="external_relay_auto_accessibility_description">Ativa automaticamente o modo ADB do Scene quando seu diálogo de autorização aparece, e ativa o Brevent quando o app é aberto. Só fica ativo enquanto o interruptor de autorização automática estiver ligado.\n\nPara manter este serviço vivo: desative a otimização de bateria do ShizukuX e bloqueie o ShizukuX na lista de apps recentes.</string>
+    <string name="external_relay_auto_accessibility_description">Ativa automaticamente o modo ADB do Scene quando seu diálogo de autorização aparece, e ativa o Brevent quando o app é aberto. Só fica ativo enquanto o interruptor de autorização automática estiver ligado.\n\nPara manter este serviço vivo: desative a otimização de bateria do ReShizukuX e bloqueie o ReShizukuX na lista de apps recentes.</string>
     <string name="external_relay_auto_scene_detected">Autorização ADB do Scene detectada; ativando automaticamente...</string>
     <string name="external_relay_auto_brevent_detected">Brevent aberto; ativando automaticamente...</string>
     <string name="external_relay_auto_battery_ok">Otimização de bateria desativada (o serviço permanecerá vivo)</string>
     <string name="external_relay_auto_battery_off">Otimização de bateria LIGADA — o sistema pode matar este serviço</string>
     <string name="external_relay_auto_battery_optimize">Desativar otimização de bateria</string>
+    <string name="external_relay_auto_battery_hint">Dica: também bloqueie o ReShizukuX nos apps recentes para evitar que o sistema encerre o serviço.</string>
     <string name="settings_tcp_mode">Modo TCP</string>
-    <string name="settings_tcp_mode_summary">Permite que o Shizuku reinicie sem Wi-Fi. (O Shizuku deve ter iniciado uma vez desde a reinicialização)</string>
+    <string name="settings_tcp_mode_summary">Permite que o ReShizukuX reinicie sem Wi-Fi. (O ReShizukuX deve ter iniciado uma vez desde a reinicialização)</string>
     <string name="settings_tcp_mode_dialog_close_port">A porta TCP será fechada imediatamente. Você precisará de Wi-Fi para ativar o modo TCP novamente. Continuar?</string>
     <string name="settings_tcp_mode_closing_port">Fechando porta TCP...</string>
     <string name="settings_restart_dialog_title">Reinício necessário</string>
-    <string name="settings_restart_dialog_message">O Shizuku precisa reiniciar para aplicar esta configuração.</string>
-    <string name="settings_restart_dialog_message_wifi_required"><![CDATA[<br><br><b>Wi-Fi é necessário. O Shizuku continuará em execução e aguardará uma conexão Wi-Fi antes de reiniciar em segundo plano.</b>]]></string>
+    <string name="settings_restart_dialog_message">O ReShizukuX precisa reiniciar para aplicar esta configuração.</string>
+    <string name="settings_restart_dialog_message_wifi_required"><![CDATA[<br><br><b>Wi-Fi é necessário. O ReShizukuX continuará em execução e aguardará uma conexão Wi-Fi antes de reiniciar em segundo plano.</b>]]></string>
     <string name="settings_tcp_port">Porta TCP</string>
     <string name="settings_tcp_port_default">Padrão (5555)</string>
     <string name="settings_tcp_port_hint">Deixe em branco para usar o padrão (5555)</string>
     <string name="settings_auto_disable_usb_debugging">Desativar depuração USB automaticamente</string>
-    <string name="settings_auto_disable_usb_debugging_summary">Desativar a depuração USB ao parar o Shizuku</string>
+    <string name="settings_auto_disable_usb_debugging_summary">Desativar a depuração USB ao parar o ReShizukuX</string>
     <string name="settings_language">Idioma</string>
+    <string name="settings_translation_contributors">Contribuidores da tradução</string>
     <string name="settings_translation">Participar da tradução</string>
     <string name="settings_translation_summary">Ajude-nos a traduzir o %s para o seu idioma</string>
+    <string name="settings_user_interface">Aparência</string>
     <string name="settings_black_night_theme">Tema noturno preto</string>
     <string name="settings_black_night_theme_summary">Use o tema preto puro se o modo noturno estiver ativado</string>
+    <string name="settings_support">Suporte</string>
     <string name="settings_version">Versão</string>
     <string name="settings_developer_options_revealed">Opções do desenvolvedor reveladas!</string>
     <string name="settings_developer_options_click_more">Toque mais %d vezes para revelar as Opções do desenvolvedor.</string>
@@ -319,6 +363,8 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="settings_hide_from_recents_summary">Ocultar este app da lista de tarefas recentes</string>
     <string name="settings_report_bug">Relatar um bug</string>
     <string name="settings_activity_log">Log de atividades</string>
+    <string name="settings_activity_log_empty">Nenhuma atividade registrada ainda.</string>
+    <string name="settings_activity_log_clear">Limpar registros</string>
     <string name="settings_enable_activity_log">Ativar log de atividades</string>
     <string name="settings_enable_activity_log_summary">Registre e exiba chamadas e eventos da API Shizuku na tela inicial.</string>
     <string name="settings_export_diagnostics">Exportar diagnósticos</string>
@@ -330,6 +376,7 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="export_diagnostics_failed">Falha ao coletar diagnósticos</string>
     <string name="export_diagnostics_collecting">Coletando diagnósticos…</string>
     <string name="settings_show_activity_log_home">Mostrar log de atividades</string>
+    <string name="settings_home_visibility">Visibilidade da tela inicial</string>
     <string name="settings_update_app_database">Atualizar banco de dados de apps</string>
     <string name="settings_update_app_database_summary">Buscar as descrições mais recentes de apps e sugestões de aprimoramento do GitHub.</string>
     <string name="settings_update_app_database_success">Banco de dados atualizado com sucesso</string>
@@ -339,37 +386,53 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="settings_show_learn_more_home">Mostrar guia do desenvolvedor</string>
     <string name="settings_show_start_adb_home">Mostrar configuração ADB com fio</string>
     <string name="home_edit_mode_hint">Segure a alça para arrastar. Toque em × para remover um cartão.</string>
+    <string name="settings_advanced">Avançado</string>
     <string name="settings_legacy_pairing">Pareamento legado</string>
     <string name="settings_legacy_pairing_summary">Inserir o código de pareamento em um diálogo em vez de uma notificação</string>
     <string name="settings_reset_adb_keys">Redefinir chaves ADB</string>
     <string name="settings_reset_adb_keys_summary">Excluir chaves e certificados ADB existentes. Útil se o pareamento estiver travado ou o KeyStore estiver corrompido.</string>
     <string name="settings_reset_adb_keys_success">Chaves ADB limpas</string>
     <string name="settings_reset_adb_keys_error">Falha ao redefinir chaves ADB</string>
-    <string name="settings_shizuku_extra_features">Recursos ShizukuX</string>
+    <string name="settings_shizuku_extra_features">Recursos ReShizukuX</string>
     <string name="settings_dhizuku_mode">Modo Dhizuku</string>
     <string name="settings_dhizuku_mode_summary">Delegue privilégios de Device Owner (DevicePolicyManager) a apps que suportam Dhizuku.</string>
-    <string name="dhizuku_device_owner_label">ShizukuX (modo Dhizuku)</string>
+    <string name="dhizuku_device_owner_label">ReShizukuX (modo Dhizuku)</string>
     <string name="dhizuku_device_owner_desc">Necessário para o modo Dhizuku compartilhar privilégios de Device Owner com apps autorizados.</string>
     <string name="dhizuku_device_owner_enabled">Device Owner Dhizuku ativado</string>
     <string name="dhizuku_device_owner_disabled">Device Owner Dhizuku desativado</string>
-    <string name="settings_enhanced_api">ShizukuX Enhanced API</string>
-    <string name="settings_enhanced_api_summary">Ative interfaces avançadas de sistema para usuários avançados. Necessário para todos os recursos exclusivos do ShizukuX.</string>
+    <string name="settings_enhanced_api">ReShizukuX Enhanced API</string>
+    <string name="settings_enhanced_api_summary">Ative interfaces avançadas de sistema para usuários avançados. Necessário para todos os recursos exclusivos do ReShizukuX.</string>
+    <string name="settings_themed_icon">Ícone do app temático</string>
+    <string name="settings_themed_icon_summary">Usa uma versão tingida pelo Material You do ícone do ReShizukuX quando o launcher suporta ícones temáticos.</string>
+    <string name="settings_themed_icon_open_settings">Abrir configurações do ícone</string>
+    <string name="settings_shell_interceptor">Acelerador de shell</string>
     <string name="settings_shell_interceptor_summary">Acelere comandos shell via APIs nativas. Melhora o desempenho de tarefas do MacroDroid e Tasker.</string>
+    <string name="settings_avf_manager">Gerenciador de máquinas virtuais (AVF)</string>
     <string name="settings_avf_manager_summary">Execute VMs Microdroid ou Linux isoladas. Use com Hyperbox e Termux-VM para gerenciar ambientes virtuais.</string>
+    <string name="settings_storage_proxy">Ponte de armazenamento</string>
     <string name="settings_storage_proxy_summary">Acesse diretamente /data/data/ e caminhos restritos. Usado pelo Neo Backup e SD Maid para gerenciar dados de apps.</string>
+    <string name="settings_continuity_bridge">Continuidade entre dispositivos</string>
     <string name="settings_continuity_bridge_summary">Sincronize estados de apps e transfira tarefas privilegiadas entre dispositivos. Funciona com o MacroDroid para automação entre dispositivos.</string>
+    <string name="settings_ai_core_plus">Ponte de inteligência</string>
+    <string name="settings_ai_core_plus_summary">APIs priorizadas de NPU e contexto de tela. Aprimora o Gemini e LLMs locais com percepção privilegiada de tela.</string>
+    <string name="settings_window_manager_plus">Ajustador de janelas</string>
     <string name="settings_window_manager_plus_summary">Controle de janelas e Bubble Bars. Usado pelo Taskbar e MacroDroid para gerenciar janelas de forma livre e overlays do sistema.</string>
+    <string name="settings_overlay_manager_plus">↳ Ponte de temas do sistema</string>
     <string name="settings_overlay_manager_plus_summary">Gerencie overlays RRO do sistema. Necessário para o Hex Installer e temas Substratum funcionarem sem root.</string>
+    <string name="settings_network_governor_plus">Governador de rede e DNS</string>
     <string name="settings_network_governor_plus_summary">Controle de rede privilegiado. Usado pelo AFWall+ para filtragem robusta em todo o sistema.</string>
+    <string name="settings_activity_manager_plus">↳ Controle avançado de processos</string>
     <string name="settings_activity_manager_plus_summary">Controle nativo de processos. Permite que MacroDroid, Tasker e Naptime forcem a parada de apps e definam buckets de standby.</string>
     <string name="settings_extra_app_found" formatted="true">App integrado detectado: %1$s. Toque para configurar.</string>
+    <string name="settings_extra_app_setup_title">Integração de configuração</string>
+    <string name="settings_extra_app_open">Abrir app</string>
     <string name="settings_extra_learn_more">Saiba mais</string>
     <string name="settings_extra_feature_help_enable">Ativar recurso</string>
     <string name="settings_extra_feature_help_close">Fechar</string>
     <string name="diagnostics_dismiss">Dispensar</string>
     <string name="diagnostics_warning_dhizuku_not_owner">O modo Dhizuku está ativado, mas o componente Device Owner não está ativo. Toque para resolver.</string>
     <string name="diagnostics_warning_shadow_binder_no_apps">O Shadow Binder está ativado, mas nenhum app foi selecionado para ocultar. Toque para selecionar.</string>
-    <string name="diagnostics_warning_battery_optimization">A otimização de bateria está ativa. O Shizuku pode ser morto em segundo plano. Toque para isentar.</string>
+    <string name="diagnostics_warning_battery_optimization">A otimização de bateria está ativa. O ReShizukuX pode ser morto em segundo plano. Toque para isentar.</string>
     <string name="diagnostics_battery_settings_open_failed">Não foi possível abrir as configurações de bateria</string>
     <string name="diagnostics_shadow_binder_navigate_hint">Vá para Central de recursos → Segurança e acesso → Shadow Binder para selecionar apps</string>
     <string name="diagnostics_device_owner_setup_title">Configurar Device Owner</string>
@@ -379,17 +442,19 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="diagnostics_disable_title">Desativar diagnósticos?</string>
     <string name="diagnostics_disable_message">Isto ocultará o painel de aviso de diagnóstico. Você pode reativá-lo a qualquer momento nas configurações avançadas.</string>
     <string name="diagnostics_disable_confirm">Desativar</string>
-    <string name="help_general_plus_summary"><![CDATA[<b>Como o ShizukuX funciona com outros apps</b><br><br>O ShizukuX oferece <i>recursos Extras exclusivos</i> (Storage Bridge, AI Bridge, Theming Bridge) acessíveis por este app e por qualquer app de terceiros que mire explicitamente a API ShizukuX (xyz.shizuku.extra.api).<br><br><b>Importante:</b> o ShizukuX é totalmente compatível com a API Shizuku original. Apps existentes que usam o Shizuku padrão (como SD Maid SE e SwiftBackup) descobrirão e funcionarão com o ShizukuX automaticamente, sem exigir atualizações de desenvolvedor.<br><br><b>Uso junto com o Shizuku padrão:</b> apenas um serviço pode ser executado por vez. O cartão Companheiro na tela inicial facilita a troca se você ainda tiver o Shizuku padrão instalado, mas é recomendável desinstalar o Shizuku padrão e usar apenas o ShizukuX.]]></string>
+    <string name="help_general_plus_summary"><![CDATA[<b>Como o ReShizukuX funciona com outros apps</b><br><br>O ReShizukuX oferece <i>recursos Extras exclusivos</i> (Storage Bridge, AI Bridge, Theming Bridge) acessíveis por este app e por qualquer app de terceiros que mire explicitamente a API ReShizukuX (xyz.shizuku.extra.api).<br><br><b>Importante:</b> o ReShizukuX é totalmente compatível com a API Shizuku original. Apps existentes que usam o Shizuku padrão (como SD Maid SE e SwiftBackup) descobrirão e funcionarão com o ReShizukuX automaticamente, sem exigir atualizações de desenvolvedor.<br><br><b>Uso junto com o Shizuku padrão:</b> apenas um serviço pode ser executado por vez. O cartão Companheiro na tela inicial facilita a troca se você ainda tiver o Shizuku padrão instalado, mas é recomendável desinstalar o Shizuku padrão e usar apenas o ReShizukuX.]]></string>
     <string name="help_dhizuku_title">Sobre o modo Dhizuku</string>
-    <string name="help_dhizuku_detail">O Dhizuku permite que o Shizuku compartilhe seus privilégios de Device Owner (DevicePolicyManager) com apps de terceiros. É essencial para apps como o Dhizuku Manager ou certas ferramentas de modo quiosque que precisam gerenciar políticas do sistema sem serem o único Device Owner.</string>
+    <string name="help_dhizuku_detail">O Dhizuku permite que o ReShizukuX compartilhe seus privilégios de Device Owner (DevicePolicyManager) com apps de terceiros. É essencial para apps como o Dhizuku Manager ou certas ferramentas de modo quiosque que precisam gerenciar políticas do sistema sem serem o único Device Owner.</string>
     <string name="help_shell_interceptor_title">Sobre o acelerador de shell</string>
-    <string name="help_shell_interceptor_detail">O acelerador de shell intercepta comandos shell padrão (am, pm, settings) e os traduz diretamente em chamadas de API do servidor Shizuku. Isso evita o alto custo de criar um novo processo /system/bin/sh para cada comando, tornando a automação no MacroDroid ou Tasker significativamente mais rápida e eficiente em bateria.</string>
+    <string name="help_shell_interceptor_detail">O acelerador de shell intercepta comandos shell padrão (am, pm, settings) e os traduz diretamente em chamadas de API do servidor ReShizukuX. Isso evita o alto custo de criar um novo processo /system/bin/sh para cada comando, tornando a automação no MacroDroid ou Tasker significativamente mais rápida e eficiente em bateria.</string>
     <string name="help_avf_manager_title">Sobre o gerenciador AVF</string>
     <string name="help_avf_manager_detail">O gerenciador do Android Virtualization Framework (AVF) permite executar máquinas virtuais Linux ou Microdroid isoladas. Em hardware compatível (Snapdragon 8 Gen 1+, Tensor G2+), isso habilita virtualização acelerada por hardware com suporte a VirtIO-GPU para executar ambientes Linux de desktop ou tarefas seguras isoladas.</string>
     <string name="help_storage_proxy_title">Sobre a Storage Bridge</string>
-    <string name="help_storage_proxy_detail">A Storage Bridge fornece acesso autenticado e de alta velocidade a caminhos restritos do sistema de arquivos, como /data/data/ (dados do app) e /data/app/ (APKs). Isso permite que ferramentas de backup como o Neo Backup funcionem sem root completo, mantendo a segurança por meio do modelo de permissão do Shizuku.</string>
+    <string name="help_storage_proxy_detail">A Storage Bridge fornece acesso autenticado e de alta velocidade a caminhos restritos do sistema de arquivos, como /data/data/ (dados do app) e /data/app/ (APKs). Isso permite que ferramentas de backup como o Neo Backup funcionem sem root completo, mantendo a segurança por meio do modelo de permissão do ReShizukuX.</string>
     <string name="help_continuity_bridge_title">Sobre a continuidade entre dispositivos</string>
-    <string name="help_continuity_bridge_detail">A ponte de continuidade permite que dispositivos ShizukuX na mesma rede transfiram tarefas e sincronizem área de transferência/estado do app. Utiliza as APIs Handoff do Android 17 (com backport quando possível) para permitir transições perfeitas de tarefas de automação entre seu telefone e tablet.</string>
+    <string name="help_continuity_bridge_detail">A ponte de continuidade permite que dispositivos ReShizukuX na mesma rede transfiram tarefas e sincronizem área de transferência/estado do app. Utiliza as APIs Handoff do Android 17 (com backport quando possível) para permitir transições perfeitas de tarefas de automação entre seu telefone e tablet.</string>
+    <string name="help_ai_core_plus_title">Sobre a Ponte de inteligência</string>
+    <string name="help_ai_core_plus_detail">A Ponte de inteligência concede aos assistentes de IA acesso privilegiado ao conteúdo da tela e ao escalonamento da NPU. Ela permite recursos como o "Circle to Search" ou contexto com percepção de tela para LLMs locais, fornecendo captura de frames de alta performance com reconhecimento de janela que ignora as restrições padrão de gravação de tela do Android.</string>
     <string name="help_window_manager_plus_title">Sobre o Window Tuner</string>
     <string name="help_window_manager_plus_detail">O Window Tuner expõe sinalizadores avançados do WindowManager que permitem forçar qualquer app para o modo de forma livre, colocá-lo em uma Bubble Bar persistente ou renderizá-lo com sobreposições sempre no topo. É uma ferramenta poderosa para multitarefa e personalização da experiência de desktop OneUI.</string>
     <string name="help_overlay_manager_plus_title">Sobre a ponte de temas do sistema</string>
@@ -398,7 +463,14 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="help_network_governor_plus_detail">O Network Governor fornece acesso privilegiado ao INetworkPolicyManager e às configurações de DNS privado. Ele pode impor POLICY_REJECT_ALL para apps individuais, fornecendo um firewall robusto de nível de sistema que funciona até em conexões Wi-Fi e 5G sem túnel VPN ativo.</string>
     <string name="help_activity_manager_plus_title">Sobre o controle profundo de processos</string>
     <string name="help_activity_manager_plus_detail">O controle profundo de processos permite que o servidor contorne as restrições padrão de hibernação e standby de apps. Ele pode forçar apps para o bucket de standby RESTRICTED ou executar um deepForceStop real (matando todos os serviços e jobs em segundo plano), essencial para ferramentas agressivas de economia de bateria.</string>
+    <string name="settings_extra_category_framework">Framework</string>
+    <string name="settings_extra_category_performance">Performance e controle de processos</string>
+    <string name="settings_extra_category_files">Arquivos e máquinas virtuais</string>
+    <string name="settings_extra_category_display">Tela e temas</string>
+    <string name="settings_extra_category_network">Rede e privacidade</string>
+    <string name="settings_extra_category_intelligence">Inteligência e continuidade</string>
     <string name="settings_extra_category_developer">Opções do desenvolvedor (experimental)</string>
+    <string name="settings_extra_category_root_compat">Módulos de compatibilidade com root</string>
     <string name="settings_root_magisk_mocking">Mocking do ambiente Magisk</string>
     <string name="settings_root_magisk_mocking_summary">Falsifica binários, propriedades e pastas internas do Magisk para enganar aplicativos de detecção de root.</string>
     <string name="settings_root_auto_grant">Bridge de aprovação automática</string>
@@ -410,54 +482,72 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="help_root_magisk_title">Sobre o mocking do Magisk</string>
     <string name="help_root_magisk_detail">Muitos apps verificam root procurando propriedades específicas do Magisk ou a pasta /sbin/.magisk. Este módulo simula esses elementos, permitindo que você use recursos exclusivos de root em apps que se recusam a iniciar sem detectar um ambiente Magisk.</string>
     <string name="help_root_auto_grant_title">Sobre a aprovação automática</string>
-    <string name="help_root_auto_grant_detail">Apps root legados costumam tentar conceder permissões a si mesmos via shell. Esta ponte escuta essas chamadas 「pm grant」 e usa os privilégios elevados do Shizuku para aprová-las instantaneamente, evitando o gerenciamento manual de permissões.</string>
+    <string name="help_root_auto_grant_detail">Apps root legados costumam tentar conceder permissões a si mesmos via shell. Esta ponte escuta essas chamadas 「pm grant」 e usa os privilégios elevados do ReShizukuX para aprová-las instantaneamente, evitando o gerenciamento manual de permissões.</string>
     <string name="help_root_file_interceptor_title">Sobre o interceptador de arquivos</string>
     <string name="help_root_file_interceptor_detail">Quando os apps copiam arquivos para /data/data usando um shell padrão, eles costumam perder a propriedade e os contextos SELinux. Este módulo adiciona automaticamente sinalizadores como --preserve=all para manter a integridade dos arquivos e evitar crashes de apps.</string>
     <string name="help_root_busybox_title">Sobre a simulação do BusyBox</string>
     <string name="help_root_busybox_detail">BusyBox é um conjunto de utilitários Unix comuns em dispositivos com root. Alguns apps root antigos verificam sua existência antes de executar sua lógica. Este módulo retorna uma resposta simulada de sucesso para o comando 「busybox」.</string>
     <string name="settings_hide_disabled_plus_features">Ocultar recursos Extras desativados</string>
     <string name="settings_hide_disabled_plus_features_summary">Ocultar recursos Extras não disponíveis neste dispositivo ou configuração</string>
+    <string name="settings_vector">Aceleração vetorial</string>
     <string name="settings_vector_summary">Ativar renderização vetorial acelerada por hardware para melhorar o desempenho gráfico</string>
-    <string name="settings_experimental_root_summary">Ative a camada de compatibilidade para operações baseadas em root via Shizuku</string>
+    <string name="settings_experimental_root">Compatibilidade com root</string>
+    <string name="settings_experimental_root_summary">Ative a camada de compatibilidade para operações baseadas em root via ReShizukuX</string>
+    <string name="settings_spoof_device">Falsear identidade do dispositivo</string>
     <string name="settings_spoof_device_summary">Relatar um modelo de dispositivo diferente aos apps para fins de compatibilidade ou teste</string>
+    <string name="settings_avf_manager_experimental">Gerenciador de máquinas virtuais (AVF) (experimental)</string>
+    <string name="settings_ai_core_plus_experimental">Ponte de inteligência (experimental)</string>
     <string name="settings_vector_experimental">Aceleração vetorial</string>
     <string name="settings_experimental_root_experimental">Compatibilidade Root experimental</string>
     <string name="settings_spoof_device_experimental">Falsificar identidade do dispositivo</string>
     <string name="settings_open_source_licenses">Licenças de código aberto</string>
-    <string name="settings_open_source_licenses_summary">Bibliotecas de código aberto usadas pelo ShizukuX</string>
+    <string name="settings_open_source_licenses_summary">Bibliotecas de código aberto usadas pelo ReShizukuX</string>
     <string name="settings_experimental_warning_title">Recurso experimental</string>
     <string name="settings_experimental_warning_message">Este recurso é experimental e pode causar instabilidade ou crashes no sistema. Tem certeza de que deseja ativá-lo?</string>
     <string name="settings_spoof_target">Dispositivo de destino</string>
+    <string name="settings_category_root_integration">Integração root</string>
+    <string name="settings_nav_root_integration_summary">Ponte SU, proxy ADB e gerenciamento de sessões root</string>
     <string name="settings_adb_proxy">Servidor proxy ADB local</string>
     <string name="settings_adb_proxy_summary">Emular um servidor ADB na porta 15555 para suportar apps que exigem ADB sem fio sem manter o recurso do sistema ativo.</string>
     <string name="settings_on_device_adb_tcp">ADB no dispositivo via TCP</string>
-    <string name="settings_on_device_adb_tcp_summary">Ative o modo ADB TCP (porta 5555) diretamente no dispositivo. Requer Shizuku com root. Útil para ferramentas ADB sem Wi-Fi.</string>
+    <string name="settings_on_device_adb_tcp_summary">Ative o modo ADB TCP (porta 5555) diretamente no dispositivo. Requer ReShizukuX com root. Útil para ferramentas ADB sem Wi-Fi.</string>
     <string name="settings_force_start_wadb">Ignorar verificação de Wi-Fi para WADB</string>
-    <string name="settings_force_start_wadb_summary">Tentar iniciar o Shizuku via ADB TCP mesmo se o Wi-Fi estiver desconectado. Útil para loopback local ou ADB por dados móveis.</string>
+    <string name="settings_force_start_wadb_summary">Tentar iniciar o ReShizukuX via ADB TCP mesmo se o Wi-Fi estiver desconectado. Útil para loopback local ou ADB por dados móveis.</string>
     <string name="settings_fake_su">SU Bridge (wrapper su)</string>
-    <string name="settings_fake_su_summary">Fornecer um binário 「su」 baseado em Shizuku para apps root legados que suportam caminhos personalizados.</string>
+    <string name="settings_fake_su_summary">Fornecer um binário 「su」 baseado em ReShizukuX para apps root legados que suportam caminhos personalizados.</string>
+    <string name="settings_root_integration_hub">Central de integração root</string>
+    <string name="settings_root_integration_hub_summary">Configure e gerencie apps root para funcionarem com os privilégios do ReShizukuX.</string>
+    <string name="settings_root_compatibility_hub">Central de compatibilidade root</string>
+    <string name="settings_root_compatibility_hub_summary">Configure e gerencie apps root para funcionarem com os privilégios do ReShizukuX.</string>
     <string name="su_bridge_title">SU Bridge</string>
     <string name="su_bridge_hub_title">SU Bridge (página completa)</string>
     <string name="su_bridge_hub_summary">Identidade do dispositivo, guia de uso, apps recomendados e configuração mágica</string>
-    <string name="su_bridge_description">Forneça acesso root a apps que não suportam Shizuku criando um binário 「su」 personalizado.</string>
+    <string name="su_bridge_description">Forneça acesso root a apps que não suportam ReShizukuX criando um binário 「su」 personalizado.</string>
     <string name="su_bridge_suggested_apps">Apps sugeridos</string>
     <string name="su_bridge_suggested_apps_desc">Estes apps suportam caminhos SU personalizados. Aponte-os para o seu script 「su」 exportado.</string>
     <string name="su_bridge_global_config_title">Configuração global</string>
     <string name="su_bridge_global_config_desc">Defina um caminho personalizado para o script da SU bridge. Os apps executarão este caminho ao solicitar root.</string>
     <string name="su_bridge_setup_all">Configurar tudo</string>
+    <string name="su_bridge_setup_all_success">Configuração automática tentada para todos os apps compatíveis.</string>
     <string name="su_bridge_magic_setup">Configuração mágica</string>
-    <string name="su_bridge_magic_setup_success">Configuração mágica concluída! O ShizukuX configurou o %s para você.</string>
+    <string name="su_bridge_magic_setup_success">Configuração mágica concluída! O ReShizukuX configurou o %s para você.</string>
     <string name="su_bridge_magic_setup_fail">Falha na configuração mágica. Use o caminho de cópia manual.</string>
-    <string name="su_bridge_magic_setup_all_summary">O ShizukuX configurou %d apps para você!</string>
+    <string name="su_bridge_magic_setup_all">Configuração mágica em todos</string>
+    <string name="su_bridge_magic_setup_all_summary">O ReShizukuX configurou %d apps para você!</string>
     <string name="su_bridge_magic_setup_all_no_apps">Nenhum app root suportado encontrado para automação.</string>
     <string name="su_bridge_copy_open">Copiar caminho e abrir</string>
-    <string name="su_bridge_no_export">Nenhum caminho SU definido. Exporte os arquivos do Shizuku primeiro pela tela inicial.</string>
-    <string name="root_hub_shizuku_aware_note">A SU Bridge fornece acesso semelhante ao root para dispositivos sem root. No entanto, o "Magic Setup" (configuração automática) requer o Shizuku em modo Root para modificar outros apps. No modo ADB, use "Copiar caminho" e configure seus apps manualmente.</string>
+    <string name="su_bridge_no_export">Nenhum caminho SU definido. Exporte os arquivos do ReShizukuX primeiro pela tela inicial.</string>
+    <string name="root_hub_shizuku_aware_note">A SU Bridge fornece acesso semelhante ao root para dispositivos sem root. No entanto, o "Magic Setup" (configuração automática) requer o ReShizukuX em modo Root para modificar outros apps. No modo ADB, use "Copiar caminho" e configure seus apps manualmente.</string>
+    <string name="su_bridge_magic_setup_root_required">A Configuração mágica exige o ReShizukuX em modo Root.</string>
+    <string name="su_bridge_no_custom_path_support">Este app não tem configuração de caminho personalizado. Requer root real.</string>
+    <string name="su_bridge_manual_setup_required">Configuração manual necessária no modo ADB</string>
     <string name="su_bridge_how_to_use">Como usar:</string>
-    <string name="su_bridge_step_1">1. Exporte os arquivos do Shizuku pela tela inicial.</string>
+    <string name="su_bridge_step_1">1. Exporte os arquivos do ReShizukuX pela tela inicial.</string>
     <string name="su_bridge_step_2">2. No seu app root, procure por "SU Path" ou "Binary Path" nas configurações.</string>
     <string name="su_bridge_step_3">3. Mude para o caminho do arquivo 「su」 exportado.</string>
-    <string name="su_bridge_step_4">4. Para apps sem configuração de caminho personalizado, ative a "SU Bridge" nas configurações do ShizukuX. Isso redireciona automaticamente muitas chamadas su legadas.</string>
+    <string name="su_bridge_step_4">4. Para apps sem configuração de caminho personalizado, ative a "SU Bridge" nas configurações do ReShizukuX. Isso redireciona automaticamente muitas chamadas su legadas.</string>
+    <string name="su_bridge_app_instruction">Defina o caminho em Configurações > %s</string>
+    <string name="su_bridge_path_label">Caminho do su exportado</string>
     <string name="su_bridge_su_path_label">Caminho su exportado</string>
     <string name="su_bridge_copy_path">Copiar caminho</string>
     <string name="su_bridge_default_nav_hint">Definir caminho SU personalizado nas configurações do app</string>
@@ -474,16 +564,27 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="su_bridge_device_identity_real">Real: %s</string>
     <string name="su_bridge_device_identity_spoofed">Falsificado: %s</string>
     <string name="su_bridge_device_identity_none">Nenhum (dispositivo real mostrado)</string>
+    <string name="sentry_offline_notice_title">Relatório de falhas offline</string>
+    <string name="sentry_offline_notice_summary">O relatório automático de falhas via Sentry está desativado no momento devido a limites de cota (reinicia em 1º de maio). Reporte quaisquer falhas manualmente.</string>
     <string name="sentry_offline_notice_button">Saiba mais</string>
+    <string name="sentry_offline_notice_learn_more">O Sentry está offline no momento. Se o app falhar ou se comportar de forma inesperada, gere um relatório manualmente e poste em nosso rastreador de Issues do GitHub. Isso nos ajuda a corrigir bugs mesmo enquanto nossos sistemas automáticos estão pausados.</string>
     <string name="manual_report_title">Relatório manual de crash</string>
     <string name="manual_report_summary">Gere um relatório detalhado com logs para nos ajudar a depurar problemas manualmente.</string>
+    <string name="manual_report_button_generate">Gerar e copiar</string>
     <string name="manual_report_button_github">Copiar relatório e ir ao GitHub</string>
     <string name="manual_report_toast_copied">Relatório copiado! Cole-o no problema do GitHub.</string>
     <string name="manual_report_last_crash_title">Relatar último crash</string>
     <string name="manual_report_last_crash_summary">Um crash persistente foi detectado. Toque para gerar um relatório com o stacktrace salvo.</string>
     <string name="manual_report_clipboard_label">Relatório de crash</string>
+    <string name="manual_report_clear_dialog_title">Limpar falha salva?</string>
+    <string name="manual_report_clear_dialog_message">Agora que o relatório foi copiado, você gostaria de limpar os dados da falha salva?</string>
+    <string name="manual_report_clear_dialog_clear">Limpar</string>
+    <string name="manual_report_clear_dialog_keep">Manter</string>
+    <string name="manual_report_copied_dialog_title">Relatório copiado</string>
+    <string name="manual_report_copied_dialog_message">O relatório foi copiado para a área de transferência. Você gostaria de abrir o GitHub Issues agora, ou compartilhar o relatório como arquivo?</string>
     <string name="manual_report_copied_dialog_share">Compartilhar arquivo</string>
-    <string name="crash_detected_dialog_message">O ShizukuX detectou um crash da sua última sessão. Deseja gerar um relatório para nos ajudar a corrigi-lo?</string>
+    <string name="crash_detected_dialog_message">O ReShizukuX detectou um crash da sua última sessão. Deseja gerar um relatório para nos ajudar a corrigi-lo?</string>
+    <string name="crash_detected_dialog_short_message">O relatório foi copiado. Abra o GitHub para colá-lo, ou compartilhe o relatório como arquivo?</string>
     <string name="crash_detected_dialog_ignore">Ignorar</string>
     <string name="shortcut_open_terminal">Abrir terminal</string>
     <string name="watchdog_shizuku_crashed_action_report_manually">Relatar manualmente</string>
@@ -498,40 +599,49 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="bug_report_dialog_method_2">Caso contrário, você pode enviar um e-mail.</string>
     <string name="bug_report_dialog_button_email">E-mail</string>
     <string name="bug_report_email_subject">Relatório de bug</string>
-    <string name="bug_report_email_body" formatted="true">Descreva o bug. Se possível, inclua etapas de reprodução e capturas de tela ou logs relevantes.\n\nDispositivo: %1$s\n\nVersão do Android: %2$s\n\nVersão do Shizuku: %3$s</string>
+    <string name="bug_report_email_body" formatted="true">Descreva o bug. Se possível, inclua etapas de reprodução e capturas de tela ou logs relevantes.\n\nDispositivo: %1$s\n\nVersão do Android: %2$s\n\nVersão do ReShizukuX: %3$s</string>
     <string name="home_service_doctor_title">Service Doctor</string>
-    <string name="home_service_doctor_summary">Problemas para iniciar o Shizuku? Toque para executar uma verificação de diagnóstico.</string>
+    <string name="home_service_doctor_summary">Problemas para iniciar o ReShizukuX? Toque para executar uma verificação de diagnóstico.</string>
+    <string name="doctor_dialog_title">Diagnósticos do sistema</string>
     <string name="doctor_check_battery" formatted="true">Otimização de bateria: %1$s</string>
     <string name="doctor_check_adb" formatted="true">Depuração sem fio: %1$s</string>
     <string name="doctor_check_root" formatted="true">Acesso root: %1$s</string>
     <string name="doctor_check_secure_settings" formatted="true">Configurações seguras: %1$s</string>
     <string name="doctor_check_permission" formatted="true">Permissão ADB: %1$s</string>
-    <string name="doctor_check_server" formatted="true">Servidor Shizuku: %1$s</string>
+    <string name="doctor_check_server" formatted="true">Servidor ReShizukuX: %1$s</string>
     <string name="doctor_check_server_version">Versão do servidor</string>
     <string name="doctor_tip_server_version"><![CDATA[O servidor não informou sua versão (a tela inicial mostra "versão 0"), o que significa que ele não iniciou corretamente ou está sendo restringido. Em OPPO/OnePlus, feche o "monitor de permissões" nas opções do desenvolvedor (um interruptor separado do ColorOS 12+; se ausente, mude o idioma do dispositivo para inglês e desative "Desativar otimização do sistema") e reinicie o telefone.]]></string>
     <string name="doctor_check_background" formatted="true">Limites de segundo plano: %1$s</string>
     <string name="doctor_check_accessibility">Serviço de acessibilidade</string>
+    <string name="doctor_check_maximum_restrictions">Restrições máximas (One UI 8)</string>
     <string name="doctor_status_ok">OK</string>
     <string name="doctor_status_running">Em execução</string>
     <string name="doctor_status_stopped">Parado</string>
     <string name="doctor_status_limited">Limitado (ADB restrito)</string>
+    <string name="doctor_status_restricted">Restrito (otimização do sistema ativada)</string>
     <string name="doctor_status_not_enabled">Não ativado</string>
     <string name="doctor_status_optimized">Otimizado (pode matar o serviço)</string>
+    <string name="doctor_status_unlocked">Desbloqueado</string>
+    <string name="doctor_status_restricted_bg">Execução em segundo plano restrita</string>
+    <string name="doctor_status_enabled_turn_off">Ativado (desligar)</string>
+    <string name="doctor_status_enabled_must_off">Ativado (deve estar desligado)</string>
     <string name="doctor_tip_xiaomi">Xiaomi/HyperOS: ative "Depuração USB (configurações de segurança)" nas opções do desenvolvedor.</string>
     <string name="doctor_tip_oppo_permission">Oppo/Realme/OnePlus: desative o "Monitor de permissões" nas opções do desenvolvedor para evitar mortes de serviços em segundo plano.</string>
-    <string name="doctor_tip_tcl_background">TCL: adicione o ShizukuX às listas de permissão "Início automático" e "Alto consumo de energia em segundo plano" nas Configurações.</string>
-    <string name="doctor_tip_battery">Desative a otimização de bateria do ShizukuX para evitar que ele seja morto em segundo plano.</string>
-    <string name="doctor_tip_adb">A depuração sem fio deve estar ativa para o Shizuku iniciar em modo não-root após uma reinicialização.</string>
+    <string name="doctor_tip_tcl_background">TCL: adicione o ReShizukuX às listas de permissão "Início automático" e "Alto consumo de energia em segundo plano" nas Configurações.</string>
+    <string name="doctor_tip_battery">Desative a otimização de bateria do ReShizukuX para evitar que ele seja morto em segundo plano.</string>
+    <string name="doctor_tip_adb">A depuração sem fio deve estar ativa para o ReShizukuX iniciar em modo não-root após uma reinicialização.</string>
     <string name="doctor_button_fix">Corrigir</string>
     <string name="snackbar_invalid_port">A porta deve estar entre 1 e 65535</string>
     <string name="snackbar_battery_optimization_home">A otimização de bateria deve ser desativada para que o início na inicialização/watchdog funcione corretamente.</string>
     <string name="snackbar_battery_optimization_settings">Desative a otimização de bateria para usar este recurso.</string>
     <string name="snackbar_action_fix">Corrigir</string>
-    <string name="snackbar_server_version_skew">O ShizukuX foi atualizado, mas o serviço em execução ainda está na versão antiga. Reinicie-o para que os apps conectados continuem funcionando.</string>
+    <string name="snackbar_server_version_skew">O ReShizukuX foi atualizado, mas o serviço em execução ainda está na versão antiga. Reinicie-o para que os apps conectados continuem funcionando.</string>
     <string name="snackbar_action_restart">Reiniciar</string>
     <string name="toast_no_email_app">Nenhum app de e-mail encontrado</string>
+    <string name="toast_shizuku_already_starting">O ReShizukuX já está iniciando em segundo plano</string>
     <string name="toast_accessibility_tv_only">Esta automação é para TVs ou dispositivos Samsung One UI com suporte a TLS.</string>
-    <string name="toast_pairing_timeout">O serviço de pareamento do Shizuku expirou</string>
+    <string name="toast_pairing_timeout">O serviço de pareamento do ReShizukuX expirou</string>
+    <string name="toast_adb_ssl_error">Falha no handshake do ADB sem fio (erro de protocolo SSL). Use Redefinir chaves do ADB nas opções do desenvolvedor e tente novamente.</string>
     <string name="adb_error_ssl_title">Erro de conexão</string>
     <string name="adb_error_ssl_message">Falha no handshake do ADB sem fio (erro de protocolo SSL). Geralmente ocorre quando as chaves do ADB estão corrompidas. Deseja redefini-las nas opções do desenvolvedor?</string>
     <string name="adb_error_ssl_button_reset">Ir para opções do desenvolvedor</string>
@@ -540,10 +650,12 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="dark_theme_on">Sempre escuro</string>
     <string name="follow_system">Seguir sistema</string>
     <string name="settings_about">Sobre</string>
+    <string name="action_about">Sobre</string>
     <string name="about_dialog_button_close">Fechar</string>
     <string name="about_view_source_code_title">Código-fonte</string>
     <string name="about_changelog_title">Novidades</string>
     <string name="about_changelog_summary">O que há de novo nesta versão</string>
+    <string name="about_changelog_loading">Carregando o changelog desta versão…</string>
     <string name="about_website_title">Site oficial</string>
     <string name="about_qq_group_title">Grupo oficial do QQ</string>
     <string name="about_qq_group_summary">Grupo: 712125973</string>
@@ -551,9 +663,15 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="about_view_source_code"><![CDATA[Ver código-fonte no %s]]></string>
     <string name="start">Iniciar</string>
     <string name="stop">Parar</string>
-    <string name="action_stop">Parar Shizuku</string>
-    <string name="dialog_stop_message">O serviço Shizuku será parado.</string>
+    <string name="action_stop">Parar ReShizukuX</string>
+    <string name="dialog_stop_message">O serviço ReShizukuX será parado.</string>
+    <string name="notification_channel_automation">Monitor de rede</string>
+    <string name="notification_automation_title">Aguardando redes conhecidas para iniciar o ReShizukuX automaticamente</string>
+    <string name="notification_channel_service_status">Status de início do serviço</string>
+    <string name="notification_service_starting">O serviço ReShizukuX está iniciando…</string>
+    <string name="notification_service_start_failed">Falha ao iniciar o serviço ReShizukuX.</string>
     <string name="notification_service_start_no_root">Falha ao solicitar permissão root.</string>
+    <string name="notification_working">Trabalhando…</string>
     <string name="notification_channel_adb_pairing">Pareamento de depuração sem fio</string>
     <string name="notification_adb_pairing_input_paring_code">Inserir código de pareamento</string>
     <string name="notification_adb_pairing_searching_for_service_title">Procurando serviço de pareamento</string>
@@ -562,12 +680,14 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="notification_adb_pairing_working_title">Pareamento em andamento</string>
     <string name="notification_adb_pairing_starting_title">Pareamento bem-sucedido, iniciando serviço…</string>
     <string name="notification_adb_pairing_starting_text">Conectando à porta de depuração sem fio</string>
-    <string name="starter_local_network_permission_rationale">O ShizukuX precisa de acesso à rede local para descobrir o serviço de depuração sem fio e concluir o pareamento. Conceda a permissão para continuar.</string>
+    <string name="starter_local_network_permission_needed">A permissão de rede local é necessária para descobrir o serviço de depuração sem fio e parear. Conceda-a no diálogo de permissão e tente novamente.</string>
+    <string name="starter_local_network_permission_rationale">O ReShizukuX precisa de acesso à rede local para descobrir o serviço de depuração sem fio e concluir o pareamento. Conceda a permissão para continuar.</string>
     <string name="starter_local_network_permission_denied">A permissão de rede local está desativada. Ative-a nas configurações do sistema para usar a depuração sem fio.</string>
     <string name="starter_go_settings">Abrir configurações</string>
-    <string name="local_network_denied_dialog_message">A permissão de rede local foi negada. O ShizukuX pode não conseguir descobrir o serviço de pareamento. Conceda-a para continuar, ou cancele para tentar mesmo assim.</string>
+    <string name="local_network_denied_hint">Permissão de rede local negada. O pareamento pode falhar — conceda-a nas configurações se a descoberta não funcionar.</string>
+    <string name="local_network_denied_dialog_message">A permissão de rede local foi negada. O ReShizukuX pode não conseguir descobrir o serviço de pareamento. Conceda-a para continuar, ou cancele para tentar mesmo assim.</string>
     <string name="notification_adb_pairing_succeed_title">Pareamento bem-sucedido</string>
-    <string name="notification_adb_pairing_succeed_text">Você já pode iniciar o serviço Shizuku.</string>
+    <string name="notification_adb_pairing_succeed_text">Você já pode iniciar o serviço ReShizukuX.</string>
     <string name="notification_adb_pairing_failed_title">Falha no pareamento</string>
     <string name="notification_adb_pairing_retry">Tentar novamente</string>
     <string name="notification_auth_missing_title">Token de autenticação necessário</string>
@@ -585,6 +705,8 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="starting_root_shell" translatable="false">Starting root shell…</string>
     <string name="start_with_root_failed">Não é possível iniciar o serviço porque a permissão root não foi concedida ou este dispositivo não tem root.</string>
     <string name="starter_waiting">Aguardando serviço…</string>
+    <string name="starter_waiting_description">Conectando — toque em Cancelar para parar.</string>
+    <string name="starter_retrying">Tentando conectar novamente…\n</string>
     <string name="starter_retry">Tentar novamente</string>
     <string name="starter_step_detect_port">Detectar porta ADB</string>
     <string name="starter_step_detect_port_running">Detectando porta de depuração sem fio…</string>
@@ -596,6 +718,7 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="starter_step_need_pairing">Ainda não pareado, pareamento necessário</string>
     <string name="starter_step_pairing">Parear depuração sem fio</string>
     <string name="starter_step_pairing_hint">Vá para Opções do desenvolvedor → Depuração sem fio → Parear dispositivo com código de pareamento e insira o código na notificação</string>
+    <string name="starter_step_pairing_waiting">Aguardando pareamento…</string>
     <string name="starter_step_pairing_done">Pareamento bem-sucedido</string>
     <string name="starter_step_enable_wireless">Ativar depuração sem fio</string>
     <string name="starter_step_enable_wireless_hint">Nenhuma porta de depuração sem fio encontrada. Ative-a primeiro: Opções do desenvolvedor → Depuração sem fio</string>
@@ -604,11 +727,12 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="starter_step_enable_wireless_done">Concluí, continuar</string>
     <string name="starter_step_enable_wireless_auto">Depuração sem fio ativada</string>
     <string name="starter_step_start_service">Iniciar serviço</string>
+    <string name="starter_step_start_service_running">Iniciando o processo do serviço…</string>
     <string name="starter_step_start_service_done">Processo do serviço iniciado</string>
     <string name="starter_step_wait_binder">Aguardar serviço</string>
-    <string name="starter_step_wait_binder_running">Aguardando serviço Shizuku…</string>
+    <string name="starter_step_wait_binder_running">Aguardando serviço ReShizukuX…</string>
     <string name="starter_step_complete">Concluído</string>
-    <string name="starter_step_complete_desc">Shizuku iniciado com sucesso</string>
+    <string name="starter_step_complete_desc">ReShizukuX iniciado com sucesso</string>
     <string name="starter_step_check_root">Verificar permissão root</string>
     <string name="starter_step_check_root_running">Verificando permissão root…</string>
     <string name="starter_step_check_root_done">Permissão root adquirida</string>
@@ -616,34 +740,50 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="starter_step_start_root_running">Iniciando serviço com root…</string>
     <string name="starter_step_start_root_done">Processo do serviço iniciado</string>
     <string name="starter_step_connecting">Conectando…</string>
+    <string name="starter_step_connected">Conectado</string>
     <string name="starter_btn_open_log">Ver log</string>
     <string name="starter_btn_hide_log">Ocultar log</string>
+    <string name="starter_already_running">O ReShizukuX já está em execução</string>
     <string name="starter_waiting_pairing">Insira o código de pareamento na notificação</string>
+    <string name="starter_pairing_failed">Falha no pareamento, tente novamente</string>
+    <string name="starter_cancel">Cancelar</string>
     <string name="starter_done">Concluído</string>
     <string name="adb_error_timeout">O serviço não iniciou a tempo. Verifique se o depuração sem fio está ativado e tente novamente.</string>
     <string name="adb_error_generic">Ocorreu um erro inesperado. Tente novamente.</string>
-    <string name="wadb_notification_title">Iniciando Shizuku…</string>
+    <string name="wadb_notification_title">Iniciando ReShizukuX…</string>
     <string name="wadb_notification_wifi_required">Aguardando conexão Wi-Fi antes de prosseguir</string>
     <string name="wadb_notification_retry">Aguardando para tentar novamente</string>
     <string name="wadb_error_title">Erro ao iniciar na inicialização</string>
     <string name="wadb_error_notify_dev">Toque para notificar o desenvolvedor.</string>
     <string name="wadb_permission_error_notification_title">Erro de permissão</string>
-    <string name="wadb_permission_error_notification_content">O Shizuku precisa de WRITE_SECURE_SETTINGS para iniciar na inicialização. Toque para saber como concedê-la.</string>
+    <string name="wadb_permission_error_notification_content">O ReShizukuX precisa de WRITE_SECURE_SETTINGS para iniciar na inicialização. Toque para saber como concedê-la.</string>
+    <string name="wadb_notification_channel">Serviço de início automático do ADB</string>
     <string name="watchdog_running">O watchdog está em execução</string>
     <string name="watchdog_turn_off">Desativar</string>
-    <string name="watchdog_shizuku_crashed_title">O Shizuku travou recentemente</string>
+    <string name="watchdog_shizuku_crashed_title">O ReShizukuX travou recentemente</string>
     <string name="watchdog_shizuku_crashed_text">O watchdog reiniciou o serviço. Toque para saber sobre correções potenciais para evitar futuros crashes.</string>
     <string name="watchdog_shizuku_crashed_action_turn_off_alerts">Desativar alertas</string>
     <string name="dialog_cannot_open_browser_title">Não foi possível iniciar o navegador</string>
     <string name="toast_copied_to_clipboard">Copiado para a área de transferência</string>
-    <string name="accessibility_service_label">Assistente de pareamento do ShizukuX</string>
-    <string name="accessibility_service_description">Pareia o ShizukuX automaticamente: enquanto o pop-up do sistema "Parear com dispositivo" estiver aberto, o ShizukuX lê o código de pareamento na tela e conclui o pareamento automaticamente — sem precisar digitar o código na notificação.\n\nÉ útil em todos os dispositivos e essencial em ROMs onde o pop-up expira ao fechar. Desativa automaticamente após o pareamento.</string>
+    <string name="accessibility_service_label">Assistente de pareamento do ReShizukuX</string>
+    <string name="accessibility_service_description">Pareia o ReShizukuX automaticamente: enquanto o pop-up do sistema "Parear com dispositivo" estiver aberto, o ReShizukuX lê o código de pareamento na tela e conclui o pareamento automaticamente — sem precisar digitar o código na notificação.\n\nÉ útil em todos os dispositivos e essencial em ROMs onde o pop-up expira ao fechar. Desativa automaticamente após o pareamento.</string>
     <string name="dialog_legacy_not_support_title" formatted="true">%1$s não suporta o Shizuku moderno</string>
     <string name="dialog_legacy_not_support_message" formatted="true"><![CDATA[O Shizuku legado está obsoleto desde março de 2019. Além disso, o Shizuku legado não funciona em sistemas Android mais novos.<p>Peça ao desenvolvedor de <b>%1$s</b> para atualizar.]]></string>
     <string name="dialog_requesting_legacy_title" formatted="true">%1$s está solicitando o Shizuku legado</string>
     <string name="dialog_requesting_legacy_message" formatted="true"><![CDATA[<b>%1$s</b> tem suporte ao Shizuku moderno, mas está solicitando o Shizuku legado. Isso pode acontecer porque o Shizuku não está em execução — verifique no app Shizuku.<p>O Shizuku legado está obsoleto desde março de 2019.]]></string>
     <string name="dialog_requesting_legacy_button_open_shizuku">Abrir Shizuku</string>
     <string name="wadb_notification_attempt_now">Tentar agora</string>
+    <string name="settings_category_general">Geral</string>
+    <string name="settings_category_dark_mode">Modo escuro</string>
+    <string name="settings_category_automatic">Automático</string>
+    <string name="settings_category_swipe">Ações de deslizar</string>
+    <string name="settings_category_long_press">Ações de pressionar e segurar</string>
+    <string name="settings_category_home_cards">Cartões da tela inicial</string>
+    <string name="settings_category_activity_log">Registro de atividades</string>
+    <string name="settings_category_database">Banco de dados</string>
+    <string name="settings_category_network">Rede</string>
+    <string name="settings_category_material_you">Material You</string>
+    <string name="settings_category_language">Idioma</string>
     <string name="settings_category_appearance">Aparência</string>
     <string name="settings_main_category_capabilities">Recursos</string>
     <string name="settings_main_category_personalization">Personalização</string>
@@ -666,9 +806,17 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="settings_accent_ocean_applied">Deep Ocean aplicado</string>
     <string name="settings_accent_default_applied">Azul padrão (padrão)</string>
     <string name="fake_adb_pairing_title">Permitir conexão ADB falsa?</string>
-    <string name="fake_adb_pairing_message" formatted="true">Um app está tentando se conectar ao ShizukuX via servidor ADB local falso.\n\nImpressão digital da chave RSA:\n%1$s</string>
+    <string name="fake_adb_pairing_message" formatted="true">Um app está tentando se conectar ao ReShizukuX via servidor ADB local falso.\n\nImpressão digital da chave RSA:\n%1$s</string>
     <string name="fake_adb_pairing_allow">Permitir</string>
     <string name="fake_adb_pairing_deny">Negar</string>
+    <string name="settings_category_advanced">Avançado</string>
+    <string name="settings_nav_behavior_summary">Iniciar na inicialização, Watchdog e modo TCP</string>
+    <string name="settings_nav_shizuku_plus_summary">API aprimorada, interceptador de shell e mais</string>
+    <string name="settings_nav_ui_summary">Tema, cores, idioma</string>
+    <string name="settings_nav_app_management_summary">Ações de deslizar e pressionar e segurar</string>
+    <string name="settings_nav_home_summary">Cartões visíveis e atalhos</string>
+    <string name="settings_nav_legacy_summary">Proxy ADB, ponte SU e compatibilidade root</string>
+    <string name="settings_nav_advanced_summary">Diagnósticos, registros, ajuda</string>
     <string name="accessibility_icon_server_status">Ícone de status do servidor</string>
     <string name="home_banner_description">Banner do tema</string>
     <string name="accessibility_icon_app_management">Ícone de gerenciamento de apps</string>
@@ -679,9 +827,18 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="accessibility_icon_automation">Ícone de automação</string>
     <string name="accessibility_icon_learn_more">Ícone de saiba mais</string>
     <string name="accessibility_icon_warning">Ícone de aviso</string>
+    <string name="accessibility_icon_help">Ícone de ajuda</string>
     <string name="accessibility_icon_drag_handle">Arrastar para reordenar</string>
     <string name="accessibility_icon_remove">Remover cartão</string>
+    <string name="accessibility_icon_close">Fechar</string>
     <string name="accessibility_icon_info">Informações</string>
+    <string name="accessibility_icon_play">Reproduzir</string>
+    <string name="accessibility_icon_settings">Configurações</string>
+    <string name="accessibility_icon_code">Código</string>
+    <string name="accessibility_icon_open_in_new">Abrir em nova aba</string>
+    <string name="accessibility_icon_link">Link</string>
+    <string name="accessibility_icon_restart">Reiniciar</string>
+    <string name="accessibility_icon_start">Iniciar</string>
     <string name="accessibility_button_start">Botão de iniciar</string>
     <string name="accessibility_button_restart">Botão de reiniciar</string>
     <string name="accessibility_button_view_command">Botão de ver comando</string>
@@ -690,19 +847,80 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="accessibility_state_collapsed">Recolhido</string>
     <string name="accessibility_button_view_intents">Botão de ver intents</string>
     <string name="accessibility_button_pairing">Botão de pareamento</string>
+    <string name="accessibility_button_developer_options">Botão de opções do desenvolvedor</string>
+    <string name="accessibility_button_notification_settings">Botão de configurações de notificação</string>
+    <string name="accessibility_button_export_files">Botão de exportar arquivos</string>
+    <string name="accessibility_button_activity_log">Botão de registro de atividades</string>
+    <string name="accessibility_swipe_right">Deslize para a direita para ação rápida</string>
+    <string name="accessibility_swipe_left">Deslize para a esquerda para ação rápida</string>
+    <string name="accessibility_action_grant_permission">Conceder permissão do Shizuku</string>
+    <string name="accessibility_action_revoke_permission">Revogar permissão do Shizuku</string>
+    <string name="accessibility_action_open_app">Abrir aplicativo</string>
+    <string name="accessibility_action_app_info">Abrir configurações de informações do app</string>
+    <string name="accessibility_action_hide_app">Ocultar da lista</string>
+    <string name="accessibility_action_unhide_app">Reexibir na lista</string>
+    <string name="accessibility_action_toggle_selection">Alternar seleção</string>
+    <string name="accessibility_action_expand">Expandir</string>
+    <string name="accessibility_action_collapse">Recolher</string>
+    <string name="accessibility_status_running">Em execução</string>
+    <string name="accessibility_status_stopped">Parado</string>
+    <string name="accessibility_status_error">Erro</string>
+    <string name="accessibility_permission_granted">Permissão concedida</string>
+    <string name="accessibility_permission_denied">Permissão negada</string>
     <string name="empty_state_title_no_results">Nenhum resultado encontrado</string>
     <string name="empty_state_description_no_results">Nenhum app corresponde ao seu filtro ou critério de pesquisa atual.</string>
+    <string name="empty_state_title_no_apps">Nenhum app ainda</string>
+    <string name="empty_state_description_no_apps">Apps que solicitaram ou declararam a permissão do Shizuku aparecerão aqui.</string>
     <string name="empty_state_title_no_home_cards">Todos os cartões ocultos</string>
     <string name="empty_state_description_no_home_cards">Você ocultou todos os cartões da tela inicial. Vá para as Configurações para restaurá-los.</string>
     <string name="empty_state_action_restore_home_cards">Restaurar cartões</string>
+    <string name="empty_state_title_no_plus_features">Todos os recursos desativados</string>
+    <string name="empty_state_description_no_plus_features">Você desativou todos os recursos do ReShizukuX. Ative os recursos para vê-los aqui.</string>
     <string name="empty_state_title_activity_log_empty">Nenhuma atividade registrada</string>
     <string name="empty_state_description_activity_log_empty">Chamadas e eventos da API Shizuku aparecerão aqui quando o registro de atividades estiver ativado.</string>
+    <string name="empty_state_title_hidden_apps">Nenhum app oculto</string>
+    <string name="empty_state_description_hidden_apps">Apps que você ocultar da lista de gerenciamento aparecerão aqui.</string>
+    <string name="settings_update_category">Atualização automática</string>
+    <string name="settings_update_title">Atualizações</string>
+    <string name="settings_update_summary">Verificar atualizações do app e configurar atualização automática</string>
     <string name="settings_developer_options">Opções do desenvolvedor</string>
     <string name="settings_developer_options_summary">Virtualização, falsificação de dispositivo e recursos experimentais</string>
+    <string name="settings_developer_category_virtualization">Virtualização</string>
+    <string name="settings_developer_category_experimental">Experimental</string>
+    <string name="settings_auto_update_title">Verificar atualizações automaticamente</string>
+    <string name="settings_auto_update_summary">Verifica novas versões automaticamente ao iniciar o app</string>
+    <string name="settings_auto_install_title">Instalar atualizações automaticamente</string>
+    <string name="settings_auto_install_summary">Baixa e solicita automaticamente a instalação de atualizações (requer permissão)</string>
+    <string name="settings_update_channel_category">Canal de lançamento</string>
+    <string name="settings_update_channel_title">Canal de atualização</string>
     <string name="update_channel_stable">Estável</string>
     <string name="update_channel_dev">Desenvolvimento</string>
+    <string name="update_channel_dev_warning_title">Mudar para o canal Dev?</string>
+    <string name="update_channel_dev_warning_message">Compilações de desenvolvimento e pré-lançamento de qianyumeng0228/ReShizukuX podem conter bugs, falhas ou mudanças disruptivas. Use isso apenas se quiser testar novos recursos antecipadamente.\n\nVocê pode voltar para o canal Estável a qualquer momento.</string>
+    <string name="settings_update_manual_category">Atualização manual</string>
+    <string name="settings_check_for_update_title">Verificar atualização</string>
+    <string name="settings_check_for_update_summary">Verifica manualmente se há uma nova versão disponível</string>
+    <string name="settings_current_version_title">Versão atual</string>
+    <string name="settings_last_check_title">Última verificação</string>
+    <string name="update_never_checked">Nunca</string>
+    <string name="update_notification_channel">Notificações de atualização</string>
+    <string name="update_notification_channel_description">Notificações de download e instalação de atualizações do app</string>
+    <string name="update_downloading_title">Baixando atualização</string>
+    <string name="update_downloading_description" formatted="true">Baixando ReShizukuX %1$s…</string>
+    <string name="update_downloading_progress" formatted="true">Baixando %1$s - %2$d%%</string>
+    <string name="update_ready_title">Atualização pronta para instalar</string>
+    <string name="update_ready_description" formatted="true">O ReShizukuX %1$s está pronto para instalar</string>
+    <string name="update_install_now">Instalar agora</string>
+    <string name="update_download_failed_title">Falha no download</string>
+    <string name="update_download_failed_message">Falha ao baixar a atualização. Tente novamente.</string>
+    <string name="update_download_failed_storage">Armazenamento livre insuficiente para baixar a atualização.</string>
+    <string name="update_download_failed_cannot_resume">O download não pôde ser retomado após a interrupção. Tente novamente.</string>
+    <string name="update_download_failed_http">Um erro de rede interrompeu o download. Verifique sua conexão e tente novamente.</string>
+    <string name="update_downgrade_warning_title">Atualização não pode ser instalada</string>
+    <string name="update_downgrade_warning_content" formatted="true">A versão baixada %1$s (build %2$d) é mais antiga que a build instalada (%3$d); o sistema a rejeitaria como downgrade. Aguarde a build correta no canal de atualização.</string>
     <string name="migration_dialog_title">Importante: reinstalação necessária</string>
-    <string name="migration_dialog_message_root">O ShizukuX mudou seu ID de pacote de moe.shizuku.privileged.api para xyz.shizuku.extra.api. Sua versão antiga e esta versão são tratadas como apps separados, então uma atualização direta não foi possível.\n\nO acesso root está disponível — toque em Migrar configurações para copiar suas configurações da versão antiga e depois desinstale-a.</string>
+    <string name="migration_dialog_message">O ReShizukuX mudou o ID do pacote de moe.shizuku.privileged.api para xyz.shizuku.extra.api. Sua versão antiga e esta versão são tratadas como apps separados, portanto uma atualização direta não foi possível.\n\nVocê pode migrar suas configurações da versão antiga e depois desinstalá-la.</string>
+    <string name="migration_dialog_message_root">O ReShizukuX mudou seu ID de pacote de moe.shizuku.privileged.api para xyz.shizuku.extra.api. Sua versão antiga e esta versão são tratadas como apps separados, então uma atualização direta não foi possível.\n\nO acesso root está disponível — toque em Migrar configurações para copiar suas configurações da versão antiga e depois desinstale-a.</string>
     <string name="migration_migrate_settings">Migrar configurações</string>
     <string name="migration_uninstall_old">Desinstalar versão antiga</string>
     <string name="migration_dismiss">Dispensar</string>
@@ -711,35 +929,67 @@ Alternativamente, com o pop-up aberto, abaixe a aba de notificações e digite o
     <string name="migration_failure_title">Falha na migração</string>
     <string name="migration_failure_message">Não foi possível ler as configurações da versão antiga. Talvez seja necessário reconfigurar suas preferências manualmente.\n\nVocê ainda pode desinstalar a versão antiga com segurança.</string>
     <string name="migration_no_root_message">O acesso root não está disponível, então as configurações não podem ser migradas automaticamente. Você precisará reconfigurar suas preferências manualmente.\n\nVocê pode desinstalar a versão antiga quando estiver pronto.</string>
+    <string name="update_available_title">Atualização disponível</string>
+    <string name="update_prerelease_badge">Pré-lançamento</string>
+    <string name="update_available_message" formatted="true">Uma nova versão %1$s está disponível para download.</string>
+    <string name="update_download">Baixar</string>
+    <string name="update_later">Depois</string>
+    <string name="update_release_notes">Notas de versão</string>
+    <string name="update_up_to_date_title">Em dia</string>
+    <string name="update_up_to_date_message" formatted="true">Você já está usando a versão mais recente (%1$s).</string>
+    <string name="update_error_title">Falha na verificação</string>
+    <string name="update_error_message">Não foi possível verificar atualizações. Verifique sua conexão com a internet e tente novamente.\n\nVocê também pode atualizar manualmente pelo GitHub Releases.</string>
+    <string name="update_last_check_failed">Falha na verificação — atualize manualmente se necessário</string>
+    <string name="update_available_manual_message" formatted="true">A versão %1$s está disponível. O download automático não está disponível — toque abaixo para abrir o GitHub Releases.</string>
+    <string name="update_view_on_github">Ver no GitHub</string>
+    <string name="update_permission_required_title">Permissão necessária</string>
+    <string name="update_permission_required_message">Para ativar a instalação automática, conceda a permissão \"Instalar apps desconhecidos\" nas configurações do sistema.</string>
+    <string name="update_checking">Verificando atualizações…</string>
     <string name="ok">OK</string>
     <string name="no_file_picker">Nenhum app de seleção de arquivos encontrado neste dispositivo</string>
     <string name="wadb_notification_discovery_timeout">Descoberta da porta ADB expirou — tentando novamente…</string>
     <string name="shell_export_success">Arquivos exportados com sucesso</string>
     <string name="shell_export_failed">Falha na exportação — nenhum arquivo pôde ser gravado</string>
     <string name="shell_export_partial" formatted="true">%1$d de %2$d arquivos exportados (alguns falharam)</string>
+    <string name="settings_backup_category">Backup e restauração</string>
+    <string name="settings_export_title">Exportar configurações</string>
+    <string name="settings_export_summary">Salva todas as configurações do ReShizukuX em um arquivo JSON</string>
+    <string name="settings_import_title">Importar configurações</string>
+    <string name="settings_import_summary">Restaura as configurações de um arquivo JSON exportado anteriormente</string>
+    <string name="settings_export_success">Configurações exportadas com sucesso</string>
+    <string name="settings_export_failed">Falha na exportação</string>
+    <string name="settings_import_success">Configurações importadas — reinicie o app para aplicar todas as alterações</string>
+    <string name="settings_import_failed">Falha na importação: arquivo inválido ou incompatível</string>
     <string name="adb_native_unavailable">O pareamento ADB não está disponível neste dispositivo</string>
+    <string name="shizuku_not_available">O serviço ReShizukuX não está disponível</string>
+    <string name="su_bridge_magic_setup_success_global_setting">Configuração mágica concluída! Configuração global do sistema configurada.</string>
     <string name="changelog_title">Novidades</string>
     <string name="changelog_close">Fechar</string>
     <string name="changelog_view_on_github">Ver no GitHub</string>
     <string name="changelog_fallback_message">Não foi possível carregar as notas de versão desta atualização (você pode estar offline). Toque em "Ver no GitHub" para ver o que mudou.</string>
+    <string name="aicore_extra_label">Ponte de automação AICore+</string>
+    <string name="aicore_extra_description">Necessário para os recursos AICore+ do ReShizukuX. Fornece despejo privilegiado da hierarquia da interface e simulação de entrada física para automação orientada por IA. Não observa senhas nem dados pessoais.</string>
     <string name="action_clear_all">Limpar tudo</string>
     <string name="action_continue">Continuar</string>
     <string name="action_open_github">GitHub</string>
     <string name="service_doctor_fix_phantom_attempted">Limite de processo phantom desativado. Reinicie o serviço se necessário.</string>
-    <string name="service_doctor_fix_requires_service">O Shizuku deve estar em execução para aplicar esta correção automaticamente.</string>
+    <string name="service_doctor_fix_requires_service">O ReShizukuX deve estar em execução para aplicar esta correção automaticamente.</string>
     <string name="service_doctor_fix_failed" formatted="true">Falha na correção automática: %1$s</string>
     <string name="adb_foreground_op_denied">Não foi possível iniciar o serviço em primeiro plano — permissão START_FOREGROUND negada. Verifique as permissões do app nas configurações do dispositivo.</string>
+    <string name="update_no_release_notes">Nenhuma nota de versão disponível.</string>
     <string name="accessibility_service_monitoring">Serviço de acessibilidade ativo: monitorando o código de pareamento…</string>
     <string name="dhizuku_setup_title">Configurar Device Owner</string>
-    <string name="dhizuku_setup_message" formatted="true">O modo Dhizuku exige que o ShizukuX seja definido como Device Owner. Execute este comando uma vez via ADB com a depuração USB ativada:\n\n%1$s\n\nApós executar o comando, reinicie o Shizuku.</string>
+    <string name="dhizuku_setup_message" formatted="true">O modo Dhizuku exige que o ReShizukuX seja definido como Device Owner. Execute este comando uma vez via ADB com a depuração USB ativada:\n\n%1$s\n\nApós executar o comando, reinicie o ReShizukuX.</string>
+    <string name="dhizuku_setup_copy">Copiar comando</string>
     <string name="dhizuku_setup_copied">Comando copiado para a área de transferência</string>
+    <string name="dhizuku_setup_run_root">Executar com root</string>
     <string name="dhizuku_setup_root_required">É necessário acesso root para a execução em um toque. Conceda acesso root ou execute o comando acima manualmente no computador.</string>
     <string name="dhizuku_setup_running">Executando...</string>
-    <string name="dhizuku_setup_root_success">Device Owner definido com sucesso! Reinicie o ShizukuX.</string>
+    <string name="dhizuku_setup_root_success">Device Owner definido com sucesso! Reinicie o ReShizukuX.</string>
     <string name="dhizuku_setup_root_failure" formatted="true">Falha na execução: %1$s\nExecute o comando acima manualmente no seu computador.</string>
     <string name="dhizuku_setup_via_dhizuku">Ativar via Dhizuku</string>
-    <string name="dhizuku_setup_via_shizukux">Ativar via ShizukuX</string>
-    <string name="dhizuku_setup_shizukux_not_running">O serviço ShizukuX não está em execução. Inicie o ShizukuX primeiro (via ADB ou Root) e depois use este recurso.</string>
+    <string name="dhizuku_setup_via_shizukux">Ativar via ReShizukuX</string>
+    <string name="dhizuku_setup_shizukux_not_running">O serviço ReShizukuX não está em execução. Inicie o ReShizukuX primeiro (via ADB ou Root) e depois use este recurso.</string>
     <string name="dhizuku_setup_shizukux_success">Device Owner definido com sucesso! Modo Dhizuku ativado.</string>
     <string name="dhizuku_setup_shizukux_failure" formatted="true">Falha na execução: %1$s
 Tente o método de linha de comando.</string>
@@ -749,56 +999,117 @@ Tente o método de linha de comando.</string>
     <string name="dhizuku_status_active">Device Owner: ativo</string>
     <string name="dhizuku_status_not_set">Device Owner não definido — toque para ver instruções de configuração</string>
     <string name="settings_clear_device_owner">Remover Device Owner</string>
-    <string name="settings_clear_device_owner_summary">Libere o ShizukuX do status de Device Owner. Necessário antes de desinstalar ou fazer downgrade.</string>
+    <string name="settings_clear_device_owner_summary">Libere o ReShizukuX do status de Device Owner. Necessário antes de desinstalar ou fazer downgrade.</string>
     <string name="dhizuku_clear_owner_title">Remover Device Owner?</string>
-    <string name="dhizuku_clear_owner_message">Isto removerá o ShizukuX como Device Owner. O modo Dhizuku será desativado e os apps que dependem dos privilégios delegados de Device Owner perderão o acesso.\n\nVocê pode reativar o Device Owner a qualquer momento executando o comando ADB mostrado no diálogo de configuração.</string>
+    <string name="dhizuku_clear_owner_message">Isto removerá o ReShizukuX como Device Owner. O modo Dhizuku será desativado e os apps que dependem dos privilégios delegados de Device Owner perderão o acesso.\n\nVocê pode reativar o Device Owner a qualquer momento executando o comando ADB mostrado no diálogo de configuração.</string>
     <string name="dhizuku_clear_owner_confirm">Remover</string>
-    <string name="dhizuku_clear_owner_success">Status de Device Owner removido. Agora você pode desinstalar ou fazer downgrade do ShizukuX.</string>
+    <string name="dhizuku_clear_owner_success">Status de Device Owner removido. Agora você pode desinstalar ou fazer downgrade do ReShizukuX.</string>
     <string name="dhizuku_clear_owner_failure">Falha ao remover o status de Device Owner. O serviço pode precisar estar em execução primeiro.</string>
     <string name="settings_transfer_device_owner">Transferir Device Owner</string>
-    <string name="settings_transfer_device_owner_summary">Transfira o status de Device Owner para outro app que suporte transferência de propriedade. O ShizukuX perderá os privilégios de Device Owner após a transferência.</string>
+    <string name="settings_transfer_device_owner_summary">Transfira o status de Device Owner para outro app que suporte transferência de propriedade. O ReShizukuX perderá os privilégios de Device Owner após a transferência.</string>
     <string name="dhizuku_transfer_title">Selecionar app de destino</string>
+    <string name="dhizuku_transfer_message">Selecione o app que receberá o status de Proprietário do dispositivo. O app de destino deve declarar suporte à transferência de propriedade em seu device_admin.xml.</string>
     <string name="dhizuku_transfer_no_targets">Nenhum app com suporte a transferência de propriedade encontrado.</string>
     <string name="dhizuku_transfer_confirm_title">Confirmar transferência?</string>
-    <string name="dhizuku_transfer_confirm_message" formatted="true">O status de Device Owner será transferido para "%1$s".\n\nO ShizukuX perderá os privilégios de Device Owner e o modo Dhizuku será desativado. Esta ação não pode ser desfeita.</string>
+    <string name="dhizuku_transfer_confirm_message" formatted="true">O status de Device Owner será transferido para "%1$s".\n\nO ReShizukuX perderá os privilégios de Device Owner e o modo Dhizuku será desativado. Esta ação não pode ser desfeita.</string>
     <string name="dhizuku_transfer_success" formatted="true">Device Owner transferido com sucesso para "%1$s".</string>
     <string name="dhizuku_transfer_failure" formatted="true">Falha na transferência: %1$s</string>
-    <string name="dhizuku_transfer_not_owner">A transferência só está disponível quando o ShizukuX é o Device Owner atual.</string>
+    <string name="dhizuku_transfer_not_owner">A transferência só está disponível quando o ReShizukuX é o Device Owner atual.</string>
+    <string name="toast_pair_notifications_required">Notificações bloqueadas — usando pareamento manual. Vá em Opções do desenvolvedor → Depuração sem fio → Parear dispositivo com código de pareamento para obter seu código, depois insira-o aqui.</string>
+    <string name="dialog_notif_permission_title">Notificações necessárias</string>
+    <string name="dialog_notif_permission_message">O código de pareamento é entregue em uma notificação. Permita que o ReShizukuX publique notificações para concluir o pareamento ADB.</string>
+    <string name="dialog_notif_permission_allow">Permitir notificações</string>
+    <string name="dialog_notif_permission_manual">Parear manualmente</string>
+    <string name="dialog_notif_permission_open_settings">Abrir configurações</string>
     <string name="dialog_notif_permission_denied">Permissão de notificação negada. Você pode ativá-la nas Configurações ou parear manualmente.</string>
+    <string name="remote_db_sync_channel_name">Atualizações do banco de dados do app</string>
     <string name="settings_binder_firewall">Firewall Binder</string>
     <string name="settings_binder_firewall_summary">Auditar e bloquear transações sensíveis do sistema de apps não autorizados</string>
+    <string name="settings_binder_logging">Registro de transações AIDL</string>
+    <string name="settings_binder_logging_summary">Registra todas as transações Binder proxy no log do sistema (Logcat) para depuração</string>
     <string name="settings_shadow_binder">Shadow Binder</string>
     <string name="settings_shadow_binder_summary">Intercepta e falsifica chamadas de serviços do sistema para ocultar informações do dispositivo ou estado do app</string>
     <string name="settings_shadow_binder_hidden_packages">Pacotes ocultos</string>
-    <string name="settings_shadow_binder_hidden_packages_summary">Lista separada por vírgulas de nomes de pacotes para ocultar de outros apps. Se você tiver o Shizuku OG e o ShizukuX instalados, adicione ambos (moe.shizuku.privileged.api, af.shizuku.manager) para evitar conflitos.</string>
+    <string name="settings_shadow_binder_hidden_packages_summary">Lista separada por vírgulas de nomes de pacotes para ocultar de outros apps. Se você tiver o Shizuku OG e o ReShizukuX instalados, adicione ambos (moe.shizuku.privileged.api, af.shizuku.manager) para evitar conflitos.</string>
+    <string name="settings_category_companion">Modo complementar</string>
     <string name="settings_companion_mode">Mostrar cartão Companheiro</string>
     <string name="settings_companion_mode_summary">Mostrar um cartão para abrir rapidamente o Shizuku padrão. Nota: apenas um serviço Shizuku pode ser executado por vez — use isto para alternar entre eles.</string>
     <string name="settings_companion_fallback">Fallback de crash</string>
     <string name="settings_companion_fallback_summary">Após 3 crashes consecutivos, mostre uma opção para abrir o Shizuku padrão na notificação de crash</string>
     <string name="home_companion_title">Shizuku padrão</string>
     <string name="home_companion_description">O Shizuku padrão está instalado. Apenas um serviço pode ser executado por vez — toque para alternar para o Shizuku padrão quando precisar de apps que o exigem.</string>
+    <string name="home_companion_not_installed">O Shizuku original não está instalado. Instale-o do GitHub para usar como alternativa.</string>
     <string name="home_companion_open">Abrir</string>
+    <string name="home_companion_install">Instalar</string>
     <string name="watchdog_open_stock_shizuku">Abrir Shizuku padrão</string>
     <string name="app_management_empty">Nenhum app encontrado</string>
     <string name="app_management_search_hint">Procurar apps</string>
+    <string name="root_hub_title">Central de compatibilidade root</string>
+    <string name="root_hub_global_config_title">Caminho SU global</string>
+    <string name="root_hub_global_config_desc">Todos os apps usam este caminho. A Configuração automática tentará configurar os apps suportados para você.</string>
+    <string name="root_hub_setup_all">Configurar todos</string>
+    <string name="root_hub_setup_all_success">Configuração automática tentada para todos os apps compatíveis.</string>
+    <string name="root_hub_magic_setup_all_summary">O ReShizukuX configurou %d apps para você!</string>
+    <string name="root_hub_magic_setup_all_no_apps">Nenhum app root encontrado que suporte configuração automática.</string>
+    <string name="root_hub_magic_setup_success">Configuração mágica concluída! O ReShizukuX configurou %s para você.</string>
+    <string name="root_hub_magic_setup_fail">Falha na Configuração mágica. Tente copiar o caminho manualmente.</string>
+    <string name="root_hub_path_copied">Caminho SU copiado para a área de transferência</string>
+    <string name="root_hub_no_export">Caminho SU não definido. Exporte os arquivos do ReShizukuX da tela inicial primeiro.</string>
+    <string name="root_hub_device_identity_title">Identidade do dispositivo</string>
+    <string name="root_hub_device_identity_none">Nenhum (mostrar dispositivo real)</string>
+    <string name="root_hub_device_identity_real">Real: %s</string>
+    <string name="root_hub_device_identity_spoofed">Falseado: %s</string>
+    <string name="home_automation_dialog_label_action">Ação</string>
+    <string name="home_automation_dialog_label_class">Classe</string>
+    <string name="home_automation_dialog_label_package">Pacote</string>
+    <string name="home_automation_dialog_label_target">Alvo</string>
+    <string name="action_start">Iniciar</string>
+    <string name="settings_tcp_learn_more">Saiba mais sobre como usar ferramentas de automação para controlar o ReShizukuX</string>
     <string name="settings_help">Ajuda</string>
+    <string name="settings_adb_category">Gerenciamento ADB</string>
     <string name="verify_virustotal_key_title">Chave da API VirusTotal</string>
     <string name="verify_virustotal_key_required">Uma chave da API é necessária para usar a verificação do VirusTotal</string>
     <string name="verify_pithus_key_title">Chave da API Pithus (opcional)</string>
+    <string name="verify_pithus_key_configured">Verifica hashes contra o Pithus para detectar características de malware · chave API configurada</string>
+    <string name="verify_pithus_default_summary">Verifica hashes contra o Pithus para detectar características de malware.</string>
     <string name="verify_api_key_hint">Toque para inserir a chave da API</string>
     <string name="verify_api_key_configured">Chave da API salva · toque para atualizar</string>
     <string name="verify_get_api_key">Obter chave da API</string>
-    <string name="automation_plugin_action_label">Serviço ShizukuX</string>
+    <string name="scripting_title">Scripts</string>
+    <string name="scripting_summary">Salve, compartilhe e execute trechos de shell privilegiados</string>
+    <string name="scripting_empty_title">Nenhum trecho ainda</string>
+    <string name="scripting_empty_description">Salve um trecho de shell privilegiado para executá-lo a qualquer momento pelo ReShizukuX.</string>
+    <string name="scripting_add">Adicionar trecho</string>
+    <string name="scripting_edit">Editar trecho</string>
+    <string name="scripting_run">Executar</string>
+    <string name="scripting_running" formatted="true">Executando “%1$s…</string>
+    <string name="scripting_no_output">(sem saída)</string>
+    <string name="scripting_exit_code" formatted="true">Código de saída: %1$d</string>
+    <string name="scripting_copy_output">Copiar saída</string>
+    <string name="scripting_output_copied">Saída copiada para a área de transferência</string>
+    <string name="scripting_title_hint">Nome do trecho</string>
+    <string name="scripting_script_hint">Comando(s) de shell</string>
+    <string name="scripting_title_and_script_required">Nome e script são obrigatórios</string>
+    <string name="scripting_delete_title">Excluir trecho?</string>
+    <string name="scripting_delete_message" formatted="true">“%1$s” será excluído permanentemente.</string>
+    <string name="scripting_delete">Excluir</string>
+    <string name="scripting_auto_run_label">Executar automaticamente ao iniciar o serviço</string>
+    <string name="scripting_auto_run_badge_desc">Executa automaticamente ao iniciar o serviço</string>
+    <string name="automation_plugin_action_label">Serviço ReShizukuX</string>
     <string name="automation_plugin_action_edit_title">Escolher ação</string>
-    <string name="automation_plugin_action_start">Iniciar serviço ShizukuX</string>
-    <string name="automation_plugin_action_stop">Parar serviço ShizukuX</string>
-    <string name="automation_plugin_blurb_start">Iniciar serviço ShizukuX</string>
-    <string name="automation_plugin_blurb_stop">Parar serviço ShizukuX</string>
-    <string name="automation_plugin_condition_label">Serviço ShizukuX em execução</string>
-    <string name="automation_plugin_condition_title">Serviço ShizukuX em execução</string>
-    <string name="automation_plugin_condition_description">Esta condição é satisfeita sempre que o serviço ShizukuX estiver em execução.</string>
-    <string name="automation_plugin_condition_blurb">O serviço ShizukuX está em execução</string>
+    <string name="automation_plugin_action_start">Iniciar serviço ReShizukuX</string>
+    <string name="automation_plugin_action_stop">Parar serviço ReShizukuX</string>
+    <string name="automation_plugin_blurb_start">Iniciar serviço ReShizukuX</string>
+    <string name="automation_plugin_blurb_stop">Parar serviço ReShizukuX</string>
+    <string name="automation_plugin_condition_label">Serviço ReShizukuX em execução</string>
+    <string name="automation_plugin_condition_title">Serviço ReShizukuX em execução</string>
+    <string name="automation_plugin_condition_description">Esta condição é satisfeita sempre que o serviço ReShizukuX estiver em execução.</string>
+    <string name="automation_plugin_condition_blurb">O serviço ReShizukuX está em execução</string>
+    <string name="cd_navigate_back">Voltar</string>
+    <string name="cd_settings_search">Pesquisar</string>
+    <string name="cd_settings_search_clear">Limpar</string>
     <string name="settings_search_hint">Procurar configurações…</string>
+    <string name="settings_search_empty_state">Nenhuma configuração encontrada</string>
     <string name="dhizuku_app_management_title">Gerenciamento de apps Dhizuku</string>
     <string name="dhizuku_app_management_summary">Gerenciar apps com acesso à API Dhizuku (Device Owner)</string>
     <string name="dhizuku_request_permission_title" formatted="true">Permitir que %1$s use o serviço Dhizuku?</string>
@@ -814,12 +1125,48 @@ Tente o método de linha de comando.</string>
     <string name="tile_action_stop">Parar serviço</string>
     <string name="tile_action_restart">Reiniciar serviço</string>
     <string name="tile_action_open_app">Abrir app</string>
+    <string name="tile_state_update_failed" formatted="true">Falha ao atualizar o estado do ReShizukuX: %1$s</string>
     <string name="app_profiles_title">Perfis de apps</string>
+    <string name="app_profiles_summary_none">Nenhuma sobreposição de Firewall Binder por app</string>
+    <string name="app_profiles_summary_count" formatted="true">%1$d sobreposição(ões) de app ativa(s)</string>
+    <string name="app_profiles_description">Sobrepõe o Firewall Binder por app. Toque em um chip para alternar: Padrão → Bloquear → Permitir. Ativo quando o AutomationService estiver em execução.</string>
     <string name="app_profile_state_default">Padrão</string>
     <string name="app_profile_state_block">Bloquear</string>
     <string name="app_profile_state_allow">Permitir</string>
     <string name="app_profile_search_hint">Procurar apps…</string>
     <string name="app_profile_empty">Nenhum app encontrado</string>
+    <string name="home_backup_title">Backup de apps</string>
+    <string name="home_backup_summary">Faz backup e restaura dados de apps sem root</string>
+    <string name="backup_activity_title">Backup de apps</string>
+    <string name="backup_action_backup">Backup</string>
+    <string name="backup_action_freeze">Congelar</string>
+    <string name="backup_action_unfreeze">Descongelar</string>
+    <string name="backup_service_required">O serviço ReShizukuX não está em execução</string>
+    <string name="backup_in_progress">Backup em andamento…</string>
+    <string name="backup_app_complete" formatted="true">Backup de %1$s concluído → %2$s</string>
+    <string name="backup_app_failed" formatted="true">Falha no backup: %1$s</string>
+    <string name="backup_freeze_success">App congelado</string>
+    <string name="backup_unfreeze_success">App descongelado</string>
+    <string name="notification_channel_shell_consent">Solicitação de acesso ao shell</string>
+    <string name="notification_shell_consent_title">Solicitação de acesso ao shell</string>
+    <string name="notification_shell_consent_title_identified">%s está solicitando acesso ao shell</string>
+    <string name="notification_shell_consent_text">Toque para ver solicitações de acesso privilegiado do ReShizukuX de um cliente de shell (ex.: rish ou ADB).</string>
+    <string name="notification_shell_consent_text_identified">Permita apenas se você acabou de executar um comando de shell.</string>
+    <string name="notification_shell_consent_action_allow">Sempre permitir</string>
+    <string name="notification_shell_consent_action_deny">Negar</string>
+    <string name="shell_consent_dialog_title">Um cliente de shell (ex.: rish ou ADB) está solicitando acesso privilegiado do ReShizukuX.\n\nPermita apenas se você acabou de executar um comando de shell. O app solicitante não pôde ser identificado.</string>
+    <string name="shell_consent_dialog_title_identified">%s está solicitando acesso privilegiado ao shell do ReShizukuX.\n\nPermita apenas se você acabou de executar um comando de shell.</string>
+    <string name="shell_consent_button_allow">Permitir</string>
+    <string name="shell_consent_retry_hint">Autorizado. Execute o comando novamente para conectar (o app está pausado enquanto aguarda).</string>
+    <string name="reshizukux_ota_title">Verificar atualizações</string>
+    <string name="reshizukux_ota_checking">Verificando atualizações…</string>
+    <string name="reshizukux_ota_up_to_date">Você está em dia</string>
+    <string name="reshizukux_ota_downloading" formatted="true">Baixando %1$d%%</string>
+    <string name="reshizukux_backup_title">Backup e restauração</string>
+    <string name="reshizukux_backup_create">Fazer backup agora</string>
+    <string name="reshizukux_backup_restore">Restaurar de arquivo</string>
+    <string name="reshizukux_ai_title">Assistente de IA</string>
+    <string name="reshizukux_ai_no_api_key">Nenhuma chave API configurada</string>
     <string name="reshizukux_accessibility_desc">Mantém o ReShizukuX vivo em segundo plano. Este serviço não lê nem coleta conteúdo de janelas ou dados do usuário.</string>
     <string name="rsx_tab_home">Status</string>
     <string name="rsx_tab_apps">Apps</string>
@@ -833,7 +1180,7 @@ Tente o método de linha de comando.</string>
     <string name="rsx_settings_group_advanced">Avançado</string>
     <string name="rsx_settings_group_about">Sobre</string>
     <string name="rsx_settings_start_on_boot">Iniciar na inicialização</string>
-    <string name="rsx_settings_start_on_boot_desc">Iniciar o Shizuku automaticamente após a inicialização do dispositivo</string>
+    <string name="rsx_settings_start_on_boot_desc">Iniciar o ReShizukuX automaticamente após a inicialização do dispositivo</string>
     <string name="rsx_settings_watchdog">Modo de autocura</string>
     <string name="rsx_settings_watchdog_desc">Restauração automática quando o serviço cair</string>
     <string name="rsx_settings_wifi_reassert">Guardião da depuração sem fio</string>
@@ -855,7 +1202,7 @@ Tente o método de linha de comando.</string>
     <string name="rsx_settings_lottie">Animações</string>
     <string name="rsx_settings_lottie_desc">Animações e transições Lottie</string>
     <string name="rsx_settings_widget">Widget da tela inicial</string>
-    <string name="rsx_settings_widget_desc">Adicionar um widget de status do Shizuku à tela inicial</string>
+    <string name="rsx_settings_widget_desc">Adicionar um widget de status do ReShizukuX à tela inicial</string>
     <string name="rsx_settings_backup">Backup e restauração</string>
     <string name="rsx_settings_backup_desc">Fazer backup de configurações e dados de módulos</string>
     <string name="rsx_settings_ai">Assistente de IA</string>
@@ -880,12 +1227,12 @@ Tente o método de linha de comando.</string>
     <string name="rsx_home_activation_adb">ADB sem fio</string>
     <string name="rsx_home_guard_selfheal">Modo de autocura</string>
     <string name="rsx_home_guard_dual">Processo duplo</string>
-    <string name="rsx_home_ready">O Shizuku está pronto. Você pode conceder acesso aos apps.</string>
+    <string name="rsx_home_ready">O ReShizukuX está pronto. Você pode conceder acesso aos apps.</string>
     <string name="rsx_home_crashed">Serviço travou</string>
     <string name="rsx_home_starting">Iniciando…</string>
     <string name="rsx_home_stopping">Parando…</string>
-    <string name="rsx_home_stop_confirm_title">Parar o serviço Shizuku?</string>
-    <string name="rsx_home_stop_confirm_msg">Os apps que dependem do Shizuku perderão o acesso. O alarme do watchdog também será cancelado até você iniciá-lo novamente.</string>
+    <string name="rsx_home_stop_confirm_title">Parar o serviço ReShizukuX?</string>
+    <string name="rsx_home_stop_confirm_msg">Os apps que dependem do ReShizukuX perderão o acesso. O alarme do watchdog também será cancelado até você iniciá-lo novamente.</string>
     <string name="rsx_home_stop">Parar</string>
     <string name="rsx_home_cancel">Cancelar</string>
     <string name="rsx_home_ok">Entendi</string>
@@ -894,11 +1241,13 @@ Tente o método de linha de comando.</string>
     <string name="rsx_home_start_failed">Falha ao iniciar</string>
     <string name="rsx_biometric_title">Bloqueio biométrico</string>
     <string name="rsx_sentry_title">Relatório de crashes</string>
+    <string name="rsx_accessibility_title">Manter acessibilidade ativa</string>
     <string name="rsx_theme_title">Tema</string>
     <string name="rsx_lottie_title">Animações</string>
     <string name="rsx_widget_title">Widget</string>
     <string name="rsx_language_title">Idioma</string>
     <string name="rsx_changelog_title">Changelog</string>
+    <string name="rsx_automation_title">Automação</string>
     <string name="rsx_language_follow_system">Seguir sistema</string>
     <string name="rsx_language_hint">O app alternará o idioma e reconstruirá as páginas automaticamente.</string>
     <string name="rsx_back">Voltar</string>
@@ -909,9 +1258,10 @@ Tente o método de linha de comando.</string>
     <string name="rsx_acc_disabled">Não ativado</string>
     <string name="rsx_acc_open_settings">Abrir configurações de acessibilidade</string>
     <string name="rsx_acc_toggle">Ativar manutenção por acessibilidade</string>
-    <string name="rsx_acc_desc1">Uma vez ativado, o ReShizukuX é executado como serviço de acessibilidade em segundo plano para melhorar a sobrevivência do Shizuku em ROMs chinesas.</string>
+    <string name="rsx_acc_desc1">Uma vez ativado, o ReShizukuX é executado como serviço de acessibilidade em segundo plano para melhorar a sobrevivência do ReShizukuX em ROMs chinesas.</string>
     <string name="rsx_acc_desc2">Este serviço não lê, coleta nem reporta conteúdo de janelas ou dados do usuário; é usado apenas para manutenção.</string>
     <string name="rsx_wiz_acc_on">Serviço de acessibilidade do assistente de pareamento (ativado, confirma diálogos automaticamente)</string>
+    <string name="rsx_wiz_code_label_shade">Código de pareamento (6 dígitos) — digite-o na notificação</string>
     <string name="rsx_wiz_acc_off">Serviço de acessibilidade do assistente de pareamento (desativado, pode ser ignorado)</string>
     <string name="rsx_wiz_auto_next">Avançará para a próxima etapa automaticamente assim que a janela do código de pareamento estiver aberta.</string>
     <string name="rsx_wiz_title">Assistente de pareamento de depuração sem fio</string>
@@ -921,18 +1271,19 @@ Tente o método de linha de comando.</string>
     <string name="rsx_wiz_open_wadb">Vá para: Configurações → Opções do desenvolvedor → Depuração sem fio e ative-a. O assistente detectará e continuará automaticamente.</string>
     <string name="rsx_wiz_wadb_on">A depuração sem fio está ativada</string>
     <string name="rsx_wiz_next">Ativado, próximo</string>
+    <string name="rsx_wiz_skipable">(desativado, pode ser pulado)</string>
     <string name="rsx_wiz_obtain_pair_info">Obter informações de pareamento</string>
     <string name="rsx_wiz_open_pair_window">Na tela "Depuração sem fio", toque em "Parear dispositivo com código de pareamento".</string>
     <string name="rsx_wiz_pair_window_done">Tela do código de pareamento aberta</string>
     <string name="rsx_wiz_system_dialog">Um diálogo do sistema mostrará um código de 6 dígitos e IP:porta.</string>
-    <string name="rsx_wiz_notification_method">Você também pode abaixar a aba de notificações e inserir o código na notificação de pareamento do Shizuku.</string>
-    <string name="rsx_wiz_notification_method2">Abaixe a aba de notificações e insira o código diretamente na notificação de pareamento do Shizuku para evitar que o pareamento seja interrompido pela troca de apps.</string>
+    <string name="rsx_wiz_notification_method">Você também pode abaixar a aba de notificações e inserir o código na notificação de pareamento do ReShizukuX.</string>
+    <string name="rsx_wiz_notification_method2">Abaixe a aba de notificações e insira o código diretamente na notificação de pareamento do ReShizukuX para evitar que o pareamento seja interrompido pela troca de apps.</string>
     <string name="rsx_wiz_input_code">Inserir código de pareamento</string>
     <string name="rsx_wiz_code_notif">Código de pareamento (6 dígitos) — inserir via notificação</string>
     <string name="rsx_wiz_code_plain">Código de pareamento (6 dígitos)</string>
     <string name="rsx_wiz_code_hint">Digite o código de 6 dígitos mostrado na janela de pareamento do sistema. O pareamento começa automaticamente assim que 6 dígitos forem inseridos.</string>
     <string name="rsx_wiz_code_progress" formatted="true">Inseridos %1$d / 6 dígitos</string>
-    <string name="rsx_wiz_keep_window">Mantenha a janela de pareamento da "Depuração sem fio" na tela, abaixe a aba de notificações e envie o código de 6 dígitos pela notificação de pareamento do ShizukuX. Esta página continuará automaticamente.</string>
+    <string name="rsx_wiz_keep_window">Mantenha a janela de pareamento da "Depuração sem fio" na tela, abaixe a aba de notificações e envie o código de 6 dígitos pela notificação de pareamento do ReShizukuX. Esta página continuará automaticamente.</string>
     <string name="rsx_wiz_pair">Parear</string>
     <string name="rsx_wiz_pairing">Pareando…</string>
     <string name="rsx_wiz_pairing_success">Pareamento bem-sucedido</string>
@@ -946,6 +1297,7 @@ Tente o método de linha de comando.</string>
     <string name="rsx_wiz_starting_service">Iniciando o serviço…</string>
     <string name="rsx_wiz_wadb_desc">Ative para confirmar automaticamente o diálogo de pareamento do sistema. Pode deixar desativado; toque em "Permitir" manualmente ao parear.</string>
     <string name="rsx_wiz_acc_enabled">Serviço de acessibilidade ativado; a confirmação de pareamento do sistema será tocada automaticamente.</string>
+    <string name="rsx_wiz_acc_toggle">Serviço de acessibilidade do assistente de pareamento</string>
     <string name="rsx_wiz_miui_hint">Recomendado para usuários MIUI / HyperOS:</string>
     <string name="rsx_wiz_miui_desc">No Xiaomi / HyperOS, o diálogo de pareamento do sistema expira imediatamente quando você troca de app.</string>
     <string name="rsx_wiz_open_acc">Abrir configurações de acessibilidade</string>
@@ -992,7 +1344,7 @@ Tente o método de linha de comando.</string>
     <string name="rsx_apps_empty">Sem apps</string>
     <string name="rsx_apps_no_match">Nenhum app correspondente</string>
     <string name="rsx_apps_not_running">Serviço não está em execução</string>
-    <string name="rsx_apps_go_start">Inicie o serviço Shizuku na página "Status" primeiro</string>
+    <string name="rsx_apps_go_start">Inicie o serviço ReShizukuX na página "Status" primeiro</string>
     <string name="rsx_auto_title">Automação</string>
     <string name="rsx_auto_rules">Regras</string>
     <string name="rsx_auto_new_rule">Nova regra</string>
@@ -1001,8 +1353,8 @@ Tente o método de linha de comando.</string>
     <string name="rsx_auto_no_rules">Nenhuma regra ainda</string>
     <string name="rsx_auto_enabled">Ativado</string>
     <string name="rsx_auto_disabled">Desativado</string>
-    <string name="rsx_auto_hint">As regras de automação entram em vigor enquanto o serviço Shizuku estiver em execução. O mecanismo escuta mudanças de rede e trocas de app em primeiro plano.</string>
-    <string name="rsx_auto_engine_hint">As regras padrão são registradas no AutomationEngine na inicialização do app; o interruptor é estado de UI, o despacho de eventos é dirigido pelo serviço Shizuku.</string>
+    <string name="rsx_auto_hint">As regras de automação entram em vigor enquanto o serviço ReShizukuX estiver em execução. O mecanismo escuta mudanças de rede e trocas de app em primeiro plano.</string>
+    <string name="rsx_auto_engine_hint">As regras padrão são registradas no AutomationEngine na inicialização do app; o interruptor é estado de UI, o despacho de eventos é dirigido pelo serviço ReShizukuX.</string>
     <string name="rsx_auto_firewall_title">Regra de firewall de rede</string>
     <string name="rsx_auto_firewall_desc">Feche o firewall Binder em redes confiáveis, ative-o em redes não confiáveis</string>
     <string name="rsx_auto_profile_title">Regra de perfil de app</string>
@@ -1037,6 +1389,7 @@ Tente o método de linha de comando.</string>
     <string name="rsx_lottie_desc">As animações melhoram a experiência visual; desativá-las economiza desempenho.</string>
     <string name="rsx_lottie_preview">Prévia da animação</string>
     <string name="rsx_lottie_off">Animações desativadas</string>
+    <string name="rsx_md_back">Voltar</string>
     <string name="rsx_md_uninstall">Desinstalar</string>
     <string name="rsx_md_exit_code_timeout" formatted="true">Código de saída=%1$d (tempo esgotado após 60s)</string>
     <string name="rsx_mod_ver_author" formatted="true">v%1$s · %2$s</string>
@@ -1059,6 +1412,7 @@ Tente o método de linha de comando.</string>
     <string name="rsx_md_status_not_installed">Não instalado</string>
     <string name="rsx_md_tampered">Arquivo adulterado (hash incompatível), execução recusada. Reative após corrigir.</string>
     <string name="rsx_md_enable_module">Ativar módulo</string>
+    <string name="rsx_md_disable_module">Desativar módulo</string>
     <string name="rsx_md_uninstall_module">Desinstalar módulo</string>
     <string name="rsx_md_enable_failed">Falha ao ativar (o arquivo pode estar adulterado; marcado como corrompido)</string>
     <string name="rsx_md_disable_failed">Falha ao desativar</string>
@@ -1091,6 +1445,7 @@ Tente o método de linha de comando.</string>
     <string name="rsx_md_error">Erro</string>
     <string name="rsx_md_exit_code" formatted="true">Código de saída=%1$d</string>
     <string name="rsx_md_not_found">O módulo não existe ou foi desinstalado</string>
+    <string name="rsx_md_webui_close">Fechar</string>
     <string name="rsx_mod_install">Instalar</string>
     <string name="rsx_mod_installed">Instalado</string>
     <string name="rsx_mod_online">Repositórios online</string>
@@ -1098,6 +1453,9 @@ Tente o método de linha de comando.</string>
     <string name="rsx_mod_install_zip">Instalar do ZIP</string>
     <string name="rsx_mod_refresh">Atualizar</string>
     <string name="rsx_mod_refreshing">Atualizando…</string>
+    <string name="rsx_mod_installing">Instalando</string>
+    <string name="rsx_mod_enable">Ativar</string>
+    <string name="rsx_mod_disable">Desativar</string>
     <string name="rsx_mod_install_failed" formatted="true">Falha na instalação: %1$s</string>
     <string name="rsx_mod_repo_failed" formatted="true">Falha ao atualizar o repositório: %1$s</string>
     <string name="rsx_mod_repo_empty">Nenhum módulo no repositório</string>
@@ -1107,6 +1465,7 @@ Tente o método de linha de comando.</string>
     <string name="rsx_mod_installed_x" formatted="true">Instalado: %1$s</string>
     <string name="rsx_mod_signed">Assinado</string>
     <string name="rsx_mod_unsigned">Não assinado</string>
+    <string name="rsx_mod_corrupted">Corrompido</string>
     <string name="rsx_mod_empty">Nenhum módulo instalado. Instale dos repositórios online ou toque no botão + para instalar de um ZIP local.</string>
     <string name="rsx_ota_current">Versão atual</string>
     <string name="rsx_ota_version_code" formatted="true">Código da versão: %1$d</string>
@@ -1141,6 +1500,7 @@ Tente o método de linha de comando.</string>
     <string name="rsx_orch_whitelist">Lista de permissão de ativação</string>
     <string name="rsx_orch_no_wadb">Nenhuma porta de depuração sem fio encontrada. Ative a depuração sem fio nas opções do desenvolvedor e conclua o pareamento primeiro.</string>
     <string name="rsx_orch_pair_required">Pareamento de depuração sem fio necessário</string>
+    <string name="rsx_orch_step_n">Executando a etapa N</string>
     <string name="rsx_biometric_enable">Ativar bloqueio biométrico</string>
     <string name="rsx_biometric_desc">Uma vez ativado, toda inicialização do ReShizukuX exige verificação biométrica ou de credencial do dispositivo antes de entrar na UI principal. A verificação é fornecida pelo sistema; o app não armazena dados biométricos.</string>
     <string name="rsx_biometric_requirement">Exigir impressão digital / rosto / credencial do dispositivo na inicialização</string>
@@ -1150,8 +1510,8 @@ Tente o método de linha de comando.</string>
     <string name="rsx_biometric_enabled">Bloqueio biométrico ativado</string>
     <string name="rsx_biometric_failed" formatted="true">Falha na verificação: %1$s</string>
     <string name="rsx_biometric_not_passed">Verificação não aprovada</string>
-    <string name="rsx_term_not_running">O serviço Shizuku não está em execução; inicie-o na página Status primeiro</string>
-    <string name="rsx_term_running">O serviço Shizuku está em execução (privilégio de shell)</string>
+    <string name="rsx_term_not_running">O serviço ReShizukuX não está em execução; inicie-o na página Status primeiro</string>
+    <string name="rsx_term_running">O serviço ReShizukuX está em execução (privilégio de shell)</string>
     <string name="rsx_term_stopping">Parando…</string>
     <string name="rsx_term_empty">Sem saída ainda. Digite um comando shell e toque em Executar.</string>
     <string name="rsx_term_hint">Digite comando shell…</string>
@@ -1165,7 +1525,7 @@ Tente o método de linha de comando.</string>
     <string name="rsx_term_shell_form">Para executar com privilégio de shell, use o formato "adb shell comando".</string>
     <string name="rsx_term_no_output" formatted="true">(sem saída, código de saída=%1$d)</string>
     <string name="rsx_term_exec_failed" formatted="true">Falha na execução: %1$s: %2$s</string>
-    <string name="rsx_term_error_not_running">(erro) serviço Shizuku não está em execução\n</string>
+    <string name="rsx_term_error_not_running">(erro) serviço ReShizukuX não está em execução\n</string>
     <string name="rsx_term_killed">(o comando excedeu 15s e foi forçado a terminar)\n</string>
     <string name="rsx_theme_mode_system">Seguir sistema</string>
     <string name="rsx_theme_mode_light">Claro</string>
@@ -1178,19 +1538,19 @@ Tente o método de linha de comando.</string>
     <string name="rsx_theme_sample_card">Cartão de amostra</string>
     <string name="rsx_theme_sample_text">Este é um texto de corpo mostrando as cores primary / onSurfaceVariant.</string>
     <string name="rsx_theme_container">Cartão de contêiner · secondaryContainer</string>
-    <string name="rsx_widget_running">Shizuku em execução</string>
-    <string name="rsx_widget_not_running">Shizuku não está em execução</string>
+    <string name="rsx_widget_running">ReShizukuX em execução</string>
+    <string name="rsx_widget_not_running">ReShizukuX não está em execução</string>
     <string name="rsx_widget_start">Iniciar</string>
-    <string name="rsx_widget_desc">Mostra o status do serviço Shizuku na tela inicial; toque para iniciar o serviço rapidamente.</string>
+    <string name="rsx_widget_desc">Mostra o status do serviço ReShizukuX na tela inicial; toque para iniciar o serviço rapidamente.</string>
     <string name="rsx_widget_features">Recursos do widget</string>
     <string name="rsx_widget_feature1">· Status do serviço em tempo real (em execução / parado)</string>
     <string name="rsx_widget_feature2">· Atualização automática a cada 30 minutos</string>
-    <string name="rsx_widget_feature3">• Toque em "Iniciar" para iniciar rapidamente o serviço Shizuku</string>
+    <string name="rsx_widget_feature3">• Toque em "Iniciar" para iniciar rapidamente o serviço ReShizukuX</string>
     <string name="rsx_widget_add">Como adicionar</string>
     <string name="rsx_widget_add1">1. Pressione e segure um espaço vazio na tela inicial</string>
     <string name="rsx_widget_add2">2. Escolha "Widgets"</string>
     <string name="rsx_widget_add3">3. Encontre o ReShizukuX</string>
-    <string name="rsx_widget_add4">4. Arraste o widget "Status do Shizuku" para a tela inicial</string>
-    <string name="rsx_widget_status_widget">Widget de status do Shizuku</string>
+    <string name="rsx_widget_add4">4. Arraste o widget "Status do ReShizukuX" para a tela inicial</string>
+    <string name="rsx_widget_status_widget">Widget de status do ReShizukuX</string>
 
 </resources>

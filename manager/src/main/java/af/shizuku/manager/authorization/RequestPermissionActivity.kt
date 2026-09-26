@@ -207,7 +207,7 @@ class RequestPermissionActivity : AppActivity() {
 
         val d = MaterialAlertDialogBuilder(this)
             .setIcon(icon)
-            .setTitle("Shizuku: ${getString(R.string.app_management_dialog_adb_is_limited_title)}")
+            .setTitle("ReShizukuX: ${getString(R.string.app_management_dialog_adb_is_limited_title)}")
             .setMessage(
                 message.toHtml(HtmlCompat.FROM_HTML_OPTION_TRIM_WHITESPACE)
             )

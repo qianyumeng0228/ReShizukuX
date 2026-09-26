@@ -34,7 +34,7 @@ public class ExtraShell {
     }
 
     private static void printHelp() {
-        LOGGER.i("ShizukuX CLI Helper (plus)");
+        LOGGER.i("ReShizukuX CLI Helper (plus)");
         LOGGER.w("Usage: plus [command] [args]");
         LOGGER.i("");
         LOGGER.i("Commands:");
@@ -110,12 +110,12 @@ public class ExtraShell {
         if (enabled) {
             LOGGER.i("Current Target: " + (target != null ? target : "None (Default)"));
         }
-        LOGGER.i("Note: Spoof targets are managed via ShizukuX Settings > Root Compatibility.");
+        LOGGER.i("Note: Spoof targets are managed via ReShizukuX Settings > Root Compatibility.");
     }
 
     private static void handleDoctor(IBinder binder) throws RemoteException {
         IShizukuService service = IShizukuService.Stub.asInterface(binder);
-        LOGGER.i("ShizukuX System Doctor Diagnostics");
+        LOGGER.i("ReShizukuX System Doctor Diagnostics");
         LOGGER.i("==================================");
         LOGGER.i("Server Version: " + service.getVersion());
         LOGGER.i("Server UID: " + service.getUid());

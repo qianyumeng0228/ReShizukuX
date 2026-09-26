@@ -249,7 +249,7 @@ class AdvancedSettingsFragment : BaseSettingsFragment() {
                         type = "text/plain"
                         putExtra(Intent.EXTRA_STREAM, uri)
                         putExtra(Intent.EXTRA_TEXT, report.take(500))
-                        clipData = ClipData.newUri(ctx.contentResolver, "ShizukuX Diagnostics", uri)
+                        clipData = ClipData.newUri(ctx.contentResolver, "ReShizukuX Diagnostics", uri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
                     startActivity(Intent.createChooser(send, ctx.getString(R.string.export_diagnostics_share)))
@@ -264,7 +264,7 @@ class AdvancedSettingsFragment : BaseSettingsFragment() {
             }
             .setNeutralButton(R.string.export_diagnostics_copy) { _, _ ->
                 val cm = ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                cm.setPrimaryClip(ClipData.newPlainText("ShizukuX Diagnostics", report))
+                cm.setPrimaryClip(ClipData.newPlainText("ReShizukuX Diagnostics", report))
                 Toast.makeText(ctx, R.string.export_diagnostics_copied, Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton(android.R.string.cancel, null)
