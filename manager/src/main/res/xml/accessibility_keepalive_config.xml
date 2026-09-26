@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  无障碍保活服务配置（ReShizukuX beta1 组B）。
+  - flags: default + includeNotImportantViews（最小化，不做事件抓取）
+  - eventTypes: typeWindowStateChanged（仅窗口状态变化，不监听内容）
+  - 本服务不读取窗口内容，不收集任何数据。
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/reshizukux_accessibility_desc"
+    android:accessibilityFlags="flagDefault|flagIncludeNotImportantViews"
+    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:canRetrieveWindowContent="false"
+    android:notificationTimeout="200" />
