@@ -24,6 +24,10 @@ import rikka.material.app.LocaleDelegate
 import rikka.shizuku.Shizuku
 import timber.log.Timber
 import af.shizuku.manager.di.appModule
+import af.shizuku.manager.service.RuntimeModuleService
+import io.reshizukux.modules.core.ModuleManager
+import io.reshizukux.modules.core.ModuleState
+import io.reshizukux.modules.permission.PermissionController
 import android.os.UserManager
 import com.airbnb.mvrx.Mavericks
 import kotlinx.coroutines.CoroutineScope
@@ -329,6 +333,26 @@ class ShizukuApplication : Application(), Configuration.Provider {
             if (e is Error) throw e
         }
 
+        // 5b. ReShizukuX 功能优先：模块后台保活托管在独立前台 RuntimeModuleService
+        // （不再附加在 :daemon 的 ShizukuDaemonService 循环里）。仅主进程执行：
+        // :daemon 进程不持有 Shizuku binder，也不跑模块。
+        if (!isDaemonProcess()) {
+            try {
+                ModuleManager.init(this)
+                // :modules 不能反向依赖 :manager，由 enable() 通过此钩子拉起前台服务。
+                ModuleManager.onBackgroundModuleActivated = {
+                    runCatching { RuntimeModuleService.start(this) }
+                        .onFailure { Timber.tag("ShizukuApplication").w(it, "RuntimeModuleService.start via hook failed") }
+                }
+                // 启动时补拉：已有 ENABLED 后台模块（service.sh + SERVICE 权限）则恢复保活。
+                if (hasAnyBackgroundModule()) {
+                    RuntimeModuleService.start(this)
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "RuntimeModuleService bootstrap failed")
+            }
+        }
+
         // 6. Update state machine
         try {
             ShizukuStateMachine.update()
@@ -351,6 +375,20 @@ class ShizukuApplication : Application(), Configuration.Provider {
             val name = java.io.File("/proc/self/cmdline").readText().trimEnd('\u0000')
             name.endsWith(":daemon")
         } catch (e: Exception) {
+            false
+        }
+    }
+
+    /** 是否存在「ENABLED 且带 service.sh 且有 SERVICE 权限」的后台模块（决定是否补拉 RuntimeModuleService）。 */
+    private fun hasAnyBackgroundModule(): Boolean {
+        return try {
+            ModuleManager.getInstalledModules().any { info ->
+                info.state == ModuleState.ENABLED &&
+                    java.io.File(ModuleManager.getModuleDir(info.id), "service.sh").exists() &&
+                    PermissionController.canService(info.id)
+            }
+        } catch (e: Exception) {
+            Timber.tag("ShizukuApplication").w(e, "hasAnyBackgroundModule check failed")
             false
         }
     }

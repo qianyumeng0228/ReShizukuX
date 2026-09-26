@@ -13,8 +13,11 @@ import java.io.File
 /**
  * 模块 service.sh 存活轮询 + 指数退避重启 + 熔断（设计方案 §3.3.3）。
  *
- * 由 [af.shizuku.manager.service.ShizukuDaemonService] 的 5s 轮询协程在每轮末尾调用
- * [checkAndRevive]，本类不自起循环、不新增前台服务。
+ * 由 [af.shizuku.manager.service.RuntimeModuleService]（manager 主进程独立前台服务）的
+ * 5s 轮询协程周期性调用 [checkAndRevive]，本类不自起循环。
+ *
+ * 历史：P3 阶段曾由 :daemon 进程的 ShizukuDaemonService 在 server 保活循环末尾「附加」调用
+ * （省电优先，不新增前台服务）；功能优先设计变更后拆分为独立前台服务托管，退避/熔断逻辑不变。
  *
  * 退避档位 [BACKOFF_MS]（参考 AxManagerD RuntimeModuleService.kt:84-85）：
  *   1s → 2s → 4s → 8s → 15s → 30s → 60s。
@@ -22,7 +25,7 @@ import java.io.File
  *   置 DB 状态为 ERROR 并停止重启；用户重新 enable（[ModuleManager.enable]）调用
  *   [clearCircuit] 清除计数后恢复。
  *
- * 省电：无任何「ENABLED 且带 service.sh 且有 SERVICE 权限」的模块时立即返回，不做任何 pgrep。
+ * 无任何「ENABLED 且带 service.sh 且有 SERVICE 权限」的模块时立即返回，不做任何 pgrep。
  */
 object ModuleWatchdog {
 

@@ -53,6 +53,17 @@ object ModuleManager {
     @Volatile
     private var appContext: Context? = null
 
+    /**
+     * 跨模块依赖倒置钩子（功能优先设计变更，2026-09）。
+     *
+     * 模块 service.sh 的后台保活由 :manager 进程的独立前台服务
+     * `af.shizuku.manager.service.RuntimeModuleService` 托管。但 :modules 模块不能反向依赖
+     * :manager（会成环），故由 manager 在启动时注入此回调；本类在拉起 service.sh 后触发它，
+     * 由 manager 负责拉起前台保活服务（幂等）。
+     */
+    @Volatile
+    var onBackgroundModuleActivated: (() -> Unit)? = null
+
     fun init(context: Context) {
         if (appContext == null) {
             appContext = context.applicationContext
@@ -327,6 +338,10 @@ object ModuleManager {
         if (File(moduleDir, "service.sh").exists()) {
             runCatching { ServiceRunner.startService(moduleId) }
                 .onFailure { Timber.tag(TAG).w(it, "startService on enable failed for $moduleId") }
+            // 功能优先：拉起独立前台 RuntimeModuleService 做后续后台保活（幂等）。
+            // :modules 不依赖 :manager，通过 [onBackgroundModuleActivated] 钩子回调。
+            runCatching { onBackgroundModuleActivated?.invoke() }
+                .onFailure { Timber.tag(TAG).w(it, "trigger RuntimeModuleService start failed") }
         }
         return true
     }

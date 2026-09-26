@@ -335,6 +335,22 @@
             android:process=":daemon"
             android:exported="false" />
 
+        <!-- 模块后台保活：运行在 manager 主进程的独立前台服务（功能优先设计变更）。
+             替代原先附加在 ShizukuDaemonService 循环末尾的模块 watchdog 轮询；
+             START_STICKY，5s 周期调 ModuleWatchdog.checkAndRevive。 -->
+        <service
+            android:name=".service.RuntimeModuleService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Keeps user-enabled module background scripts (service.sh) alive.
+                    The scripts run as detached shell processes adopted by the Shizuku server;
+                    this foreground service periodically checks their liveness and restarts
+                    crashed ones with exponential backoff. Without it, enabled modules stop
+                    running whenever the main process is frozen." />
+        </service>
+
         <receiver
             android:name=".widget.ShizukuWidgetProvider"
             android:exported="true"

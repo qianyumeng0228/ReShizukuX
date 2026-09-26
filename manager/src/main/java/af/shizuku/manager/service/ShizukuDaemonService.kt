@@ -8,9 +8,6 @@ import android.os.Process
 import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.starter.Starter
 import com.topjohnwu.superuser.Shell
-import io.reshizukux.modules.core.ModuleManager
-import io.reshizukux.modules.execution.ServiceRunner
-import io.reshizukux.modules.watchdog.ModuleWatchdog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -92,17 +89,6 @@ class ShizukuDaemonService : Service() {
                 return@launch
             }
 
-            // P3：模块后台保活。daemon 进程无 Shizuku binder（它自己就是拉起 server 的那一方），
-            // 故把模块 service.sh 的 pgrep/kill/重启统一走已就绪的 libsu root shell。
-            runCatching {
-                ModuleManager.init(this@ShizukuDaemonService)
-                ServiceRunner.installShell { cmd ->
-                    runCatching { Shell.cmd(cmd).exec().out.joinToString("\n").trim() }
-                        .getOrDefault("")
-                }
-                Timber.tag(TAG).i("module watchdog shell installed (libsu root)")
-            }.onFailure { Timber.tag(TAG).w(it, "module watchdog init failed") }
-
             Timber.tag(TAG).i("guard loop started, polling every ${POLL_INTERVAL_MS}ms")
             while (isActive) {
                 try {
@@ -116,10 +102,6 @@ class ShizukuDaemonService : Service() {
                         Timber.tag(TAG).w("server not alive, attempting relaunch")
                         attemptRestart()
                     }
-                    // P3：在原有 server 保活循环末尾「附加」模块 service.sh 存活轮询
-                    // （不改 server pgrep/重启/熔断逻辑）。无后台模块时快速返回。
-                    runCatching { ModuleWatchdog.checkAndRevive(this@ShizukuDaemonService) }
-                        .onFailure { Timber.tag(TAG).w(it, "module watchdog iteration failed") }
                 } catch (e: Exception) {
                     Timber.tag(TAG).w(e, "guard loop iteration failed")
                 }
