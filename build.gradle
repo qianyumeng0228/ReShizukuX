@@ -32,9 +32,9 @@ def versionNameOverride = {
     return raw.toString().trim()
 }()
 // ReShizukuX：免 Root 模块系统完整功能版，beta 阶段（12 项回归功能已集成）
-def portableVersionName = versionNameOverride ?: "v${baseVersionName}-beta1"
+def portableVersionName = versionNameOverride ?: "v${baseVersionName}-beta2"
 ext {
-    versionCode = versionCodeOverride ?: 1200
+    versionCode = versionCodeOverride ?: 1201
     versionName = portableVersionName
 }
 
