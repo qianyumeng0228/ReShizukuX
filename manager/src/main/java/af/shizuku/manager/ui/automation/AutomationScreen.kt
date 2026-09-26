@@ -1,6 +1,7 @@
 package af.shizuku.manager.ui.automation
 
 import android.content.Intent
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,7 +33,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import af.shizuku.manager.R
 import af.shizuku.manager.automation.AppProfilesActivity
 import kotlinx.coroutines.launch
 
@@ -65,12 +68,12 @@ fun AutomationScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("自动化") },
+                title = { Text(stringResource(R.string.rsx_auto_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回"
+                            contentDescription = stringResource(R.string.rsx_back)
                         )
                     }
                 }
@@ -80,11 +83,11 @@ fun AutomationScreen(
             ExtendedFloatingActionButton(
                 onClick = {
                     scope.launch {
-                        snackbarHostState.showSnackbar("规则引擎扩展开发中")
+                        snackbarHostState.showSnackbar(context.getString(R.string.rsx_auto_engine_wip))
                     }
                 },
                 icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                text = { Text("新建规则") }
+                text = { Text(stringResource(R.string.rsx_auto_new_rule)) }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -102,7 +105,7 @@ fun AutomationScreen(
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Text(
-                        text = "自动化规则在 Shizuku 服务运行时生效。规则引擎监听网络变化和前台应用切换。",
+                        text = stringResource(R.string.rsx_auto_hint),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(16.dp)
@@ -111,13 +114,13 @@ fun AutomationScreen(
             }
 
             item {
-                SectionHeader("规则")
+                SectionHeader(stringResource(R.string.rsx_auto_rules))
             }
 
             if (defaultRules.isEmpty()) {
                 item {
                     Text(
-                        text = "暂无规则",
+                        text = stringResource(R.string.rsx_auto_no_rules),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
@@ -127,9 +130,9 @@ fun AutomationScreen(
                 items(defaultRules, key = { it.registeredName }) { rule ->
                     val enabled = enabledMap[rule.registeredName] ?: true
                     RuleCard(
-                        title = rule.title,
-                        description = rule.description,
-                        status = if (enabled) "已启用" else "已禁用",
+                        title = stringResource(rule.titleRes),
+                        description = stringResource(rule.descRes),
+                        status = if (enabled) stringResource(R.string.rsx_auto_enabled) else stringResource(R.string.rsx_auto_disabled),
                         registeredName = rule.registeredName,
                         checked = enabled,
                         onCheckedChange = { enabledMap[rule.registeredName] = it }
@@ -138,7 +141,7 @@ fun AutomationScreen(
             }
 
             item {
-                SectionHeader("应用配置文件")
+                SectionHeader(stringResource(R.string.rsx_auto_profile))
             }
 
             item {
@@ -150,13 +153,13 @@ fun AutomationScreen(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
                 ) {
-                    Text("管理应用配置文件")
+                    Text(stringResource(R.string.rsx_auto_manage_profiles))
                 }
             }
 
             item {
                 Text(
-                    text = "默认规则在应用启动时注册进 AutomationEngine；开关为界面状态，事件派发由 Shizuku 服务驱动。",
+                    text = stringResource(R.string.rsx_auto_engine_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 80.dp)
@@ -220,19 +223,19 @@ private fun RuleCard(
 
 private data class AutomationRuleUi(
     val registeredName: String,
-    val title: String,
-    val description: String
+    @StringRes val titleRes: Int,
+    @StringRes val descRes: Int
 )
 
 private val defaultRules = listOf(
     AutomationRuleUi(
         registeredName = "Network Firewall Rule",
-        title = "网络防火墙规则",
-        description = "安全网络时关闭 Binder 防火墙，不可信网络时开启"
+        titleRes = R.string.rsx_auto_firewall_title,
+        descRes = R.string.rsx_auto_firewall_desc
     ),
     AutomationRuleUi(
         registeredName = "App Profile Rule",
-        title = "应用配置文件规则",
-        description = "前台应用变化时应用对应配置文件"
+        titleRes = R.string.rsx_auto_profile_title,
+        descRes = R.string.rsx_auto_profile_desc
     )
 )

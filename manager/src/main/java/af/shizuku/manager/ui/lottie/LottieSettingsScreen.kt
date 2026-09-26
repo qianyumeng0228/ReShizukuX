@@ -29,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
@@ -49,10 +50,10 @@ fun LottieSettingsScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("动画效果") },
+                title = { Text(stringResource(R.string.rsx_lottie_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.rsx_back))
                     }
                 }
             )
@@ -71,9 +72,9 @@ fun LottieSettingsScreen(onBack: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text("启用动画效果", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.rsx_lottie_enable), style = MaterialTheme.typography.titleMedium)
                         Text(
-                            "开启动画可提升视觉体验，关闭可节省性能。",
+                            stringResource(R.string.rsx_lottie_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -96,7 +97,7 @@ fun LottieSettingsScreen(onBack: () -> Unit) {
                     Modifier.fillMaxWidth().padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("动画预览", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.rsx_lottie_preview), style = MaterialTheme.typography.titleMedium)
                     androidx.compose.foundation.layout.Spacer(Modifier.padding(8.dp))
                     if (enabled) {
                         val composition by rememberLottieComposition(
@@ -109,7 +110,7 @@ fun LottieSettingsScreen(onBack: () -> Unit) {
                             modifier = Modifier.padding(16.dp)
                         )
                     } else {
-                        Text("动画已关闭", style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.rsx_lottie_off), style = MaterialTheme.typography.bodyMedium)
                     }
 
                     androidx.compose.foundation.layout.Spacer(Modifier.padding(8.dp))

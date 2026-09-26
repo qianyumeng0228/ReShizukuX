@@ -34,7 +34,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import af.shizuku.manager.R
 import af.shizuku.manager.ai.AiClient
 import af.shizuku.manager.ai.AiSettings
 import af.shizuku.manager.ai.AiSettings.HistoryItem
@@ -83,10 +85,10 @@ fun AiAssistantScreen(
 
             val result = AiClient.explain(
                 context,
-                AiClient.AiRequest(command = q, context = "ReShizukuX 模块 shell 环境")
+                AiClient.AiRequest(command = q, context = context.getString(R.string.rsx_ai_shell_env))
             )
             sending = false
-            val reply = result.getOrElse { "请求失败：${it.message}" }
+            val reply = result.getOrElse { context.getString(R.string.rsx_ai_request_failed, it.message) }
             val aiItem = HistoryItem("ai", reply, System.currentTimeMillis())
             history = history + aiItem
             AiSettings.appendHistory(context, aiItem)
@@ -95,31 +97,31 @@ fun AiAssistantScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text("AI 助手") },
+            title = { Text(stringResource(R.string.rsx_ai_title)) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(painter = painterResource(af.shizuku.manager.R.drawable.ic_back_24), contentDescription = "返回")
+                    Icon(painter = painterResource(af.shizuku.manager.R.drawable.ic_back_24), contentDescription = stringResource(R.string.rsx_back))
                 }
             },
             actions = {
-                TextButton(onClick = { showSettings = true }) { Text("设置") }
+                TextButton(onClick = { showSettings = true }) { Text(stringResource(R.string.rsx_ai_settings)) }
                 TextButton(onClick = {
                     AiSettings.clearHistory(context)
                     history = emptyList()
-                }) { Text("清空") }
+                }) { Text(stringResource(R.string.rsx_ai_clear)) }
             }
         )
 
         if (!AiSettings.hasApiKey(context)) {
             Card(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("尚未配置 API 密钥", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.rsx_ai_no_key), style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "请在设置中填入 API Key 后开始使用。",
+                        stringResource(R.string.rsx_ai_need_key),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    OutlinedButton(onClick = { showSettings = true }) { Text("配置 API 密钥") }
+                    OutlinedButton(onClick = { showSettings = true }) { Text(stringResource(R.string.rsx_ai_configure)) }
                 }
             }
         }
@@ -134,7 +136,7 @@ fun AiAssistantScreen(
                 item {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.padding(2.dp))
-                        Text("思考中…", style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.rsx_ai_thinking), style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
@@ -149,10 +151,10 @@ fun AiAssistantScreen(
                 value = input,
                 onValueChange = { input = it },
                 modifier = Modifier.weight(1f),
-                placeholder = { Text("输入命令或脚本，如 pm list packages") },
+                placeholder = { Text(stringResource(R.string.rsx_ai_placeholder)) },
                 maxLines = 3
             )
-            Button(onClick = { send() }, enabled = !sending) { Text("发送") }
+            Button(onClick = { send() }, enabled = !sending) { Text(stringResource(R.string.rsx_ai_send)) }
         }
 
         Row(
@@ -162,20 +164,20 @@ fun AiAssistantScreen(
             OutlinedButton(onClick = {
                 // 占位：后续接入 TerminalTab 当前命令追踪
                 input = input // no-op
-            }) { Text("追踪当前终端命令") }
+            }) { Text(stringResource(R.string.rsx_ai_track)) }
         }
     }
 
     if (showSettings) {
         AlertDialog(
             onDismissRequest = { showSettings = false },
-            title = { Text("AI 服务设置") },
+            title = { Text(stringResource(R.string.rsx_ai_service_settings)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = apiKey,
                         onValueChange = { apiKey = it },
-                        label = { Text("API 密钥") },
+                        label = { Text(stringResource(R.string.rsx_ai_api_key)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -201,9 +203,9 @@ fun AiAssistantScreen(
                     AiSettings.setEndpoint(context, endpoint.trim().ifBlank { AiSettings.DEFAULT_ENDPOINT })
                     AiSettings.setModel(context, model.trim().ifBlank { AiSettings.DEFAULT_MODEL })
                     showSettings = false
-                }) { Text("保存") }
+                }) { Text(stringResource(R.string.rsx_ai_save)) }
             },
-            dismissButton = { TextButton(onClick = { showSettings = false }) { Text("取消") } }
+            dismissButton = { TextButton(onClick = { showSettings = false }) { Text(stringResource(R.string.rsx_cancel)) } }
         )
     }
 }

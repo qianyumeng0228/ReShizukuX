@@ -46,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import af.shizuku.manager.R
 import io.reshizukux.modules.core.ModuleInfo
@@ -102,7 +103,7 @@ fun ModulesTab() {
                 runCatching {
                     val cacheFile = File(context.cacheDir, "install-${System.currentTimeMillis()}.zip")
                     context.contentResolver.openInputStream(uri).use { input ->
-                        requireNotNull(input) { "无法打开所选文件" }
+                        requireNotNull(input) { context.getString(R.string.rsx_mod_cant_open) }
                         cacheFile.outputStream().use { output -> input.copyTo(output) }
                     }
                     ModuleManager.install(cacheFile).getOrThrow()
@@ -110,10 +111,10 @@ fun ModulesTab() {
             }
             busyInstallId = null
             result.onSuccess { info ->
-                snackbarHostState.showSnackbar("已安装：${info.name}")
+                snackbarHostState.showSnackbar(context.getString(R.string.rsx_mod_installed_x, info.name))
                 refreshKey++
             }.onFailure { e ->
-                snackbarHostState.showSnackbar("安装失败：${e.message ?: "未知错误"}")
+                snackbarHostState.showSnackbar(context.getString(R.string.rsx_mod_install_failed, e.message ?: context.getString(R.string.rsx_mod_error)))
             }
         }
     }
@@ -142,7 +143,7 @@ fun ModulesTab() {
         if (url != null) {
             val r = withContext(Dispatchers.IO) { RepoManager.refreshRepo(url) }
             r.onFailure { e ->
-                snackbarHostState.showSnackbar("仓库刷新失败：${e.message ?: ""}")
+                snackbarHostState.showSnackbar(context.getString(R.string.rsx_mod_repo_failed, e.message ?: ""))
             }
         }
         loadRepoModules()
@@ -174,11 +175,11 @@ fun ModulesTab() {
             }
             busyInstallId = null
             result.onSuccess { info ->
-                snackbarHostState.showSnackbar("已安装：${info.name}")
+                snackbarHostState.showSnackbar(context.getString(R.string.rsx_mod_installed_x, info.name))
                 refreshKey++
                 loadRepoModules()
             }.onFailure { e ->
-                snackbarHostState.showSnackbar("安装失败：${e.message ?: "未知错误"}")
+                snackbarHostState.showSnackbar(context.getString(R.string.rsx_mod_install_failed, e.message ?: context.getString(R.string.rsx_mod_error)))
             }
         }
     }
@@ -200,7 +201,7 @@ fun ModulesTab() {
         floatingActionButton = {
             if (tabIndex == 0) {
                 FloatingActionButton(onClick = { zipPicker.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }) {
-                    Icon(painter = painterResource(R.drawable.ic_add_24), contentDescription = "从 ZIP 安装")
+                    Icon(painter = painterResource(R.drawable.ic_add_24), contentDescription = stringResource(R.string.rsx_mod_install_zip))
                 }
             }
         }
@@ -216,13 +217,13 @@ fun ModulesTab() {
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("搜索模块…") },
+                placeholder = { Text(stringResource(R.string.rsx_mod_search)) },
                 singleLine = true
             )
 
             TabRow(selectedTabIndex = tabIndex) {
-                Tab(selected = tabIndex == 0, onClick = { tabIndex = 0 }, text = { Text("已安装") })
-                Tab(selected = tabIndex == 1, onClick = { tabIndex = 1 }, text = { Text("在线仓库") })
+                Tab(selected = tabIndex == 0, onClick = { tabIndex = 0 }, text = { Text(stringResource(R.string.rsx_mod_installed)) })
+                Tab(selected = tabIndex == 1, onClick = { tabIndex = 1 }, text = { Text(stringResource(R.string.rsx_mod_online)) })
             }
 
             if (tabIndex == 0) {
@@ -279,7 +280,7 @@ private fun InstalledList(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                "暂无已安装模块\n去「在线仓库」安装，或点右下角按钮从本地 ZIP 安装。",
+                stringResource(R.string.rsx_mod_empty),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -333,7 +334,7 @@ private fun ModuleCard(
                 }
                 Text("v${info.version} · ${info.author}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (!info.publicKey.isNullOrBlank()) {
-                    Text("已签名", style = MaterialTheme.typography.labelSmall, color = Color(0xFF4CAF50))
+                    Text(stringResource(R.string.rsx_mod_signed), style = MaterialTheme.typography.labelSmall, color = Color(0xFF4CAF50))
                 }
             }
             Switch(
@@ -348,12 +349,12 @@ private fun ModuleCard(
 @Composable
 private fun StateChip(state: ModuleState) {
     val (text, color) = when (state) {
-        ModuleState.ENABLED -> "启用" to Color(0xFF4CAF50)
-        ModuleState.DISABLED -> "停用" to Color.Gray
-        ModuleState.ERROR -> "错误" to MaterialTheme.colorScheme.error
-        ModuleState.CORRUPTED -> "损坏" to Color(0xFFFF9800)
-        ModuleState.UPDATING -> "更新中" to Color(0xFF2196F3)
-        ModuleState.NOT_INSTALLED -> "未安装" to Color.Gray
+        ModuleState.ENABLED -> stringResource(R.string.rsx_md_status_enabled) to Color(0xFF4CAF50)
+        ModuleState.DISABLED -> stringResource(R.string.rsx_md_status_disabled) to Color.Gray
+        ModuleState.ERROR -> stringResource(R.string.rsx_md_error) to MaterialTheme.colorScheme.error
+        ModuleState.CORRUPTED -> stringResource(R.string.rsx_md_status_corrupted) to Color(0xFFFF9800)
+        ModuleState.UPDATING -> stringResource(R.string.rsx_md_updating) to Color(0xFF2196F3)
+        ModuleState.NOT_INSTALLED -> stringResource(R.string.rsx_md_status_not_installed) to Color.Gray
     }
     AssistChip(onClick = {}, label = { Text(text, color = color, style = MaterialTheme.typography.labelSmall) })
 }
@@ -377,7 +378,7 @@ private fun RepoList(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (repos.isEmpty()) {
-                Text("暂无仓库", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.rsx_mod_no_repos), style = MaterialTheme.typography.bodyMedium)
             } else {
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
@@ -392,7 +393,7 @@ private fun RepoList(
                 }
             }
             TextButton(onClick = onRefresh, enabled = !loading) {
-                Text(if (loading) "刷新中…" else "刷新")
+                Text(if (loading) stringResource(R.string.rsx_mod_refreshing) else stringResource(R.string.rsx_mod_refresh))
             }
         }
 
@@ -405,7 +406,7 @@ private fun RepoList(
 
         if (modules.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("仓库暂无模块", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.rsx_mod_repo_empty), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             return
         }
@@ -439,9 +440,9 @@ private fun RepoModuleCard(
             ) {
                 Text(mod.name, style = MaterialTheme.typography.titleMedium)
                 if (!mod.signature.isNullOrBlank() && !mod.publicKey.isNullOrBlank()) {
-                    Text("已签名", style = MaterialTheme.typography.labelSmall, color = Color(0xFF4CAF50))
+                    Text(stringResource(R.string.rsx_mod_signed), style = MaterialTheme.typography.labelSmall, color = Color(0xFF4CAF50))
                 } else {
-                    Text("未验证", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    Text(stringResource(R.string.rsx_mod_unsigned), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                 }
             }
             Text("v${mod.version} · ${mod.author}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -453,7 +454,7 @@ private fun RepoModuleCard(
                     CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(20.dp))
                 } else {
                     OutlinedButton(onClick = onInstall, enabled = !alreadyInstalled) {
-                        Text(if (alreadyInstalled) "已安装" else "安装")
+                        Text(if (alreadyInstalled) stringResource(R.string.rsx_mod_installed) else stringResource(R.string.rsx_mod_install))
                     }
                 }
             }

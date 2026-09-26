@@ -27,7 +27,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import af.shizuku.manager.R
 import af.shizuku.manager.analytics.SentryManager
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -50,10 +52,10 @@ fun SentrySettingsScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("崩溃上报") },
+                title = { Text(stringResource(R.string.rsx_sentry_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.rsx_back))
                     }
                 }
             )
@@ -73,9 +75,9 @@ fun SentrySettingsScreen(onBack: () -> Unit) {
                         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                     ) {
                         Column(Modifier.weight(1f)) {
-                            Text("启用崩溃上报", style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.rsx_sentry_enable), style = MaterialTheme.typography.titleMedium)
                             Text(
-                                "匿名上报崩溃堆栈，帮助改进应用，不包含个人信息。",
+                                stringResource(R.string.rsx_sentry_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -96,9 +98,9 @@ fun SentrySettingsScreen(onBack: () -> Unit) {
             // 上次崩溃
             Text(
                 if (lastCrash > 0) {
-                    "上次崩溃：${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(lastCrash))}"
+                    stringResource(R.string.rsx_sentry_last_crash, SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date(lastCrash)))
                 } else {
-                    "上次崩溃：无记录"
+                    stringResource(R.string.rsx_sentry_last_crash_none)
                 },
                 style = MaterialTheme.typography.bodyMedium
             )
@@ -107,20 +109,20 @@ fun SentrySettingsScreen(onBack: () -> Unit) {
 
             // 高级选项
             OutlinedButton(onClick = { showAdvanced = !showAdvanced }) {
-                Text(if (showAdvanced) "隐藏高级选项" else "高级选项（DSN）")
+                Text(if (showAdvanced) stringResource(R.string.rsx_sentry_hide_advanced) else stringResource(R.string.rsx_sentry_advanced))
             }
             if (showAdvanced) {
                 OutlinedTextField(
                     value = dsn,
                     onValueChange = { dsn = it },
-                    label = { Text("Sentry DSN") },
+                    label = { Text(stringResource(R.string.rsx_sentry_dsn)) },
                     modifier = Modifier.fillMaxSize()
                 )
                 OutlinedButton(onClick = {
                     SentryManager.setDsn(context, dsn)
-                    Toast.makeText(context, "DSN 已保存", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.rsx_sentry_dsn_saved), Toast.LENGTH_SHORT).show()
                 }) {
-                    Text("保存 DSN")
+                    Text(stringResource(R.string.rsx_sentry_save_dsn))
                 }
             }
 
@@ -130,9 +132,9 @@ fun SentrySettingsScreen(onBack: () -> Unit) {
             OutlinedButton(onClick = {
                 val test = RuntimeException("Sentry test @ ${System.currentTimeMillis()}")
                 SentryManager.captureException(test)
-                Toast.makeText(context, if (enabled) "已发送测试崩溃" else "未启用上报", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, if (enabled) context.getString(R.string.rsx_sentry_test_sent) else context.getString(R.string.rsx_sentry_disabled), Toast.LENGTH_SHORT).show()
             }, enabled = enabled) {
-                Text("发送测试崩溃")
+                Text(stringResource(R.string.rsx_sentry_send_test))
             }
         }
     }

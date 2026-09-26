@@ -26,8 +26,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
+import af.shizuku.manager.R
 import af.shizuku.manager.security.BiometricLockManager
 
 /**
@@ -53,12 +55,12 @@ fun BiometricLockScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("生物识别锁") },
+                title = { Text(stringResource(R.string.rsx_biometric_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回"
+                            contentDescription = stringResource(R.string.rsx_back)
                         )
                     }
                 }
@@ -80,9 +82,9 @@ fun BiometricLockScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
-                        Text(text = "启用生物识别锁", style = MaterialTheme.typography.bodyLarge)
+                        Text(text = stringResource(R.string.rsx_biometric_enable), style = MaterialTheme.typography.bodyLarge)
                         Text(
-                            text = "启动应用时需要指纹 / 面容 / 设备凭据验证",
+                            text = stringResource(R.string.rsx_biometric_requirement),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -95,7 +97,7 @@ fun BiometricLockScreen(
                                 // 立即触发一次验证，通过后才真正写入启用状态。
                                 val activity = context as? FragmentActivity
                                 if (activity == null) {
-                                    Toast.makeText(context, "当前环境不支持生物识别验证", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.rsx_biometric_unsupported), Toast.LENGTH_SHORT).show()
                                     return@Switch
                                 }
                                 verifying = true
@@ -104,17 +106,17 @@ fun BiometricLockScreen(
                                         verifying = false
                                         manager.setLockEnabled(context, true)
                                         enabled = true
-                                        Toast.makeText(context, "生物识别锁已启用", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.rsx_biometric_enabled), Toast.LENGTH_SHORT).show()
                                     }
 
                                     override fun onError(errorCode: Int, errString: CharSequence) {
                                         verifying = false
-                                        Toast.makeText(context, "验证失败：$errString", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.rsx_biometric_failed, errString), Toast.LENGTH_SHORT).show()
                                     }
 
                                     override fun onFailed() {
                                         verifying = false
-                                        Toast.makeText(context, "验证未通过", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.rsx_biometric_not_passed), Toast.LENGTH_SHORT).show()
                                     }
                                 })
                             } else {
@@ -129,12 +131,12 @@ fun BiometricLockScreen(
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "支持的验证方式",
+                        text = stringResource(R.string.rsx_biometric_methods),
                         style = MaterialTheme.typography.titleMedium
                     )
                     if (!available) {
                         Text(
-                            text = "当前设备未设置任何生物识别或设备凭据。请在系统设置中先录入指纹/面容或设置锁屏密码。",
+                            text = stringResource(R.string.rsx_biometric_no_credential),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -152,7 +154,7 @@ fun BiometricLockScreen(
 
             Card(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "开启后，每次启动 ReShizukuX 都需要完成一次生物识别或设备凭据验证才能进入主界面。验证方式由系统提供，应用不会存储任何生物特征数据。",
+                    text = stringResource(R.string.rsx_biometric_desc),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(16.dp)

@@ -39,9 +39,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.adb.AdbInvalidPairingCodeException
 import af.shizuku.manager.adb.AdbKey
@@ -161,9 +163,9 @@ fun AdbPairingWizard(
                 } else {
                     Timber.tag(TAG).w(error, "Pairing failed via service")
                     errorMessage = when (error) {
-                        is AdbInvalidPairingCodeException -> "配对码错误，请重试"
-                        is java.net.ConnectException -> "无法连接配对端口，请确认配对窗口仍打开"
-                        else -> "配对失败：${error?.message ?: "未知错误"}"
+                        is AdbInvalidPairingCodeException -> context.getString(R.string.rsx_wiz_code_error)
+                        is java.net.ConnectException -> context.getString(R.string.rsx_wiz_cant_connect_port)
+                        else -> context.getString(R.string.rsx_wiz_pair_failed, error?.message ?: context.getString(R.string.rsx_mod_error))
                     }
                     pairCode = ""
                     step = 3
@@ -256,7 +258,7 @@ fun AdbPairingWizard(
                 if (ok) {
                     step = 5
                 } else {
-                    errorMessage = "配对失败，请确认配对码正确且系统配对窗口仍打开后重试"
+                    errorMessage = context.getString(R.string.rsx_wiz_pairing_failed_retry)
                     pairCode = ""
                     step = 3
                 }
@@ -269,7 +271,7 @@ fun AdbPairingWizard(
         if (step == 5 && !isBusy) {
             isBusy = true
             errorMessage = null
-            successMessage = "配对成功，正在连接 ADB 并启动服务…"
+            successMessage = context.getString(R.string.rsx_wiz_pairing_success_connecting)
             val ok = runPostPairingStart(context)
             isBusy = false
             if (ok) {
@@ -277,7 +279,7 @@ fun AdbPairingWizard(
                 ShizukuStateMachine.update()
                 onFinished()
             } else {
-                errorMessage = "配对成功但启动服务失败，请重试"
+                errorMessage = context.getString(R.string.rsx_wiz_start_failed)
                 successMessage = null
             }
         }
@@ -292,11 +294,11 @@ fun AdbPairingWizard(
     ) {
         // Header: step progress
         Text(
-            text = "无线调试配对向导",
+            text = stringResource(R.string.rsx_wiz_title),
             style = MaterialTheme.typography.headlineSmall
         )
         Text(
-            text = "第 $step / 5 步",
+            text = stringResource(R.string.rsx_wiz_step, step),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primary
         )
@@ -339,7 +341,7 @@ fun AdbPairingWizard(
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text(
-                            text = "错误：$msg",
+                            text = stringResource(R.string.rsx_wiz_error, msg),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.error
                         )
@@ -363,7 +365,7 @@ fun AdbPairingWizard(
                     )
                 } catch (_: Exception) {}
                 onCancel()
-            }) { Text("取消") }
+            }) { Text(stringResource(R.string.rsx_wiz_cancel)) }
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -372,13 +374,13 @@ fun AdbPairingWizard(
                 OutlinedButton(onClick = {
                     if (step == 3 || step == 4) pairCode = ""
                     step = (step - 1).coerceAtLeast(1)
-                }) { Text("上一步") }
+                }) { Text(stringResource(R.string.rsx_wiz_back)) }
             }
 
             // Step-specific primary action.
             when (step) {
                 1 -> {
-                    Button(onClick = { step = 2 }) { Text("已开启，下一步") }
+                    Button(onClick = { step = 2 }) { Text(stringResource(R.string.rsx_wiz_next)) }
                 }
                 2 -> {
                     Button(onClick = {
@@ -398,14 +400,14 @@ fun AdbPairingWizard(
                                 step = 3
                             }
                         }
-                    }) { Text("已打开配对码界面") }
+                    }) { Text(stringResource(R.string.rsx_wiz_pair_window_done)) }
                 }
                 3 -> {
                     // Auto-submits at 6 digits; manual fallback button.
                     Button(
                         onClick = { if (pairCode.length == 6) step = 4 },
                         enabled = pairCode.length == 6
-                    ) { Text("配对") }
+                    ) { Text(stringResource(R.string.rsx_wiz_pair)) }
                 }
                 4 -> {
                     // busy — no button
@@ -431,7 +433,7 @@ private fun Step1Content(
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("前置检查", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.rsx_wiz_precheck), style = MaterialTheme.typography.titleMedium)
 
             // Wireless debugging check
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -442,14 +444,14 @@ private fun Step1Content(
                             else MaterialTheme.colorScheme.error
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("无线调试已开启", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.rsx_wiz_wadb_on), style = MaterialTheme.typography.bodyMedium)
             }
             if (!wadbOn) {
                 Text(
-                    "请前往：设置 → 开发者选项 → 无线调试，打开开关。向导会自动检测并进入下一步。",
+                    stringResource(R.string.rsx_wiz_open_wadb),
                     style = MaterialTheme.typography.bodySmall
                 )
-                Button(onClick = onOpenWirelessSettings) { Text("打开开发者选项") }
+                Button(onClick = onOpenWirelessSettings) { Text(stringResource(R.string.rsx_wiz_open_dev_options)) }
             }
 
             // Accessibility check (optional)
@@ -462,16 +464,16 @@ private fun Step1Content(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "配对辅助无障碍服务${if (accessibilityOn) "（已开启，自动确认弹窗）" else "（未开启，可跳过）"}",
+                    if (accessibilityOn) stringResource(R.string.rsx_wiz_acc_on) else stringResource(R.string.rsx_wiz_acc_off),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
             if (!accessibilityOn) {
                 Text(
-                    "开启后可自动确认系统配对弹窗。不开也没关系，配对时手动点击「允许」即可。",
+                    stringResource(R.string.rsx_wiz_wadb_desc),
                     style = MaterialTheme.typography.bodySmall
                 )
-                OutlinedButton(onClick = onOpenAccessibilitySettings) { Text("打开无障碍设置") }
+                OutlinedButton(onClick = onOpenAccessibilitySettings) { Text(stringResource(R.string.rsx_wiz_open_acc)) }
             }
         }
     }
@@ -481,36 +483,36 @@ private fun Step1Content(
 private fun Step2Content() {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("获取配对信息", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.rsx_wiz_obtain_pair_info), style = MaterialTheme.typography.titleMedium)
             Text(
-                "请在「无线调试」界面点击「使用配对码配对设备」。",
+                stringResource(R.string.rsx_wiz_open_pair_window),
                 style = MaterialTheme.typography.bodyMedium
             )
             Text(
-                "系统会弹出一个窗口，显示 6 位配对码和 IP:端口。",
+                stringResource(R.string.rsx_wiz_system_dialog),
                 style = MaterialTheme.typography.bodySmall
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.width(20.dp).height(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("正在等待配对端口…", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.rsx_wiz_waiting_port), style = MaterialTheme.typography.bodySmall)
             }
             // MIUI-specific guidance: pulling down the shade keeps the pairing dialog alive.
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(10.dp)) {
                     Text(
-                        "MIUI / HyperOS 用户推荐：",
+                        stringResource(R.string.rsx_wiz_miui_hint),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        "下拉通知栏，在 Shizuku 配对通知中直接输入配对码发送，避免切换应用导致配对中断。",
+                        stringResource(R.string.rsx_wiz_notification_method2),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
             }
             Text(
-                "打开配对码窗口后会自动进入下一步。",
+                stringResource(R.string.rsx_wiz_auto_next),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -533,7 +535,7 @@ private fun Step3Content(
     }
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("输入配对码", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.rsx_wiz_input_code), style = MaterialTheme.typography.titleMedium)
             if (isOemWithShadePairing) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -541,12 +543,12 @@ private fun Step3Content(
                 ) {
                     Column(modifier = Modifier.padding(12.dp)) {
                         Text(
-                            "本机为小米 / HyperOS：系统配对弹窗在切换应用时会立即失效。",
+                            stringResource(R.string.rsx_wiz_miui_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
                         Text(
-                            "请保持「无线调试」配对窗口在屏幕上，直接下拉通知栏，在 ShizukuX 配对通知中输入 6 位配对码并发送。输码后本页会自动继续，无需返回。",
+                            stringResource(R.string.rsx_wiz_keep_window),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
@@ -557,7 +559,7 @@ private fun Step3Content(
                 OutlinedTextField(
                     value = pairCode,
                     onValueChange = { },
-                    label = { Text("配对码（6 位数字）— 请用通知栏输入") },
+                    label = { Text(stringResource(R.string.rsx_wiz_code_notif)) },
                     singleLine = true,
                     enabled = false,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -565,19 +567,19 @@ private fun Step3Content(
                 )
             } else {
                 Text(
-                    "请输入系统配对窗口中显示的 6 位数字配对码。输入满 6 位后自动开始配对。",
+                    stringResource(R.string.rsx_wiz_code_hint),
                     style = MaterialTheme.typography.bodyMedium
                 )
                 OutlinedTextField(
                     value = pairCode,
                     onValueChange = onCodeChange,
-                    label = { Text("配对码（6 位数字）") },
+                    label = { Text(stringResource(R.string.rsx_wiz_code_plain)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
                 Text(
-                    "已输入 ${pairCode.length} / 6 位",
+                    stringResource(R.string.rsx_wiz_code_progress, pairCode.length),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -586,7 +588,7 @@ private fun Step3Content(
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(10.dp)) {
                         Text(
-                            "也可以下拉通知栏，在 Shizuku 配对通知中输入配对码发送。",
+                            stringResource(R.string.rsx_wiz_notification_method),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -604,17 +606,17 @@ private fun Step4Content(accessibilityOn: Boolean) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.width(24.dp).height(24.dp))
                 Spacer(modifier = Modifier.width(12.dp))
-                Text("配对中…", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.rsx_wiz_pairing), style = MaterialTheme.typography.titleMedium)
             }
             if (!accessibilityOn) {
                 Text(
-                    "如果系统弹出「允许无线调试配对？」确认框，请点击「允许」。",
+                    stringResource(R.string.rsx_wiz_allow_dialog),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
             } else {
                 Text(
-                    "无障碍服务已开启，系统配对确认框将被自动点击。",
+                    stringResource(R.string.rsx_wiz_acc_enabled),
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -630,12 +632,12 @@ private fun Step5Content(
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("配对成功", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.rsx_wiz_pairing_success), style = MaterialTheme.typography.titleMedium)
             if (isBusy) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.width(20.dp).height(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(successMessage ?: "正在启动服务…", style = MaterialTheme.typography.bodyMedium)
+                    Text(successMessage ?: stringResource(R.string.rsx_wiz_starting_service), style = MaterialTheme.typography.bodyMedium)
                 }
             }
             errorMessage?.let {

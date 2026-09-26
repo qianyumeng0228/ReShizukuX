@@ -30,8 +30,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import af.shizuku.manager.BuildConfig
+import af.shizuku.manager.R
 import af.shizuku.manager.ota.OtaUpdateManager
 import af.shizuku.manager.ota.OtaUpdateManager.CheckResult
 import kotlinx.coroutines.Dispatchers
@@ -55,7 +57,7 @@ fun OtaUpdateScreen(
     var checking by remember { mutableStateOf(false) }
     var downloading by remember { mutableStateOf(false) }
     var progress by remember { mutableFloatStateOf(0f) }
-    var statusText by remember { mutableStateOf("尚未检查更新") }
+    var statusText by remember { mutableStateOf(context.getString(R.string.rsx_ota_not_checked)) }
     var remote by remember { mutableStateOf<OtaUpdateManager.RemoteVersion?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
 
@@ -63,7 +65,7 @@ fun OtaUpdateScreen(
         if (checking) return
         checking = true
         error = null
-        statusText = "正在检查更新…"
+        statusText = context.getString(R.string.rsx_ota_checking2)
         remote = null
         scope.launch {
             val result = withContext(Dispatchers.IO) { OtaUpdateManager.checkUpdate() }
@@ -71,12 +73,12 @@ fun OtaUpdateScreen(
             when (result) {
                 is CheckResult.Available -> {
                     remote = result.remote
-                    statusText = "发现新版本 ${result.remote.latestVersion} (${result.remote.versionCode})"
+                    statusText = context.getString(R.string.rsx_ota_new, result.remote.latestVersion, result.remote.versionCode)
                 }
-                CheckResult.UpToDate -> statusText = "当前已是最新版本"
+                CheckResult.UpToDate -> statusText = context.getString(R.string.rsx_ota_latest)
                 is CheckResult.Failed -> {
                     error = result.message
-                    statusText = "检查失败：${result.message}"
+                    statusText = context.getString(R.string.rsx_ota_check_failed, result.message)
                 }
             }
         }
@@ -99,18 +101,18 @@ fun OtaUpdateScreen(
                 }
             } catch (e: Exception) {
                 downloading = false
-                error = e.message ?: "下载失败"
-                statusText = "下载失败：${error}"
+                error = e.message ?: context.getString(R.string.rsx_ota_download_failed)
+                statusText = context.getString(R.string.rsx_ota_download_failed_msg, error)
             }
         }
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text("检查更新") },
+            title = { Text(stringResource(R.string.rsx_ota_check)) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(painter = painterResource(af.shizuku.manager.R.drawable.ic_back_24), contentDescription = "返回")
+                    Icon(painter = painterResource(af.shizuku.manager.R.drawable.ic_back_24), contentDescription = stringResource(R.string.rsx_back))
                 }
             }
         )
@@ -124,13 +126,13 @@ fun OtaUpdateScreen(
         ) {
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("当前版本", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.rsx_ota_current), style = MaterialTheme.typography.titleMedium)
                     Text(
                         "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Text(
-                        "更新源：${OtaUpdateManager.VERSION_JSON_URL}",
+                        stringResource(R.string.rsx_ota_source, OtaUpdateManager.VERSION_JSON_URL),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -151,7 +153,7 @@ fun OtaUpdateScreen(
                             modifier = Modifier.fillMaxWidth()
                         )
                         Text(
-                            "下载中 ${(progress * 100).toInt()}%",
+                            stringResource(R.string.rsx_ota_downloading, (progress * 100).toInt()),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -165,10 +167,10 @@ fun OtaUpdateScreen(
             remote?.let { r ->
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("新版本 ${r.latestVersion}", style = MaterialTheme.typography.titleMedium)
-                        Text("版本码：${r.versionCode}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.rsx_ota_new_short, r.latestVersion), style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.rsx_ota_version_code, r.versionCode), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         if (r.changelog.isNotBlank()) {
-                            Text("更新日志", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+                            Text(stringResource(R.string.rsx_ota_changelog), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                             Text(r.changelog, style = MaterialTheme.typography.bodyMedium)
                         }
                     }
@@ -177,17 +179,17 @@ fun OtaUpdateScreen(
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = { check() }, enabled = !checking && !downloading) {
-                    Text(if (checking) "检查中…" else "检查更新")
+                    Text(if (checking) stringResource(R.string.rsx_ota_checking) else stringResource(R.string.rsx_ota_check))
                 }
                 if (remote != null && !downloading) {
                     OutlinedButton(onClick = { downloadAndInstall() }) {
-                        Text("下载并安装")
+                        Text(stringResource(R.string.rsx_ota_download))
                     }
                 }
             }
 
             Text(
-                "提示：首次安装需在系统弹窗中确认。静默检查已在应用启动时自动执行。",
+                stringResource(R.string.rsx_ota_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

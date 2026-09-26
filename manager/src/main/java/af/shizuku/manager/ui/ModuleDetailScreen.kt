@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import af.shizuku.manager.R
@@ -129,8 +130,8 @@ fun ModuleDetailScreen(
             modifier = Modifier.fillMaxSize().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("模块不存在或已卸载", style = MaterialTheme.typography.titleMedium)
-            OutlinedButton(onClick = onBack) { Text("返回") }
+            Text(stringResource(R.string.rsx_md_not_found), style = MaterialTheme.typography.titleMedium)
+            OutlinedButton(onClick = onBack) { Text(stringResource(R.string.rsx_back)) }
         }
         return
     }
@@ -151,7 +152,7 @@ fun ModuleDetailScreen(
                 if (wantEnabled) ModuleManager.enable(moduleId) else ModuleManager.disable(moduleId)
             }
             busy = false
-            message = if (ok) null else if (wantEnabled) "启用失败（可能文件被篡改，标记为已损坏）" else "停用失败"
+            message = if (ok) null else if (wantEnabled) context.getString(R.string.rsx_md_enable_failed) else context.getString(R.string.rsx_md_disable_failed)
             refresh()
         }
     }
@@ -200,7 +201,7 @@ fun ModuleDetailScreen(
                 )
             }
             actionLines.add("——————————")
-            actionLines.add("退出码=${result.exitCode}${if (result.timedOut) "（超时 60s）" else ""}")
+            actionLines.add(if (result.timedOut) context.getString(R.string.rsx_md_exit_code_timeout, result.exitCode) else context.getString(R.string.rsx_md_exit_code, result.exitCode))
             if (result.stderr.isNotBlank()) actionLines.add("stderr: ${result.stderr}")
             actionRunning = false
             refresh()
@@ -212,8 +213,8 @@ fun ModuleDetailScreen(
             val text = withContext(Dispatchers.IO) {
                 if (isCustomize) ModuleManager.getCustomizeLog(moduleId)
                 else ModuleManager.getActionLog(moduleId)
-            } ?: "（暂无日志）"
-            logTitle = if (isCustomize) "安装日志（customize.sh）" else "动作日志（action.sh）"
+            } ?: context.getString(R.string.rsx_md_no_logs)
+            logTitle = if (isCustomize) context.getString(R.string.rsx_md_install_log_title) else context.getString(R.string.rsx_md_action_log_title)
             logText = text
             showLogDialog = true
         }
@@ -228,7 +229,7 @@ fun ModuleDetailScreen(
             if (ok) {
                 onBack()
             } else {
-                message = "卸载失败"
+                message = context.getString(R.string.rsx_md_uninstall_failed)
             }
         }
     }
@@ -239,7 +240,7 @@ fun ModuleDetailScreen(
         scope.launch {
             val ok = withContext(Dispatchers.IO) { ModuleManager.repair(moduleId) }
             busy = false
-            message = if (ok) "已修复，基线已更新" else "修复失败"
+            message = if (ok) context.getString(R.string.rsx_md_repaired) else context.getString(R.string.rsx_md_repair_failed)
             refresh()
         }
     }
@@ -255,7 +256,7 @@ fun ModuleDetailScreen(
         }
         AlertDialog(
             onDismissRequest = { showActionDialog = false },
-            title = { Text("运行 action.sh") },
+            title = { Text(stringResource(R.string.rsx_md_run_action_sh)) },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Box(
@@ -265,7 +266,7 @@ fun ModuleDetailScreen(
                             .padding(vertical = 8.dp)
                     ) {
                         if (actionLines.isEmpty()) {
-                            Text("等待输出…", style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(R.string.rsx_md_waiting_output), style = MaterialTheme.typography.bodySmall)
                         } else {
                             LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                 items(actionLines) { line ->
@@ -277,12 +278,12 @@ fun ModuleDetailScreen(
                     if (actionRunning) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.padding(2.dp))
-                            Text("执行中…", style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(R.string.rsx_md_executing), style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = { showActionDialog = false }, enabled = !actionRunning) { Text("关闭") } },
+            confirmButton = { TextButton(onClick = { showActionDialog = false }, enabled = !actionRunning) { Text(stringResource(R.string.rsx_md_close)) } },
             dismissButton = {}
         )
     }
@@ -294,10 +295,10 @@ fun ModuleDetailScreen(
                 highRiskDeferred?.complete(false)
                 pendingHighRisk = null
             },
-            title = { Text("检测到高风险命令") },
+            title = { Text(stringResource(R.string.rsx_md_high_risk_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text("该模块 action.sh 包含以下高风险命令，确认继续执行？", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.rsx_md_high_risk_msg), style = MaterialTheme.typography.bodyMedium)
                     fr.matchedLines.take(8).forEach { Text(it, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall) }
                 }
             },
@@ -305,13 +306,13 @@ fun ModuleDetailScreen(
                 TextButton(onClick = {
                     highRiskDeferred?.complete(true)
                     pendingHighRisk = null
-                }) { Text("继续执行") }
+                }) { Text(stringResource(R.string.rsx_md_continue)) }
             },
             dismissButton = {
                 TextButton(onClick = {
                     highRiskDeferred?.complete(false)
                     pendingHighRisk = null
-                }) { Text("取消") }
+                }) { Text(stringResource(R.string.rsx_cancel)) }
             }
         )
     }
@@ -323,10 +324,10 @@ fun ModuleDetailScreen(
             title = { Text(logTitle) },
             text = {
                 Box(modifier = Modifier.fillMaxWidth()) {
-                    Text(logText.ifBlank { "（暂无日志）" }, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall)
+                    Text(logText.ifBlank { context.getString(R.string.rsx_md_no_logs) }, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall)
                 }
             },
-            confirmButton = { TextButton(onClick = { showLogDialog = false }) { Text("关闭") } },
+            confirmButton = { TextButton(onClick = { showLogDialog = false }) { Text(stringResource(R.string.rsx_md_close)) } },
             dismissButton = {}
         )
     }
@@ -335,10 +336,10 @@ fun ModuleDetailScreen(
     if (showUninstallConfirm) {
         AlertDialog(
             onDismissRequest = { showUninstallConfirm = false },
-            title = { Text("卸载模块？") },
-            text = { Text("将执行 uninstall.sh 并删除模块目录：${module.name}") },
-            confirmButton = { TextButton(onClick = { doUninstall() }) { Text("卸载", color = MaterialTheme.colorScheme.error) } },
-            dismissButton = { TextButton(onClick = { showUninstallConfirm = false }) { Text("取消") } }
+            title = { Text(stringResource(R.string.rsx_md_uninstall_confirm_title)) },
+            text = { Text(stringResource(R.string.rsx_md_uninstall_confirm_msg, module.name)) },
+            confirmButton = { TextButton(onClick = { doUninstall() }) { Text(stringResource(R.string.rsx_md_uninstall), color = MaterialTheme.colorScheme.error) } },
+            dismissButton = { TextButton(onClick = { showUninstallConfirm = false }) { Text(stringResource(R.string.rsx_cancel)) } }
         )
     }
 
@@ -348,7 +349,7 @@ fun ModuleDetailScreen(
             title = { Text(module.name, maxLines = 1) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(painter = painterResource(af.shizuku.manager.R.drawable.ic_back_24), contentDescription = "返回")
+                    Icon(painter = painterResource(af.shizuku.manager.R.drawable.ic_back_24), contentDescription = stringResource(R.string.rsx_back))
                 }
             },
             actions = {
@@ -369,14 +370,14 @@ fun ModuleDetailScreen(
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(module.name, style = MaterialTheme.typography.titleLarge)
                     }
-                    InfoRow("版本", "${module.version} (${module.versionCode})")
-                    InfoRow("作者", module.author)
-                    InfoRow("安装时间", SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(module.installTime)))
-                    InfoRow("权限档位", permLevel.name)
-                    InfoRow("签名", if (signed) "已验证" else "未验证（未签名）")
+                    InfoRow(stringResource(R.string.rsx_md_version), "${module.version} (${module.versionCode})")
+                    InfoRow(stringResource(R.string.rsx_md_author), module.author)
+                    InfoRow(stringResource(R.string.rsx_md_installed_time), SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date(module.installTime)))
+                    InfoRow(stringResource(R.string.rsx_md_permission_tier), permLevel.name)
+                    InfoRow(stringResource(R.string.rsx_md_signature), if (signed) stringResource(R.string.rsx_md_status_verified) else stringResource(R.string.rsx_md_status_unverified))
                     if (hasServiceScript) {
                         val pid = ServiceRunner.getServicePid(moduleId)
-                        InfoRow("服务进程", if (pid != null) "运行中 (pid=$pid)" else "已停止")
+                        InfoRow(stringResource(R.string.rsx_md_service_process), if (pid != null) stringResource(R.string.rsx_md_running_pid, pid) else stringResource(R.string.rsx_md_status_stopped))
                     }
                     if (module.description.isNotBlank()) {
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
@@ -397,7 +398,7 @@ fun ModuleDetailScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("启用模块", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.rsx_md_enable_module), style = MaterialTheme.typography.titleMedium)
                         Switch(
                             checked = module.state == ModuleState.ENABLED,
                             enabled = !busy && module.state != ModuleState.CORRUPTED,
@@ -405,37 +406,37 @@ fun ModuleDetailScreen(
                         )
                     }
                     if (module.state == ModuleState.CORRUPTED) {
-                        Text("文件被篡改（哈希校验失败），已拒绝执行。修复后可重新启用。", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-                        OutlinedButton(onClick = { doRepair() }, enabled = !busy) { Text("修复篡改") }
+                        Text(stringResource(R.string.rsx_md_tampered), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+                        OutlinedButton(onClick = { doRepair() }, enabled = !busy) { Text(stringResource(R.string.rsx_md_fix_tamper)) }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (hasActionScript) {
                             OutlinedButton(onClick = { runAction() }, enabled = !busy && module.state == ModuleState.ENABLED && PermissionController.canAction(moduleId)) {
-                                Text("运行 action")
+                                Text(stringResource(R.string.rsx_md_run_action))
                             }
                         }
                         if (webUiAvailable) {
-                            OutlinedButton(onClick = { ModuleWebUi.start(context, moduleId) }) { Text("打开 WebUI") }
+                            OutlinedButton(onClick = { ModuleWebUi.start(context, moduleId) }) { Text(stringResource(R.string.rsx_md_open_webui)) }
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TextButton(onClick = { showLog(isCustomize = false) }) { Text("动作日志") }
-                        TextButton(onClick = { showLog(isCustomize = true) }) { Text("安装日志") }
+                        TextButton(onClick = { showLog(isCustomize = false) }) { Text(stringResource(R.string.rsx_md_action_log)) }
+                        TextButton(onClick = { showLog(isCustomize = true) }) { Text(stringResource(R.string.rsx_md_install_log)) }
                     }
                     HorizontalDivider()
                     Button(
                         onClick = { showUninstallConfirm = true },
                         enabled = !busy,
                         colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer)
-                    ) { Text("卸载模块") }
+                    ) { Text(stringResource(R.string.rsx_md_uninstall_module)) }
                 }
             }
 
             // --- 权限设置卡片 ---
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("权限设置", style = MaterialTheme.typography.titleMedium)
-                    Text("新模块默认 SAFE（全禁）。FULL 档也禁止 WebUI 联网。", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.rsx_md_permission_settings), style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.rsx_md_new_module_safe), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     PermissionLevel.entries.forEach { level ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -450,9 +451,9 @@ fun ModuleDetailScreen(
                             )
                             Text(
                                 when (level) {
-                                    PermissionLevel.SAFE -> "SAFE（默认，全部禁止）"
-                                    PermissionLevel.CUSTOM -> "CUSTOM（逐开关授权）"
-                                    PermissionLevel.FULL -> "FULL（全量授权，WebUI 联网仍禁）"
+                                    PermissionLevel.SAFE -> stringResource(R.string.rsx_md_safe)
+                                    PermissionLevel.CUSTOM -> stringResource(R.string.rsx_md_custom)
+                                    PermissionLevel.FULL -> stringResource(R.string.rsx_md_full)
                                 },
                                 style = MaterialTheme.typography.bodyMedium
                             )
@@ -460,10 +461,10 @@ fun ModuleDetailScreen(
                     }
                     if (permLevel == PermissionLevel.CUSTOM) {
                         HorizontalDivider()
-                        CustomSwitch("执行 action 脚本", PermissionFlag.ACTION, moduleId)
-                        CustomSwitch("后台 service.sh", PermissionFlag.SERVICE, moduleId)
+                        CustomSwitch(stringResource(R.string.rsx_md_run_action), PermissionFlag.ACTION, moduleId)
+                        CustomSwitch(stringResource(R.string.rsx_md_background_service), PermissionFlag.SERVICE, moduleId)
                         CustomSwitch("WebUI JS Bridge", PermissionFlag.WEB_BRIDGE, moduleId)
-                        CustomSwitch("联网下载", PermissionFlag.DOWNLOAD, moduleId)
+                        CustomSwitch(stringResource(R.string.rsx_md_network_download), PermissionFlag.DOWNLOAD, moduleId)
                     }
                 }
             }
@@ -472,14 +473,14 @@ fun ModuleDetailScreen(
             if (hasServiceScript) {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("后台服务", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.rsx_md_background_service), style = MaterialTheme.typography.titleMedium)
                         val pid = ServiceRunner.getServicePid(moduleId)
                         Text(
-                            if (pid != null) "运行中 (pid=$pid)" else "已停止",
+                            if (pid != null) stringResource(R.string.rsx_md_running_pid, pid) else stringResource(R.string.rsx_md_status_stopped),
                             color = if (pid != null) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         TextButton(onClick = { startServiceRestart() }, enabled = !busy && module.state == ModuleState.ENABLED) {
-                            Text("重启服务")
+                            Text(stringResource(R.string.rsx_md_restart_service))
                         }
                     }
                 }
@@ -519,12 +520,12 @@ private fun CustomSwitch(label: String, flag: Int, moduleId: String) {
 @Composable
 private fun StatusBadge(state: ModuleState, modifier: Modifier = Modifier) {
     val (text, color) = when (state) {
-        ModuleState.ENABLED -> "已启用" to Color(0xFF4CAF50)
-        ModuleState.DISABLED -> "已停用" to Color.Gray
-        ModuleState.ERROR -> "错误" to MaterialTheme.colorScheme.error
-        ModuleState.CORRUPTED -> "已损坏" to Color(0xFFFF9800)
-        ModuleState.UPDATING -> "更新中" to Color(0xFF2196F3)
-        ModuleState.NOT_INSTALLED -> "未安装" to Color.Gray
+        ModuleState.ENABLED -> stringResource(R.string.rsx_md_status_enabled) to Color(0xFF4CAF50)
+        ModuleState.DISABLED -> stringResource(R.string.rsx_md_status_disabled) to Color.Gray
+        ModuleState.ERROR -> stringResource(R.string.rsx_md_error) to MaterialTheme.colorScheme.error
+        ModuleState.CORRUPTED -> stringResource(R.string.rsx_md_status_corrupted) to Color(0xFFFF9800)
+        ModuleState.UPDATING -> stringResource(R.string.rsx_md_updating) to Color(0xFF2196F3)
+        ModuleState.NOT_INSTALLED -> stringResource(R.string.rsx_md_status_not_installed) to Color.Gray
     }
     AssistChip(
         onClick = {},

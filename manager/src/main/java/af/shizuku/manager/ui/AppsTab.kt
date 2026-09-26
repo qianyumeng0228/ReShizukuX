@@ -2,6 +2,7 @@ package af.shizuku.manager.ui
 
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import androidx.annotation.StringRes
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
@@ -43,7 +44,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import af.shizuku.manager.R
 import af.shizuku.manager.authorization.AuthorizationManager
 import af.shizuku.manager.utils.ShizukuStateMachine
 import kotlinx.coroutines.Dispatchers
@@ -153,11 +156,11 @@ fun AppsTab() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "授权管理",
+                text = stringResource(R.string.rsx_apps_title),
                 style = MaterialTheme.typography.headlineSmall
             )
             TextButton(onClick = { if (running) reload() }) {
-                Text("刷新")
+                Text(stringResource(R.string.rsx_apps_refresh))
             }
         }
 
@@ -172,11 +175,11 @@ fun AppsTab() {
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "服务未启动",
+                        text = stringResource(R.string.rsx_apps_not_running),
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        text = "请先在「状态」页启动 Shizuku 服务",
+                        text = stringResource(R.string.rsx_apps_go_start),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -188,7 +191,7 @@ fun AppsTab() {
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
-            label = { Text("搜索应用") },
+            label = { Text(stringResource(R.string.rsx_apps_search)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth()
         )
@@ -203,7 +206,7 @@ fun AppsTab() {
                 FilterChip(
                     selected = filter == f,
                     onClick = { filter = f },
-                    label = { Text(f.label) }
+                    label = { Text(stringResource(f.labelRes)) }
                 )
             }
         }
@@ -224,9 +227,9 @@ fun AppsTab() {
                 ) {
                     Text(
                         text = if (searchQuery.isNotBlank() || filter != AppFilter.ALL)
-                            "没有匹配的应用"
+                            stringResource(R.string.rsx_apps_no_match)
                         else
-                            "暂无应用",
+                            stringResource(R.string.rsx_apps_empty),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -251,10 +254,10 @@ fun AppsTab() {
     }
 }
 
-private enum class AppFilter(val label: String) {
-    ALL("全部"),
-    GRANTED("已授权"),
-    DENIED("未授权")
+private enum class AppFilter(@StringRes val labelRes: Int) {
+    ALL(R.string.rsx_apps_all),
+    GRANTED(R.string.rsx_apps_granted),
+    DENIED(R.string.rsx_apps_denied)
 }
 
 @Composable

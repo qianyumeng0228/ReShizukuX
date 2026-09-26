@@ -15,6 +15,7 @@ import androidx.glance.text.Text
 import androidx.glance.Button
 import androidx.glance.LocalContext
 import androidx.compose.ui.unit.dp
+import af.shizuku.manager.R
 import af.shizuku.manager.analytics.SentryManager
 
 /**
@@ -45,9 +46,9 @@ class ShizukuWidget : GlanceAppWidget() {
                 verticalAlignment = Alignment.Vertical.CenterVertically,
                 horizontalAlignment = Alignment.Horizontal.CenterHorizontally
             ) {
-                Text(if (running) "Shizuku 运行中" else "Shizuku 未运行")
+                Text(if (running) ctx.getString(R.string.rsx_widget_running) else ctx.getString(R.string.rsx_widget_not_running))
                 Button(
-                    text = "启动",
+                    text = ctx.getString(R.string.rsx_widget_start),
                     onClick = actionSendBroadcast("${ctx.packageName}.START")
                 )
             }

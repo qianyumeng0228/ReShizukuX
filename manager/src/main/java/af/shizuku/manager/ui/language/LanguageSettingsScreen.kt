@@ -66,7 +66,7 @@ fun LanguageSettingsScreen(onBack: () -> Unit) {
                 title = { Text(stringResource(R.string.rsx_language_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.rsx_back))
                     }
                 }
             )

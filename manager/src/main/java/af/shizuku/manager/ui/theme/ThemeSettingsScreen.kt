@@ -40,7 +40,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import af.shizuku.manager.R
 import af.shizuku.manager.theme.ThemeManager
 
 /**
@@ -66,12 +68,12 @@ fun ThemeSettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("主题个性化") },
+                title = { Text(stringResource(R.string.rsx_theme_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回"
+                            contentDescription = stringResource(R.string.rsx_back)
                         )
                     }
                 }
@@ -88,7 +90,7 @@ fun ThemeSettingsScreen(
         ) {
             // 实时预览
             Text(
-                text = "预览",
+                text = stringResource(R.string.rsx_theme_preview),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -96,7 +98,7 @@ fun ThemeSettingsScreen(
 
             // 主题模式
             Text(
-                text = "主题模式",
+                text = stringResource(R.string.rsx_theme_mode),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -110,14 +112,14 @@ fun ThemeSettingsScreen(
                         },
                         shape = SegmentedButtonDefaults.itemShape(index, ThemeManager.ThemeMode.entries.size)
                     ) {
-                        Text(m.label)
+                        Text(stringResource(m.labelRes))
                     }
                 }
             }
 
             // 强调色
             Text(
-                text = "强调色",
+                text = stringResource(R.string.rsx_theme_accent),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -148,9 +150,9 @@ fun ThemeSettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
-                        Text(text = "动态颜色", style = MaterialTheme.typography.bodyLarge)
+                        Text(text = stringResource(R.string.rsx_theme_dynamic), style = MaterialTheme.typography.bodyLarge)
                         Text(
-                            text = "使用系统壁纸提取的配色（Android 12+）",
+                            text = stringResource(R.string.rsx_theme_dynamic_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -202,12 +204,12 @@ private fun PreviewCard() {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "示例卡片",
+                text = stringResource(R.string.rsx_theme_sample_card),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary
             )
             Text(
-                text = "这是一段正文，展示 primary / onSurfaceVariant 配色效果。",
+                text = stringResource(R.string.rsx_theme_sample_text),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -230,7 +232,7 @@ private fun PreviewCard() {
             }
             OutlinedCard(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "容器卡片 · secondaryContainer",
+                    text = stringResource(R.string.rsx_theme_container),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(8.dp),
                     color = MaterialTheme.colorScheme.onSecondaryContainer

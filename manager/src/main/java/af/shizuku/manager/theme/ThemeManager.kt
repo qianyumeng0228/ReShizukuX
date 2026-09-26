@@ -2,12 +2,14 @@ package af.shizuku.manager.theme
 
 import android.content.Context
 import android.os.Build
+import androidx.annotation.StringRes
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
+import af.shizuku.manager.R
 
 /**
  * 主题个性化管理器（ReShizukuX beta1 组B）。
@@ -25,10 +27,10 @@ class ThemeManager private constructor() {
     private val keyAccent = "theme_accent"
     private val keyDynamic = "theme_dynamic"
 
-    enum class ThemeMode(val value: Int, val label: String) {
-        SYSTEM(0, "跟随系统"),
-        LIGHT(1, "浅色"),
-        DARK(2, "深色");
+    enum class ThemeMode(val value: Int, @StringRes val labelRes: Int) {
+        SYSTEM(0, R.string.rsx_theme_mode_system),
+        LIGHT(1, R.string.rsx_theme_mode_light),
+        DARK(2, R.string.rsx_theme_mode_dark);
 
         companion object {
             fun fromValue(v: Int): ThemeMode = entries.firstOrNull { it.value == v } ?: SYSTEM

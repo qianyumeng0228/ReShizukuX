@@ -32,7 +32,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import af.shizuku.manager.R
 import af.shizuku.manager.backup.BackupManager
 import af.shizuku.manager.backup.BackupManager.BackupEntry
 import kotlinx.coroutines.Dispatchers
@@ -71,25 +73,25 @@ fun BackupRestoreScreen(
     ) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         busy = true
-        message = "正在恢复…"
+        message = context.getString(R.string.rsx_backup_restoring)
         scope.launch {
             val result = withContext(Dispatchers.IO) { BackupManager.restoreFromUri(context, uri) }
             busy = false
             result.onSuccess {
-                message = "恢复完成，部分设置需重启应用生效"
+                message = context.getString(R.string.rsx_backup_done_desc)
                 showRestartHint = true
             }.onFailure {
-                message = "恢复失败：${it.message}"
+                message = context.getString(R.string.rsx_backup_restore_failed, it.message)
             }
         }
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text("备份与恢复") },
+            title = { Text(stringResource(R.string.rsx_backup_title)) },
             navigationIcon = {
                 IconButton(onClick = onBack) {
-                    Icon(painter = painterResource(af.shizuku.manager.R.drawable.ic_back_24), contentDescription = "返回")
+                    Icon(painter = painterResource(af.shizuku.manager.R.drawable.ic_back_24), contentDescription = stringResource(R.string.rsx_back))
                 }
             }
         )
@@ -102,12 +104,12 @@ fun BackupRestoreScreen(
         ) {
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("备份内容", style = MaterialTheme.typography.titleMedium)
-                    Text("· 应用设置（SharedPreferences）", style = MaterialTheme.typography.bodyMedium)
-                    Text("· 已安装模块列表", style = MaterialTheme.typography.bodyMedium)
-                    Text("· 模块权限档位", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.rsx_backup_content_title), style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.rsx_backup_content1), style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.rsx_backup_content2), style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.rsx_backup_content3), style = MaterialTheme.typography.bodyMedium)
                     Text(
-                        "保存到 /sdcard/ReShizukuX/backup-<时间戳>.json",
+                        stringResource(R.string.rsx_backup_saved_to),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -118,35 +120,35 @@ fun BackupRestoreScreen(
                 Button(
                     onClick = {
                         busy = true
-                        message = "正在备份…"
+                        message = context.getString(R.string.rsx_backup_backing_up)
                         scope.launch {
                             val result = withContext(Dispatchers.IO) { BackupManager.createBackup(context) }
                             busy = false
                             result.onSuccess { entry ->
-                                message = "已备份：${entry.fileName}"
+                                message = context.getString(R.string.rsx_backup_backed_up, entry.fileName)
                                 refresh()
                             }.onFailure {
-                                message = "备份失败：${it.message}"
+                                message = context.getString(R.string.rsx_backup_failed, it.message)
                             }
                         }
                     },
                     enabled = !busy
-                ) { Text("立即备份") }
+                ) { Text(stringResource(R.string.rsx_backup_create)) }
 
                 OutlinedButton(
                     onClick = { pickerLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) },
                     enabled = !busy
-                ) { Text("从文件恢复") }
+                ) { Text(stringResource(R.string.rsx_backup_restore)) }
             }
 
             message?.let {
                 Text(it, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
             }
 
-            Text("已有备份", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.rsx_backup_existing), style = MaterialTheme.typography.titleMedium)
 
             if (backups.isEmpty()) {
-                Text("暂无备份文件", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.rsx_backup_none), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -166,8 +168,8 @@ fun BackupRestoreScreen(
     pendingDelete?.let { entry ->
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
-            title = { Text("删除备份？") },
-            text = { Text("将删除 ${entry.fileName}，此操作不可撤销。") },
+            title = { Text(stringResource(R.string.rsx_backup_delete_title)) },
+            text = { Text(stringResource(R.string.rsx_backup_delete_msg, entry.fileName)) },
             confirmButton = {
                 TextButton(onClick = {
                     pendingDelete = null
@@ -175,18 +177,18 @@ fun BackupRestoreScreen(
                         withContext(Dispatchers.IO) { BackupManager.deleteBackup(entry) }
                         refresh()
                     }
-                }) { Text("删除", color = MaterialTheme.colorScheme.error) }
+                }) { Text(stringResource(R.string.rsx_backup_delete), color = MaterialTheme.colorScheme.error) }
             },
-            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text("取消") } }
+            dismissButton = { TextButton(onClick = { pendingDelete = null }) { Text(stringResource(R.string.rsx_cancel)) } }
         )
     }
 
     if (showRestartHint) {
         AlertDialog(
             onDismissRequest = { showRestartHint = false },
-            title = { Text("恢复完成") },
-            text = { Text("设置已恢复。模块本身不会被重装，如需完整恢复请重新安装模块。建议重启应用使设置生效。") },
-            confirmButton = { TextButton(onClick = { showRestartHint = false }) { Text("知道了") } },
+            title = { Text(stringResource(R.string.rsx_backup_done)) },
+            text = { Text(stringResource(R.string.rsx_backup_restore_desc)) },
+            confirmButton = { TextButton(onClick = { showRestartHint = false }) { Text(stringResource(R.string.rsx_ok)) } },
             dismissButton = {}
         )
     }
@@ -213,7 +215,7 @@ private fun BackupRow(entry: BackupEntry, onDelete: () -> Unit) {
                 )
             }
             TextButton(onClick = onDelete) {
-                Text("删除", color = MaterialTheme.colorScheme.error)
+                Text(stringResource(R.string.rsx_backup_delete), color = MaterialTheme.colorScheme.error)
             }
         }
     }

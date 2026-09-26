@@ -2,6 +2,7 @@ package af.shizuku.manager.ui
 
 import android.content.Context
 import android.provider.Settings
+import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.receiver.ShizukuReceiverStarter
 import af.shizuku.manager.receiver.WatchdogAlarmReceiver
@@ -68,7 +69,7 @@ object PortableStartOrchestrator {
         }
 
         // ---------------------------------------------------------------- ① detect method
-        onStep?.invoke(1, "检测激活方式")
+        onStep?.invoke(1, ctx.getString(R.string.rsx_orch_detect))
         val method = when {
             EnvironmentUtils.isRooted() -> ShizukuSettings.LaunchMethod.ROOT
             isDhizukuActive(ctx) -> ShizukuSettings.LaunchMethod.DHIZUKU
@@ -85,7 +86,7 @@ object PortableStartOrchestrator {
 
         // ---------------------------------------------------------------- ② ADB pairing check
         if (method == ShizukuSettings.LaunchMethod.ADB) {
-            onStep?.invoke(2, "检查无线调试配对")
+            onStep?.invoke(2, ctx.getString(R.string.rsx_orch_check_pair))
             val livePort = AdbPortProbe.getLiveAdbTcpPort(ctx)
             val wadbOn = try {
                 Settings.Global.getInt(ctx.contentResolver, "adb_wifi_enabled", 0) == 1
@@ -107,7 +108,7 @@ object PortableStartOrchestrator {
                     return StartResult(
                         success = false,
                         method = method,
-                        error = "需要完成无线调试配对",
+                        error = ctx.getString(R.string.rsx_orch_pair_required),
                         pairingRequired = true
                     )
                 }
@@ -118,7 +119,7 @@ object PortableStartOrchestrator {
                         return StartResult(
                             success = false,
                             method = method,
-                            error = "未检测到无线调试端口，请先在开发者选项中开启无线调试并完成配对",
+                            error = ctx.getString(R.string.rsx_orch_no_wadb),
                             pairingRequired = true
                         )
                     }
@@ -128,27 +129,30 @@ object PortableStartOrchestrator {
 
         // ---------------------------------------------------------------- ③ lock screen gate (ADB)
         if (method == ShizukuSettings.LaunchMethod.ADB) {
-            onStep?.invoke(3, "等待屏幕解锁")
+            onStep?.invoke(3, ctx.getString(R.string.rsx_orch_wait_unlock))
             val unlocked = awaitUserUnlocked(ctx)
             if (!unlocked) {
                 return StartResult(
                     success = false,
                     method = method,
-                    error = "等待屏幕解锁超时（30s），请解锁后重试"
+                    error = ctx.getString(R.string.rsx_orch_unlock_timeout)
                 )
             }
         }
 
         // ---------------------------------------------------------------- ④ hostile ROM reassert (ADB, opt-in)
         if (method == ShizukuSettings.LaunchMethod.ADB) {
-            onStep?.invoke(4, "无线调试守护")
+            onStep?.invoke(4, ctx.getString(R.string.rsx_orch_reassert))
             // Best effort; never fails the flow.
             runCatching { WifiDebugReassert.reassertIfEnabled(ctx) }
                 .onFailure { Timber.tag(TAG).w(it, "reassert step failed (non-fatal)") }
         }
 
         // ---------------------------------------------------------------- ⑤ execute start
-        onStep?.invoke(5, if (method == ShizukuSettings.LaunchMethod.ROOT) "Root 启动服务" else "ADB 启动服务")
+        onStep?.invoke(
+            5,
+            ctx.getString(if (method == ShizukuSettings.LaunchMethod.ROOT) R.string.rsx_orch_start_root else R.string.rsx_orch_start_adb)
+        )
         ShizukuStateMachine.set(ShizukuStateMachine.State.STARTING)
         when (method) {
             ShizukuSettings.LaunchMethod.ROOT -> ShizukuReceiverStarter.rootStart(ctx)
@@ -156,7 +160,7 @@ object PortableStartOrchestrator {
         }
 
         // ---------------------------------------------------------------- ⑥ wait for binder
-        onStep?.invoke(6, "等待 Binder 就绪")
+        onStep?.invoke(6, ctx.getString(R.string.rsx_orch_wait_binder))
         val binderOk = withTimeoutOrNull(BINDER_TIMEOUT_MS) {
             while (ShizukuStateMachine.update() != ShizukuStateMachine.State.RUNNING) {
                 delay(500)
@@ -168,17 +172,17 @@ object PortableStartOrchestrator {
             return StartResult(
                 success = false,
                 method = method,
-                error = "等待服务就绪超时（20s）。ADB 模式下可能需要完成无线调试配对。",
+                error = ctx.getString(R.string.rsx_orch_binder_timeout),
                 pairingRequired = method == ShizukuSettings.LaunchMethod.ADB
             )
         }
 
         // ---------------------------------------------------------------- ⑦ record launch method
-        onStep?.invoke(7, "记录启动方式")
+        onStep?.invoke(7, ctx.getString(R.string.rsx_orch_record))
         ShizukuSettings.setLastLaunchMode(method)
 
         // ---------------------------------------------------------------- ⑧ boot-start + network callback
-        onStep?.invoke(8, "开启开机自启")
+        onStep?.invoke(8, ctx.getString(R.string.rsx_orch_boot))
         runCatching {
             ShizukuSettings.setStartOnBoot(ctx, true)
         }.onFailure { Timber.tag(TAG).w(it, "setStartOnBoot failed") }
@@ -186,7 +190,7 @@ object PortableStartOrchestrator {
         // extra to do here beyond ensuring the setting that gates it is on.
 
         // ---------------------------------------------------------------- ⑨ dual-process guard
-        onStep?.invoke(9, "守护模式")
+        onStep?.invoke(9, ctx.getString(R.string.rsx_orch_guard))
         // Root launch + daemon setting on -> start the :daemon process that polls /proc and
         // relaunches the server. Otherwise (ADB / Dhizuku / opt-out) degrade to Alarm.
         val wantDaemon = ShizukuSettings.isDaemonEnabled() &&
@@ -200,13 +204,13 @@ object PortableStartOrchestrator {
         }
 
         // ---------------------------------------------------------------- ⑩ schedule 15-min alarm
-        onStep?.invoke(10, "调度看门狗 Alarm")
+        onStep?.invoke(10, ctx.getString(R.string.rsx_orch_watchdog))
         runCatching {
             WatchdogAlarmReceiver.schedule(ctx)
         }.onFailure { Timber.tag(TAG).w(it, "alarm schedule failed") }
 
         // ---------------------------------------------------------------- ⑪ wake-lock / battery whitelist
-        onStep?.invoke(11, "唤醒跟随白名单")
+        onStep?.invoke(11, ctx.getString(R.string.rsx_orch_whitelist))
         // Non-blocking: we do not open the battery-optimization whitelist dialog here.
         // Flag it as a noted follow-up for the UI.
         val noted = true

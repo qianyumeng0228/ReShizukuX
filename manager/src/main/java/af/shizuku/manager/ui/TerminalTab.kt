@@ -36,8 +36,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import af.shizuku.manager.R
 import af.shizuku.manager.utils.ShizukuStateMachine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -60,6 +63,7 @@ import timber.log.Timber
  */
 @Composable
 fun TerminalTab() {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     val state by ShizukuStateMachine.asFlow()
@@ -95,12 +99,12 @@ fun TerminalTab() {
             lower.startsWith("adb shell ") -> {
                 val stripped = raw.substring("adb shell ".length).trim()
                 if (stripped.isEmpty()) {
-                    lines.add("→ 实际执行: (空)\n（adb shell 后缺少命令参数）")
+                    lines.add(context.getString(R.string.rsx_term_actual_empty))
                     executing = false
                 } else {
-                    lines.add("→ 实际执行: $stripped")
+                    lines.add(context.getString(R.string.rsx_term_actual, stripped))
                     scope.launch {
-                        lines.add(withContext(Dispatchers.IO) { execViaShizuku(stripped) })
+                        lines.add(withContext(Dispatchers.IO) { execViaShizuku(context, stripped) })
                         executing = false
                     }
                 }
@@ -109,16 +113,16 @@ fun TerminalTab() {
             // 手机终端没有 adb 客户端二进制，不执行，给出友好提示。
             lower.startsWith("adb ") || lower == "adb" -> {
                 lines.add(
-                    "该命令需要电脑端 adb 客户端（手机终端无 adb 二进制）。" +
-                        "若目标是以 shell 权限执行命令，请使用 adb shell 命令 形式，" +
-                        "终端会自动剥离前缀执行。"
+                    context.getString(R.string.rsx_term_need_pc_adb) +
+                        context.getString(R.string.rsx_term_shell_form) +
+                        context.getString(R.string.rsx_term_strip_hint)
                 )
                 executing = false
             }
             // 普通 shell 命令，直接执行。
             else -> {
                 scope.launch {
-                    lines.add(withContext(Dispatchers.IO) { execViaShizuku(raw) })
+                    lines.add(withContext(Dispatchers.IO) { execViaShizuku(context, raw) })
                     executing = false
                 }
             }
@@ -145,8 +149,8 @@ fun TerminalTab() {
                     )
             )
             Text(
-                text = if (running) "Shizuku 服务运行中（shell 权限）"
-                else "Shizuku 服务未运行，请先在状态页启动",
+                text = if (running) stringResource(R.string.rsx_term_running)
+                else stringResource(R.string.rsx_term_not_running),
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (running) MaterialTheme.colorScheme.onSurface
                 else MaterialTheme.colorScheme.error
@@ -165,7 +169,7 @@ fun TerminalTab() {
         ) {
             if (lines.isEmpty()) {
                 Text(
-                    text = "暂无输出。输入 shell 命令后点「执行」。",
+                    text = stringResource(R.string.rsx_term_empty),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(12.dp)
@@ -217,7 +221,7 @@ fun TerminalTab() {
                 value = input,
                 onValueChange = { if (!executing) input = it },
                 modifier = Modifier.weight(1f).heightIn(min = 56.dp, max = 120.dp),
-                placeholder = { Text("输入 shell 命令…") },
+                placeholder = { Text(stringResource(R.string.rsx_term_hint)) },
                 singleLine = false,
                 maxLines = 3,
                 enabled = !executing && running
@@ -226,7 +230,7 @@ fun TerminalTab() {
                 onClick = { runCommand() },
                 enabled = !executing && running && input.isNotBlank()
             ) {
-                Text(if (executing) "停止中…" else "执行")
+                Text(if (executing) stringResource(R.string.rsx_term_stopping) else stringResource(R.string.rsx_term_execute))
             }
         }
 
@@ -241,13 +245,13 @@ fun TerminalTab() {
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
-                    Text("执行中…", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.rsx_term_executing), style = MaterialTheme.typography.bodySmall)
                 }
             } else {
                 Text("", style = MaterialTheme.typography.bodySmall)
             }
             OutlinedButton(onClick = { lines.clear() }, enabled = !executing && lines.isNotEmpty()) {
-                Text("清除")
+                Text(stringResource(R.string.rsx_term_clear))
             }
         }
     }
@@ -266,9 +270,9 @@ private val QuickCommands = listOf(
  * 通过 Shizuku shell 执行单条命令，合并 stdout/stderr 返回为一段文本。
  * 必须在 IO 调度器上调用。15s 超时后 destroy() 进程。
  */
-private suspend fun execViaShizuku(cmd: String): String {
+private suspend fun execViaShizuku(context: android.content.Context, cmd: String): String {
     if (!Shizuku.pingBinder()) {
-        return "（错误）Shizuku 服务未运行\n"
+        return context.getString(R.string.rsx_term_error_not_running)
     }
     return try {
         val p = Shizuku.newProcess(arrayOf("sh", "-c", cmd), null, null)
@@ -283,7 +287,7 @@ private suspend fun execViaShizuku(cmd: String): String {
             val exitCode = withTimeoutOrNull(15_000L) { p.waitFor() }
             if (exitCode == null) {
                 runCatching { p.destroy() }
-                "（命令执行超过 15s，已强制终止）\n"
+                context.getString(R.string.rsx_term_killed)
             } else {
                 val out = outDeferred.await()
                 val err = errDeferred.await()
@@ -293,13 +297,13 @@ private suspend fun execViaShizuku(cmd: String): String {
                         if (isNotEmpty() && !endsWith("\n")) append("\n")
                         append(err)
                     }
-                    if (isEmpty()) append("（无输出，退出码=$exitCode）")
+                    if (isEmpty()) append(context.getString(R.string.rsx_term_no_output, exitCode))
                     if (!endsWith("\n")) append("\n")
                 }
             }
         }
     } catch (e: Exception) {
         Timber.tag("TerminalTab").w(e, "exec failed: %s", cmd)
-        "执行失败：${e.javaClass.simpleName}: ${e.message}\n"
+        context.getString(R.string.rsx_term_exec_failed, e.javaClass.simpleName, e.message) + "\n"
     }
 }

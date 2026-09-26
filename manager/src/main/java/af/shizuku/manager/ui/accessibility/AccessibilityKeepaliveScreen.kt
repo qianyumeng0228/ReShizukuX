@@ -24,7 +24,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import af.shizuku.manager.R
 import af.shizuku.manager.service.AccessibilityKeepaliveService
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -60,12 +62,12 @@ fun AccessibilityKeepaliveScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("无障碍保活") },
+                title = { Text(stringResource(R.string.rsx_acc_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回"
+                            contentDescription = stringResource(R.string.rsx_back)
                         )
                     }
                 }
@@ -82,12 +84,12 @@ fun AccessibilityKeepaliveScreen(
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "服务状态",
+                        text = stringResource(R.string.rsx_acc_status),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = if (enabled) "已启用" else "未启用",
+                        text = if (enabled) stringResource(R.string.rsx_acc_enabled) else stringResource(R.string.rsx_acc_disabled),
                         style = MaterialTheme.typography.headlineSmall
                     )
                 }
@@ -97,18 +99,17 @@ fun AccessibilityKeepaliveScreen(
                 onClick = { AccessibilityKeepaliveService.openAccessibilitySettings(context) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (enabled) "前往无障碍设置" else "开启无障碍保活")
+                Text(if (enabled) stringResource(R.string.rsx_acc_open_settings) else stringResource(R.string.rsx_acc_toggle))
             }
 
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "关于无障碍保活",
+                        text = stringResource(R.string.rsx_acc_about),
                         style = MaterialTheme.typography.titleMedium
                     )
                     Text(
-                        text = "开启后，ReShizukuX 会作为无障碍服务在后台持续运行，提升 Shizuku 服务在国产 ROM 上的存活率。" +
-                            "本服务不读取、不收集、不上报任何窗口内容或用户数据，仅用于保活。",
+                        text = stringResource(R.string.rsx_acc_desc1) + stringResource(R.string.rsx_acc_desc2),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

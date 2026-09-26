@@ -20,7 +20,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import af.shizuku.manager.R
 
 /**
  * 桌面小部件设置页（ReShizukuX beta1 组C）。
@@ -36,10 +38,10 @@ fun WidgetSettingsScreen(onBack: () -> Unit = {}) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("桌面小部件") },
+                title = { Text(stringResource(R.string.rsx_widget_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.rsx_back))
                     }
                 }
             )
@@ -55,9 +57,9 @@ fun WidgetSettingsScreen(onBack: () -> Unit = {}) {
         ) {
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Shizuku 状态小部件", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.rsx_widget_status_widget), style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "在桌面显示 Shizuku 服务运行状态，点击可快速启动服务。",
+                        stringResource(R.string.rsx_widget_desc),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -66,12 +68,12 @@ fun WidgetSettingsScreen(onBack: () -> Unit = {}) {
 
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("添加方法", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.rsx_widget_add), style = MaterialTheme.typography.titleSmall)
                     Text(
-                        "1. 长按桌面空白处\n" +
-                        "2. 选择「小部件」或「Widgets」\n" +
-                        "3. 找到 ReShizukuX\n" +
-                        "4. 拖拽「Shizuku 状态」小部件到桌面",
+                        stringResource(R.string.rsx_widget_add1) + "\n" +
+                        stringResource(R.string.rsx_widget_add2) + "\n" +
+                        stringResource(R.string.rsx_widget_add3) + "\n" +
+                        stringResource(R.string.rsx_widget_add4),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -80,11 +82,11 @@ fun WidgetSettingsScreen(onBack: () -> Unit = {}) {
 
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("小部件功能", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.rsx_widget_features), style = MaterialTheme.typography.titleSmall)
                     Text(
-                        "• 实时显示服务状态（运行中 / 未运行）\n" +
-                        "• 点击「启动」按钮快速拉起 Shizuku 服务\n" +
-                        "• 每 30 分钟自动刷新状态",
+                        stringResource(R.string.rsx_widget_feature1) + "\n" +
+                        stringResource(R.string.rsx_widget_feature3) + "\n" +
+                        stringResource(R.string.rsx_widget_feature2),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

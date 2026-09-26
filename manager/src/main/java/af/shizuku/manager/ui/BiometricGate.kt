@@ -24,8 +24,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
+import af.shizuku.manager.R
 import af.shizuku.manager.security.BiometricLockManager
 
 /**
@@ -117,16 +119,16 @@ private fun LockedScreen(onRetry: () -> Unit) {
                 )
             }
             Text(
-                text = "已锁定",
+                text = stringResource(R.string.rsx_gate_locked),
                 style = MaterialTheme.typography.headlineSmall
             )
             Text(
-                text = "请使用生物识别或设备凭据解锁",
+                text = stringResource(R.string.rsx_gate_hint),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Button(onClick = onRetry) {
-                Text("重新验证")
+                Text(stringResource(R.string.rsx_gate_retry))
             }
         }
     }

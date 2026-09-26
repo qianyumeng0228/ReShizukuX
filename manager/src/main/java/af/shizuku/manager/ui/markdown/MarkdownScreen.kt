@@ -20,8 +20,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import af.shizuku.manager.R
 import io.noties.markwon.Markwon
 
 /**
@@ -69,10 +71,10 @@ object MarkdownScreen {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("更新日志") },
+                    title = { Text(stringResource(R.string.rsx_changelog_title)) },
                     navigationIcon = {
                         IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.rsx_back))
                         }
                     }
                 )
