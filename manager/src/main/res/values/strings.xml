@@ -1390,4 +1390,17 @@ Please try the command-line method instead.</string>
     <string name="shell_consent_dialog_title_identified">%s is requesting Shizuku privileged shell access.\n\nOnly allow if you just ran a shell command.</string>
     <string name="shell_consent_button_allow">Allow</string>
     <string name="shell_consent_retry_hint">Authorized. Please re-run the command to connect (the app is paused while waiting).</string>
+
+    <!-- ReShizukuX beta1 组A：OTA / 备份恢复 / AI 助手 -->
+    <string name="reshizukux_ota_title">检查更新</string>
+    <string name="reshizukux_ota_checking">正在检查更新…</string>
+    <string name="reshizukux_ota_up_to_date">当前已是最新版本</string>
+    <string name="reshizukux_ota_downloading">下载中 %1$d%%</string>
+    <string name="reshizukux_backup_title">备份与恢复</string>
+    <string name="reshizukux_backup_create">立即备份</string>
+    <string name="reshizukux_backup_restore">从文件恢复</string>
+    <string name="reshizukux_ai_title">AI 助手</string>
+    <string name="reshizukux_ai_no_api_key">尚未配置 API 密钥</string>
+
+    <string name="reshizukux_accessibility_desc">保持 ReShizukuX 在后台活跃。本服务不读取、不收集任何窗口内容或用户数据。</string>
 </resources>
