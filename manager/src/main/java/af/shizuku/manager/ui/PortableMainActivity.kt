@@ -1,7 +1,7 @@
 package af.shizuku.manager.ui
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
@@ -21,35 +21,52 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import af.shizuku.manager.R
+import af.shizuku.manager.analytics.SentryManager
+import af.shizuku.manager.ota.OtaUpdateManager
+import af.shizuku.manager.theme.ThemeManager
+import af.shizuku.manager.ui.accessibility.AccessibilityKeepaliveScreen
+import af.shizuku.manager.ui.ai.AiAssistantScreen
+import af.shizuku.manager.ui.analytics.SentrySettingsScreen
+import af.shizuku.manager.ui.automation.AutomationScreen
+import af.shizuku.manager.ui.backup.BackupRestoreScreen
+import af.shizuku.manager.ui.language.LanguageSettingsScreen
+import af.shizuku.manager.ui.lottie.LottieSettingsScreen
+import af.shizuku.manager.ui.markdown.MarkdownScreen
+import af.shizuku.manager.ui.ota.OtaUpdateScreen
+import af.shizuku.manager.ui.security.BiometricLockScreen
+import af.shizuku.manager.ui.theme.ThemeSettingsScreen
+import af.shizuku.manager.ui.widget.WidgetSettingsScreen
 import io.reshizukux.modules.core.ModuleManager
 import io.reshizukux.modules.repository.RepoManager
 
 /**
- * ShizukuX Portable 的 Compose 宿主 Activity。
+ * ReShizukuX beta1 宿主 Activity。
  *
- * 与现有 View 体系（MainActivity / Fragment / RecyclerView）共存：这里是 Compose 五 Tab
- * 骨架入口（状态 / 授权 / 终端 / 模块 / 设置），不删除、不改造任何既有页面。
- *
- * P6（ReShizukuX UI 整合）：
- *  - 底部导航从「状态/授权/终端/自动化/设置」调整为「状态/授权/终端/模块/设置」。
- *  - 「自动化」不再作为底部 Tab（设计方案 §4.3：手机端 5 Tab 最佳，自动化规则本质是内置模块）；
- *    AutomationTab.kt 文件保留，可从模块 Tab 内的「自动化规则」入口启动 AppProfilesActivity。
- *  - 模块系统（:modules）在主进程首次使用前初始化（ModuleManager / RepoManager）。
+ * 底部 5 Tab：状态 / 授权 / 终端 / 模块 / 设置。
+ * 设置 Tab 中的入口行导航到全屏页面（OTA/备份/AI/生物识别/Sentry/无障碍/主题/Lottie/Widget/语言/Markdown/自动化）。
+ * 启动时受 BiometricGate 保护（如果用户启用了生物识别锁）。
+ * 主题由 ThemeManager 驱动（跟随系统/浅色/深色 + 6 种强调色 + 动态颜色）。
  */
-class PortableMainActivity : ComponentActivity() {
+class PortableMainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // P6：模块系统在主进程初始化（:daemon 进程的 ShizukuDaemonService 也会各自 init，幂等）。
-        // RepoManager.init 内部会 ensureDefaultRepo()，首次启动注入官方仓库。
         ModuleManager.init(this)
         RepoManager.init(this)
+        // beta1 回归功能初始化
+        SentryManager.init(this)
+        OtaUpdateManager.checkSilently(this)
         setContent {
-            // 骨架阶段使用默认 MaterialTheme，不引入自定义主题系统。
-            MaterialTheme {
-                PortableApp()
+            val context = LocalContext.current
+            val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+            val colorScheme = ThemeManager.getInstance().getColorScheme(context, isDark)
+            MaterialTheme(colorScheme = colorScheme) {
+                BiometricGate {
+                    PortableApp()
+                }
             }
         }
     }
@@ -69,14 +86,41 @@ private enum class PortableTab(
 @Composable
 private fun PortableApp() {
     var selected by rememberSaveable { mutableIntStateOf(0) }
-    // When true, the full-screen ADB pairing wizard replaces the five-tab scaffold.
     var showPairingWizard by rememberSaveable { mutableStateOf(false) }
+    // 全屏页面导航：null = 显示 Tab，非 null = 显示对应全屏页
+    var fullScreen by rememberSaveable { mutableStateOf<String?>(null) }
 
     if (showPairingWizard) {
         AdbPairingWizard(
             onFinished = { showPairingWizard = false },
             onCancel = { showPairingWizard = false }
         )
+        return
+    }
+
+    // 全屏页面渲染
+    if (fullScreen != null) {
+        val onBack = { fullScreen = null }
+        when (fullScreen) {
+            "ota" -> OtaUpdateScreen(onBack = onBack)
+            "backup" -> BackupRestoreScreen(onBack = onBack)
+            "ai" -> AiAssistantScreen(onBack = onBack)
+            "biometric" -> BiometricLockScreen(onBack = onBack)
+            "sentry" -> SentrySettingsScreen(onBack = onBack)
+            "accessibility" -> AccessibilityKeepaliveScreen(onBack = onBack)
+            "theme" -> ThemeSettingsScreen(onBack = onBack)
+            "lottie" -> LottieSettingsScreen(onBack = onBack)
+            "widget" -> WidgetSettingsScreen(onBack = onBack)
+            "language" -> LanguageSettingsScreen(onBack = onBack)
+            "changelog" -> MarkdownScreen.Content(onBack = onBack)
+            "automation" -> AutomationScreen(onBack = onBack)
+            "old_settings" -> {
+                // 启动旧版 SettingsActivity
+                val ctx = LocalContext.current
+                ctx.startActivity(android.content.Intent(ctx, af.shizuku.manager.settings.SettingsActivity::class.java))
+                fullScreen = null
+            }
+        }
         return
     }
 
@@ -109,7 +153,7 @@ private fun PortableApp() {
                 1 -> AppsTab()
                 2 -> TerminalTab()
                 3 -> ModulesTab()
-                else -> SettingsTab()
+                else -> SettingsTab(onNavigate = { route -> fullScreen = route })
             }
         }
     }

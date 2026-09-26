@@ -351,18 +351,32 @@
                     running whenever the main process is frozen." />
         </service>
 
+        <!-- ReShizukuX Glance 桌面小部件（替代旧版 ShizukuWidgetProvider） -->
         <receiver
-            android:name=".widget.ShizukuWidgetProvider"
+            android:name=".ui.widget.ShizukuWidgetReceiver"
             android:exported="true"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                <action android:name="af.shizuku.manager.action.STATE_CHANGED" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/widget_info" />
+                android:resource="@xml/widget_shizuku_info" />
         </receiver>
+
+        <!-- 无障碍保活服务（beta1 回归功能）：保持后台进程活跃，不收集任何数据 -->
+        <service
+            android:name=".service.AccessibilityKeepaliveService"
+            android:label="@string/reshizukux_accessibility_desc"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_keepalive_config" />
+        </service>
 
         <service
             android:name=".service.ShizukuTileService"

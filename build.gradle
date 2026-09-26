@@ -31,10 +31,10 @@ def versionNameOverride = {
     if (raw == null || raw.toString().trim().isEmpty()) return null
     return raw.toString().trim()
 }()
-// ReShizukuX：免 Root 模块系统完整功能版，alpha 阶段
-def portableVersionName = versionNameOverride ?: "v${baseVersionName}-alpha1"
+// ReShizukuX：免 Root 模块系统完整功能版，beta 阶段（12 项回归功能已集成）
+def portableVersionName = versionNameOverride ?: "v${baseVersionName}-beta1"
 ext {
-    versionCode = versionCodeOverride ?: 1100
+    versionCode = versionCodeOverride ?: 1200
     versionName = portableVersionName
 }
 
