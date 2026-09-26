@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- P4 WebUI：模块 WebUI 宿主 Activity。
+         声明在 :modules library manifest，合并进 :manager APK。
+         仅由应用内部通过 ModuleWebUi.start() 启动，不导出。 -->
+    <application>
+        <activity
+            android:name="io.reshizukux.modules.webui.ModuleWebViewActivity"
+            android:exported="false"
+            android:label="Module WebUI" />
+    </application>
+
+</manifest>

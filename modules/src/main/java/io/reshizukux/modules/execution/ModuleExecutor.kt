@@ -39,19 +39,36 @@ object ModuleExecutor {
      * @param timeoutSec 超时秒数，超时后 destroy() 强杀（exitCode=124）
      * @param onOutput 可选实时输出回调；stdout/stderr 每读到一段字节就以字符串回调一次
      *   （用于 action.sh 的流式显示，P6 UI 对话框）。为 null 时保持 P1 缓冲行为。
+     * @param stdin 可选写入远端进程 stdin 的内容；写完后关闭输出流（P4 WebUI execWithOptions 用）
+     * @param cwd 可选远端工作目录覆盖；null 时默认 /data/local/tmp（P4 WebUI execWithOptions 用）
      */
     fun execute(
         script: String,
         env: Map<String, String> = emptyMap(),
         timeoutSec: Int = 60,
-        onOutput: ((String) -> Unit)? = null
+        onOutput: ((String) -> Unit)? = null,
+        stdin: String? = null,
+        cwd: String? = null
     ): ExecResult {
         val envArray = if (env.isEmpty()) null else env.map { "${it.key}=${it.value}" }.toTypedArray()
+        val workingDir = cwd?.takeIf { it.isNotBlank() } ?: WORKING_DIR
         val process = try {
-            Shizuku.newProcess(arrayOf("sh", "-c", script), envArray, WORKING_DIR)
+            Shizuku.newProcess(arrayOf("sh", "-c", script), envArray, workingDir)
         } catch (e: Exception) {
             Timber.tag(TAG).w(e, "newProcess failed")
             return ExecResult(-1, "", "newProcess failed: ${e.message}", false)
+        }
+
+        // 写入 stdin（P4 WebUI bridge）：写完立即关闭，让远端 shell 收到 EOF。
+        if (!stdin.isNullOrEmpty()) {
+            try {
+                process.outputStream.use { os ->
+                    os.write(stdin.toByteArray(Charsets.UTF_8))
+                    os.flush()
+                }
+            } catch (e: Exception) {
+                Timber.tag(TAG).d(e, "write stdin failed")
+            }
         }
 
         val stdoutBuffer = ByteArrayOutputStream()
