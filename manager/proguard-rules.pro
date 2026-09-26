@@ -145,3 +145,8 @@
 #-repackageclasses rikka.shizuku
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
+
+# BiometricLock: androidx.core.hardware.fingerprint.FingerprintManagerCompat references
+# system FingerprintManager (deprecated but present); R8 minify reports missing class.
+-dontwarn android.hardware.fingerprint.**
+-keep class android.hardware.fingerprint.** { *; }

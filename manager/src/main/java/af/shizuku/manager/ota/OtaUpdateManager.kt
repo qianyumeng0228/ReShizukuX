@@ -28,7 +28,7 @@ import kotlin.math.min
 object OtaUpdateManager {
 
     const val VERSION_JSON_URL =
-        "https://raw.githubusercontent.com/qianyumeng0228/ReShizukuX/main/version.json"
+        "https://raw.githubusercontent.com/qianyumeng0228/ReShizukuX-OTA/main/version.json"
 
     data class RemoteVersion(
         val latestVersion: String,
