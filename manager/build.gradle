@@ -239,7 +239,7 @@ dependencies {
     implementation libs.appiconloader
 
     // ReShizukuX beta1 回归功能依赖
-    implementation libs.sentry.android
+    implementation libs.sentry.core
     implementation libs.lottie.compose
     implementation libs.androidx.biometric
     implementation libs.glance.appwidget

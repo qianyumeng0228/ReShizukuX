@@ -69,7 +69,8 @@
         <item name="android:layout">@layout/collapsible_preference_category_card</item>
     </style>
 
-    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+    <style name="Theme.App.Portable" parent="Base.AppTheme" />
+<style name="Theme.App.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">?android:attr/colorBackground</item>
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground_base</item>
         <item name="postSplashScreenTheme">@style/Theme.Light</item>

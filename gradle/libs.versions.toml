@@ -44,7 +44,7 @@ kotestJunit5 = "5.9.1"
 robolectric = "4.14.1"
 coroutines-test = "1.10.2"
 androidx-test-core = "1.6.1"
-compose-bom = "2024.04.01"
+compose-bom = "2025.06.01"
 sentry = "8.17.0"
 lottie = "6.6.2"
 biometric = "1.1.0"
@@ -132,6 +132,7 @@ room-testing = { group = "androidx.room", name = "room-testing", version.ref = "
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidx-test-core" }
 
 sentry-android = { group = "io.sentry", name = "sentry-android", version.ref = "sentry" }
+sentry-core = { group = "io.sentry", name = "sentry", version.ref = "sentry" }
 lottie-compose = { group = "com.airbnb.android", name = "lottie-compose", version.ref = "lottie" }
 androidx-biometric = { group = "androidx.biometric", name = "biometric", version.ref = "biometric" }
 glance-appwidget = { group = "androidx.glance", name = "glance-appwidget", version.ref = "glance" }
