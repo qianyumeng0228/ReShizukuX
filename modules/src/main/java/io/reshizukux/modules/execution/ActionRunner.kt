@@ -39,6 +39,13 @@ object ActionRunner {
             return ExecResult(-3, "", msg, false)
         }
 
+        // 1b. P7：CORRUPTED 模块拒绝执行（哈希树篡改，设计方案 §3.5.4）
+        if (ModuleManager.isCorrupted(moduleId)) {
+            val msg = "module $moduleId is CORRUPTED (hash tree mismatch); repair() or reinstall first"
+            Timber.tag(TAG).w(msg)
+            return ExecResult(-6, "", msg, false)
+        }
+
         val moduleDir = ModuleManager.getModuleDir(moduleId)
         if (!moduleDir.exists() || !moduleDir.isDirectory) {
             val msg = "module not installed: $moduleId"
