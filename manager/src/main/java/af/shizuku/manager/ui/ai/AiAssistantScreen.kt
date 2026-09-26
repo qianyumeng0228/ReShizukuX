@@ -184,14 +184,14 @@ fun AiAssistantScreen(
                     OutlinedTextField(
                         value = endpoint,
                         onValueChange = { endpoint = it },
-                        label = { Text("Endpoint") },
+                        label = { Text(stringResource(R.string.rsx_ai_endpoint)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
                     OutlinedTextField(
                         value = model,
                         onValueChange = { model = it },
-                        label = { Text("Model") },
+                        label = { Text(stringResource(R.string.rsx_ai_model)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )

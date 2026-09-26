@@ -286,13 +286,13 @@
     <string name="settings_legacy_pairing_summary">配对码弹窗关闭即结束配对会话；请使用通知输入或无障碍自动配对</string>
     <!-- Bug Report Dialog -->
     <string name="bug_report_dialog_before_reporting">首先，请执行以下操作：</string>
-    <string name="bug_report_dialog_update">请检查您是否正在使用^1。</string>
+    <string name="bug_report_dialog_update">请检查您是否正在使用%1$s。</string>
     <string name="bug_report_dialog_link_update">最新版本</string>
-    <string name="bug_report_dialog_wiki">阅读^1并遵循所有相关故障排除步骤。</string>
+    <string name="bug_report_dialog_wiki">阅读%1$s并遵循所有相关故障排除步骤。</string>
     <string name="bug_report_dialog_link_wiki">维基</string>
-    <string name="bug_report_dialog_issues">在所有 ^1 中搜索，确认您的问题是否已经有人报告。</string>
+    <string name="bug_report_dialog_issues">在所有 %1$s 中搜索，确认您的问题是否已经有人报告。</string>
     <string name="bug_report_dialog_link_issues">现有问题</string>
-    <string name="bug_report_dialog_method">如果您有账号，请在^1上提交问题。</string>
+    <string name="bug_report_dialog_method">如果您有账号，请在%1$s上提交问题。</string>
     <string name="bug_report_dialog_method_2">否则，您可以通过发送电子邮件的方式。</string>
     <string name="bug_report_dialog_button_email">电子邮件</string>
     <string name="bug_report_email_subject">问题标题</string>
@@ -1367,11 +1367,60 @@
     <string name="rsx_wiz_allow_dialog">如果系统弹出「允许无线调试配对？」确认框，请点击「允许」。</string>
     <string name="rsx_wiz_back">上一步</string>
     <string name="rsx_wiz_cancel">取消</string>
+    <string name="app_profile_empty">未找到应用</string>
+    <string name="app_profile_search_hint">搜索应用…</string>
+    <string name="app_profile_state_allow">允许</string>
+    <string name="app_profile_state_block">拦截</string>
+    <string name="app_profile_state_default">默认</string>
+    <string name="app_profiles_title">应用配置文件</string>
+    <string name="app_profiles_description">按应用覆盖 Binder 防火墙。点击徽章循环切换：默认 → 拦截 → 允许。自动化服务运行时生效。</string>
+    <string name="app_profiles_summary_count">已启用 %1$d 个应用覆盖</string>
+    <string name="app_profiles_summary_none">无按应用 Binder 防火墙覆盖</string>
+    <string name="dhizuku_request_permission_allow">允许</string>
+    <string name="dhizuku_request_permission_deny">拒绝</string>
+    <string name="dhizuku_request_permission_message">授权后，%1$s 可执行需要设备所有者权限的操作。
+
+%2$d 秒后自动拒绝。</string>
+    <string name="dhizuku_request_permission_title">允许 %1$s 使用 Dhizuku 服务？</string>
+    <string name="export_diagnostics_collecting">正在收集诊断信息…</string>
+    <string name="external_relay_auto_battery_off">电池优化已开启——系统可能杀掉此服务</string>
+    <string name="external_relay_auto_battery_ok">已关闭电池优化（服务将保持存活）</string>
+    <string name="external_relay_auto_battery_optimize">关闭电池优化</string>
+    <string name="external_relay_auto_battery_hint">提示：也请在最近任务中锁定 ShizukuX，防止系统杀掉服务。</string>
+    <string name="home_backup_title">应用备份</string>
+    <string name="home_backup_summary">免 Root 备份和恢复应用数据</string>
+    <string name="backup_activity_title">应用备份</string>
+    <string name="backup_action_backup">备份</string>
+    <string name="backup_action_freeze">冻结</string>
+    <string name="backup_action_unfreeze">解冻</string>
+    <string name="backup_service_required">Shizuku 服务未运行</string>
+    <string name="backup_in_progress">备份中…</string>
+    <string name="backup_app_complete">已备份 %1$s → %2$s</string>
+    <string name="backup_app_failed">备份失败：%1$s</string>
+    <string name="backup_freeze_success">应用已冻结</string>
+    <string name="backup_unfreeze_success">应用已解冻</string>
+    <string name="reshizukux_ota_title">检查更新</string>
+    <string name="reshizukux_ota_checking">正在检查更新…</string>
+    <string name="reshizukux_ota_up_to_date">当前已是最新版本</string>
+    <string name="reshizukux_ota_downloading">下载中 %1$d%%</string>
+    <string name="reshizukux_backup_title">备份与恢复</string>
+    <string name="reshizukux_backup_create">立即备份</string>
+    <string name="reshizukux_backup_restore">从文件恢复</string>
+    <string name="reshizukux_ai_title">AI 助手</string>
+    <string name="reshizukux_ai_no_api_key">尚未配置 API 密钥</string>
+    <string name="reshizukux_accessibility_desc">保持 ReShizukuX 在后台活跃。本服务不读取、不收集任何窗口内容或用户数据。</string>
+    <string name="tile_action_open_app">打开应用</string>
+    <string name="tile_action_restart">重启服务</string>
+    <string name="tile_action_start">启动服务</string>
+    <string name="tile_action_stop">停止服务</string>
+    <string name="tile_state_update_failed">更新 Shizuku 状态失败：%1$s</string>
     <string name="rsx_wiz_error">错误：%1$s</string>
     <string name="rsx_ai_title">AI 助手</string>
     <string name="rsx_ai_settings">设置</string>
     <string name="rsx_ai_no_key">尚未配置 API 密钥</string>
     <string name="rsx_cancel">取消</string>
+    <string name="rsx_ai_endpoint">接口地址</string>
+    <string name="rsx_ai_model">模型名称</string>
     <!-- AI 助手 -->
     <string name="rsx_ai_service_settings">AI 服务设置</string>
     <string name="rsx_ai_api_key">API 密钥</string>
@@ -1461,6 +1510,7 @@
     <string name="rsx_md_back">返回</string>
     <string name="rsx_md_uninstall">卸载</string>
     <string name="rsx_md_exit_code_timeout">退出码=%1$d（超时 60s）</string>
+    <string name="rsx_mod_ver_author">v%1$s · %2$s</string>
     <!-- 模块详情 -->
     <string name="rsx_md_author">作者</string>
     <string name="rsx_md_version">版本</string>

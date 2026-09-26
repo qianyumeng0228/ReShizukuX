@@ -332,7 +332,7 @@ private fun ModuleCard(
                     Text(info.name, style = MaterialTheme.typography.titleMedium)
                     StateChip(info.state)
                 }
-                Text("v${info.version} · ${info.author}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.rsx_mod_ver_author, info.version, info.author), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (!info.publicKey.isNullOrBlank()) {
                     Text(stringResource(R.string.rsx_mod_signed), style = MaterialTheme.typography.labelSmall, color = Color(0xFF4CAF50))
                 }
@@ -445,7 +445,7 @@ private fun RepoModuleCard(
                     Text(stringResource(R.string.rsx_mod_unsigned), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                 }
             }
-            Text("v${mod.version} · ${mod.author}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.rsx_mod_ver_author, mod.version, mod.author), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (mod.description.isNotBlank()) {
                 Text(mod.description, style = MaterialTheme.typography.bodySmall)
             }

@@ -1392,17 +1392,17 @@ Please try the command-line method instead.</string>
     <string name="shell_consent_retry_hint">Authorized. Please re-run the command to connect (the app is paused while waiting).</string>
 
     <!-- ReShizukuX beta1 组A：OTA / 备份恢复 / AI 助手 -->
-    <string name="reshizukux_ota_title">检查更新</string>
-    <string name="reshizukux_ota_checking">正在检查更新…</string>
-    <string name="reshizukux_ota_up_to_date">当前已是最新版本</string>
-    <string name="reshizukux_ota_downloading">下载中 %1$d%%</string>
-    <string name="reshizukux_backup_title">备份与恢复</string>
-    <string name="reshizukux_backup_create">立即备份</string>
-    <string name="reshizukux_backup_restore">从文件恢复</string>
-    <string name="reshizukux_ai_title">AI 助手</string>
-    <string name="reshizukux_ai_no_api_key">尚未配置 API 密钥</string>
+    <string name="reshizukux_ota_title">Check for updates</string>
+    <string name="reshizukux_ota_checking">Checking for updates…</string>
+    <string name="reshizukux_ota_up_to_date">You are up to date</string>
+    <string name="reshizukux_ota_downloading">Downloading %1$d%%</string>
+    <string name="reshizukux_backup_title">Backup &amp; Restore</string>
+    <string name="reshizukux_backup_create">Back up now</string>
+    <string name="reshizukux_backup_restore">Restore from file</string>
+    <string name="reshizukux_ai_title">AI Assistant</string>
+    <string name="reshizukux_ai_no_api_key">No API key configured</string>
 
-    <string name="reshizukux_accessibility_desc">保持 ReShizukuX 在后台活跃。本服务不读取、不收集任何窗口内容或用户数据。</string>
+    <string name="reshizukux_accessibility_desc">Keeps ReShizukuX alive in the background. This service does not read or collect any window content or user data.</string>
     <!-- ReShizukuX Portable UI -->
     <string name="rsx_tab_home">Status</string>
     <string name="rsx_tab_apps">Apps</string>
@@ -1546,6 +1546,8 @@ Please try the command-line method instead.</string>
     <string name="rsx_ai_settings">Settings</string>
     <string name="rsx_ai_no_key">API key not configured</string>
     <string name="rsx_cancel">Cancel</string>
+    <string name="rsx_ai_endpoint">Endpoint</string>
+    <string name="rsx_ai_model">Model</string>
     <!-- AI assistant -->
     <string name="rsx_ai_service_settings">AI service settings</string>
     <string name="rsx_ai_api_key">API key</string>
@@ -1635,6 +1637,7 @@ Please try the command-line method instead.</string>
     <string name="rsx_md_back">Back</string>
     <string name="rsx_md_uninstall">Uninstall</string>
     <string name="rsx_md_exit_code_timeout">Exit code=%1$d (timed out after 60s)</string>
+    <string name="rsx_mod_ver_author">v%1$s · %2$s</string>
     <!-- Module detail -->
     <string name="rsx_md_author">Author</string>
     <string name="rsx_md_version">Version</string>
