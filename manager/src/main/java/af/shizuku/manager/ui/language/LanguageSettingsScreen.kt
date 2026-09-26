@@ -42,11 +42,11 @@ private data class LanguageOption(val label: String, val tag: String)
 
 private val LANGUAGES = listOf(
     LanguageOption("跟随系统", ""),
-    LanguageOption("简体中文", "zh-rCN"),
+    LanguageOption("简体中文", "zh-CN"),
     LanguageOption("English", "en"),
     LanguageOption("日本語", "ja"),
     LanguageOption("한국어", "ko"),
-    LanguageOption("Português (Brasil)", "pt-rBR"),
+    LanguageOption("Português (Brasil)", "pt-BR"),
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
