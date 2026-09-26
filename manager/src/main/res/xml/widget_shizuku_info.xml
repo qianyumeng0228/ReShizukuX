@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 组C - Glance 桌面小部件元数据。initialLayout 使用 Glance 自带的加载占位布局，
+     Glance 运行时自行渲染真实内容。Manifest 注册由集成阶段统一处理。 -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="180dp"
+    android:minHeight="80dp"
+    android:updatePeriodMillis="1800000"
+    android:initialLayout="@layout/glance_default_loading_layout"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen" />
