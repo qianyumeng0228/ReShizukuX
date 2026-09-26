@@ -26,7 +26,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
 import af.shizuku.manager.utils.ShizukuStateMachine
 import kotlinx.coroutines.launch
@@ -58,11 +60,11 @@ fun HomeTab(
 
     val running = state == ShizukuStateMachine.State.RUNNING
     val statusText = when (state) {
-        ShizukuStateMachine.State.RUNNING -> "运行中"
-        ShizukuStateMachine.State.STARTING -> "启动中…"
-        ShizukuStateMachine.State.STOPPING -> "停止中…"
-        ShizukuStateMachine.State.CRASHED -> "服务已崩溃"
-        ShizukuStateMachine.State.STOPPED -> "未运行"
+        ShizukuStateMachine.State.RUNNING -> stringResource(R.string.rsx_home_running)
+        ShizukuStateMachine.State.STARTING -> stringResource(R.string.rsx_home_starting)
+        ShizukuStateMachine.State.STOPPING -> stringResource(R.string.rsx_home_stopping)
+        ShizukuStateMachine.State.CRASHED -> stringResource(R.string.rsx_home_crashed)
+        ShizukuStateMachine.State.STOPPED -> stringResource(R.string.rsx_home_not_running)
     }
 
     // --- orchestrator UI state ---
@@ -77,9 +79,9 @@ fun HomeTab(
     LaunchedEffect(running, state) {
         activationMode = when (ShizukuSettings.getLastLaunchMode()) {
             ShizukuSettings.LaunchMethod.ROOT -> "Root"
-            ShizukuSettings.LaunchMethod.ADB -> "无线 ADB"
+            ShizukuSettings.LaunchMethod.ADB -> context.getString(R.string.rsx_home_activation_adb)
             ShizukuSettings.LaunchMethod.DHIZUKU -> "Dhizuku"
-            else -> "未激活"
+            else -> context.getString(R.string.rsx_home_activation_none)
         }
     }
 
@@ -105,7 +107,7 @@ fun HomeTab(
                             errorMessage = null
                             onPairingRequired()
                         }
-                        else -> errorMessage = result.error ?: "启动失败"
+                        else -> errorMessage = result.error ?: context.getString(R.string.rsx_home_start_failed)
                     }
                 }
             }
@@ -118,8 +120,8 @@ fun HomeTab(
     if (showStopConfirm) {
         AlertDialog(
             onDismissRequest = { showStopConfirm = false },
-            title = { Text("停止 Shizuku 服务？") },
-            text = { Text("停止后依赖 Shizuku 的应用将失去授权。看门狗 Alarm 也会被取消，直到下次手动开启。") },
+            title = { Text(stringResource(R.string.rsx_home_stop_confirm_title)) },
+            text = { Text(stringResource(R.string.rsx_home_stop_confirm_msg)) },
             confirmButton = {
                 TextButton(onClick = {
                     showStopConfirm = false
@@ -130,10 +132,10 @@ fun HomeTab(
                         isWorking = false
                         ShizukuStateMachine.update()
                     }
-                }) { Text("停止") }
+                }) { Text(stringResource(R.string.rsx_home_stop)) }
             },
             dismissButton = {
-                TextButton(onClick = { showStopConfirm = false }) { Text("取消") }
+                TextButton(onClick = { showStopConfirm = false }) { Text(stringResource(R.string.rsx_home_cancel)) }
             }
         )
     }
@@ -145,7 +147,7 @@ fun HomeTab(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "服务状态",
+            text = stringResource(R.string.rsx_home_title),
             style = MaterialTheme.typography.headlineSmall
         )
 
@@ -163,9 +165,9 @@ fun HomeTab(
                     style = MaterialTheme.typography.headlineMedium
                 )
                 Text(
-                    text = if (running) "Shizuku 服务已就绪，可授权应用使用。"
-                    else if (isWorking) "正在启动…"
-                    else "打开开关以 Root 或无线 ADB 方式启动服务。",
+                    text = if (running) stringResource(R.string.rsx_home_ready)
+                    else if (isWorking) stringResource(R.string.rsx_home_starting)
+                    else stringResource(R.string.rsx_home_hint),
                     style = MaterialTheme.typography.bodyMedium
                 )
 
@@ -178,7 +180,7 @@ fun HomeTab(
                         CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.padding(2.dp))
                         Column {
                             Text(
-                                text = "正在执行第 $currentStep / 11 步",
+                                text = stringResource(R.string.rsx_home_step, currentStep),
                                 style = MaterialTheme.typography.labelMedium
                             )
                             if (stepTitle.isNotEmpty()) {
@@ -194,12 +196,12 @@ fun HomeTab(
                 // Error message.
                 errorMessage?.let { msg ->
                     Text(
-                        text = "错误：$msg",
+                        text = stringResource(R.string.rsx_home_error, msg),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error
                     )
                     OutlinedButton(onClick = { errorMessage = null }) {
-                        Text("知道了")
+                        Text(stringResource(R.string.rsx_home_ok))
                     }
                 }
 
@@ -209,7 +211,7 @@ fun HomeTab(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "启动服务",
+                        text = stringResource(R.string.rsx_home_start),
                         style = MaterialTheme.typography.titleMedium
                     )
                     Switch(
@@ -223,18 +225,19 @@ fun HomeTab(
 
         // Activation mode line.
         Text(
-            text = "激活模式：$activationMode",
+            text = stringResource(R.string.rsx_home_activation, activationMode),
             style = MaterialTheme.typography.bodySmall
         )
         // Guard mode line: root launch + daemon setting on => the :daemon process polls /proc and
         // relaunches the server; otherwise degrade to the Alarm/foreground watchdog.
         val guardLabel = when {
             running && ShizukuSettings.isDaemonEnabled() &&
-                ShizukuSettings.getLastLaunchMode() == ShizukuSettings.LaunchMethod.ROOT -> "双进程"
-            else -> "自愈模式"
+                ShizukuSettings.getLastLaunchMode() == ShizukuSettings.LaunchMethod.ROOT ->
+                stringResource(R.string.rsx_home_guard_dual)
+            else -> stringResource(R.string.rsx_home_guard_selfheal)
         }
         Text(
-            text = "守护：$guardLabel",
+            text = stringResource(R.string.rsx_home_guard, guardLabel),
             style = MaterialTheme.typography.bodySmall
         )
     }

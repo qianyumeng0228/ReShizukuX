@@ -1,6 +1,7 @@
 package af.shizuku.manager.ui
 
 import android.os.Bundle
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -24,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import af.shizuku.manager.R
 import af.shizuku.manager.analytics.SentryManager
 import af.shizuku.manager.ota.OtaUpdateManager
@@ -74,14 +76,14 @@ class PortableMainActivity : AppCompatActivity() {
 }
 
 private enum class PortableTab(
-    val label: String,
+    @StringRes val labelRes: Int,
     @DrawableRes val icon: Int
 ) {
-    HOME("状态", R.drawable.ic_power_settings_new_24),
-    APPS("授权", R.drawable.ic_group_24),
-    TERMINAL("终端", R.drawable.ic_code_24),
-    MODULES("模块", R.drawable.ic_install_24),
-    SETTINGS("设置", R.drawable.ic_settings_outline_24);
+    HOME(R.string.rsx_tab_home, R.drawable.ic_power_settings_new_24),
+    APPS(R.string.rsx_tab_apps, R.drawable.ic_group_24),
+    TERMINAL(R.string.rsx_tab_terminal, R.drawable.ic_code_24),
+    MODULES(R.string.rsx_tab_modules, R.drawable.ic_install_24),
+    SETTINGS(R.string.rsx_tab_settings, R.drawable.ic_settings_outline_24);
 }
 
 @Composable
@@ -139,10 +141,10 @@ private fun PortableApp() {
                         icon = {
                             Icon(
                                 painter = painterResource(tab.icon),
-                                contentDescription = tab.label
+                                contentDescription = stringResource(tab.labelRes)
                             )
                         },
-                        label = { Text(tab.label) }
+                        label = { Text(stringResource(tab.labelRes)) }
                     )
                 }
             }

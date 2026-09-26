@@ -26,9 +26,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
+import af.shizuku.manager.R
 
 /**
  * 组C - 多语言设置页。
@@ -54,11 +56,14 @@ fun LanguageSettingsScreen(onBack: () -> Unit) {
     var current by remember {
         mutableStateOf(AppCompatDelegate.getApplicationLocales().toLanguageTags().orEmpty())
     }
+    // 语言名以自身语言显示（天然多语言），"跟随系统"走资源。
+    val followSystemLabel = stringResource(R.string.rsx_language_follow_system)
+    val options = LANGUAGES.map { if (it.tag.isEmpty()) it.copy(label = followSystemLabel) else it }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("语言") },
+                title = { Text(stringResource(R.string.rsx_language_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
@@ -74,12 +79,12 @@ fun LanguageSettingsScreen(onBack: () -> Unit) {
                 .verticalScroll(rememberScrollState())
         ) {
             Text(
-                "更改后应用自动切换语言并重建页面。",
+                stringResource(R.string.rsx_language_hint),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(16.dp)
             )
-            LANGUAGES.forEach { option ->
+            options.forEach { option ->
                 val selected = current == option.tag
                 Row(
                     Modifier
