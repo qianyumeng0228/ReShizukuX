@@ -2,6 +2,7 @@ package af.shizuku.manager.ui
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Box
@@ -89,6 +90,10 @@ private fun PortableApp() {
     var showPairingWizard by rememberSaveable { mutableStateOf(false) }
     // 全屏页面导航：null = 显示 Tab，非 null = 显示对应全屏页
     var fullScreen by rememberSaveable { mutableStateOf<String?>(null) }
+
+    // 系统返回键拦截：二级全屏页/配对向导按返回应回到上一级，而不是退出应用
+    BackHandler(enabled = showPairingWizard) { showPairingWizard = false }
+    BackHandler(enabled = fullScreen != null) { fullScreen = null }
 
     if (showPairingWizard) {
         AdbPairingWizard(
