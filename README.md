@@ -4,6 +4,38 @@
 
 基于 [ShizukuX](https://github.com/qianyumeng0228/ShizukuX) 源码深度精简重设计，面向「省电、低内存、强保活」的无 Root 日常使用场景。
 
+## 🧩 ReShizukuX 模块系统
+
+ReShizukuX = **ShizukuX Portable + 免 Root 模块系统**。在 Portable 的省电闭环之上，新增了一套
+Magisk 式 ZIP 模块体系：你可以安装第三方模块包，通过 Shizuku 特权（shell uid=2000 或 root uid=0）
+执行脚本、提供 WebUI 管理界面，并从内置仓库发现和更新模块。**无需 Root**（ADB 激活 Shizuku 即可）。
+
+- **什么是模块**：一个 ZIP 包，根目录放 `module.prop` 元数据，可选 `customize.sh`（安装）、
+  `action.sh`（手动运行）、`service.sh`（后台常驻）、`uninstall.sh`（卸载回滚）和 `webroot/`（WebUI）。
+- **如何安装模块**：① 从仓库浏览并一键安装；② 把模块 ZIP 拷到手机，在「模块」Tab 选择本地 ZIP 安装。
+  新模块默认 **SAFE**（全禁），需在详情页主动授权 action / service / WebUI Bridge。
+- **安全**：ZIP 路径穿越双校验 + 资源上限 + SHA-256 哈希树篡改检测 + Ed25519 签名（API 33+）+
+  HIGH 风险命令过滤。
+
+### 示例模块
+
+| 模块 | 打包产物 | 演示点 |
+|------|---------|--------|
+| Hello | [`samples/hello-module-v1.0.0.zip`](samples/hello-module-v1.0.0.zip) | 最简 `action.sh` + WebUI JS Bridge（源码 [`samples/hello-module/`](samples/hello-module/)） |
+| 系统设置清理 | [`samples/settings-cleaner-v1.0.0.zip`](samples/settings-cleaner-v1.0.0.zip) | `customize.sh` 备份 + `uninstall.sh` 回滚 |
+| 定时备份守护 | [`samples/backup-module-v1.0.0.zip`](samples/backup-module-v1.0.0.zip) | `service.sh` 后台常驻（shell 权限即可运行） |
+
+> 这些 ZIP 可直接通过「本地安装」导入测试。模块包要求 `module.prop` 位于 ZIP 根目录（上述打包产物已满足）。
+
+### 文档索引
+
+- [模块包规范 `docs/module-spec.md`](docs/module-spec.md) —— `module.prop` 字段、脚本钩子、环境变量、webroot、打包要求
+- [JS Bridge API `docs/module-api.md`](docs/module-api.md) —— `Shizuku.exec` / `execWithOptions` / `download` / `getModuleInfo`
+- [仓库协议 `docs/repo-protocol.md`](docs/repo-protocol.md) —— `modules.json` 格式、签名、更新检测
+- [安全模型 `docs/security.md`](docs/security.md) —— 权限三档、哈希树、Ed25519、HIGH 命令过滤
+
+---
+
 ## ✨ 特性
 
 - **单开关全自动**：一个开关触发完整启动链路（检测激活方式 → 配对检查 → 锁屏门禁 → 启动 → Binder 就绪 → 记录方式 → 开机自启 → 双进程守护 → Alarm 兜底），无需分步操作

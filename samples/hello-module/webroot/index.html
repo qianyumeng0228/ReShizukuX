@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hello Module WebUI</title>
+  <style>
+    body { font-family: sans-serif; margin: 24px; background: #f7f7f9; color: #222; }
+    h1 { font-size: 20px; }
+    button { padding: 10px 16px; font-size: 15px; border: none; border-radius: 8px;
+             background: #3b6cff; color: #fff; }
+    pre { background: #1e1e1e; color: #d4d4d4; padding: 12px; border-radius: 8px;
+          white-space: pre-wrap; word-break: break-all; min-height: 40px; }
+  </style>
+</head>
+<body>
+  <h1>Hello Module WebUI</h1>
+  <p>这是 hello.module 的 WebUI 示例页面。点击下面的按钮，通过 JS Bridge 在特权 shell 中执行 <code>id</code>。</p>
+  <button onclick="runId()">执行 id 命令</button>
+  <h3>输出：</h3>
+  <pre id="out">（尚未执行）</pre>
+
+  <script>
+    function runId() {
+      var out = document.getElementById('out');
+      out.textContent = '执行中...';
+      try {
+        // Shizuku.exec 返回 JSON 字符串：{ok, exitCode, stdout, stderr, timedOut}
+        var raw = Shizuku.exec('id');
+        var r = JSON.parse(raw);
+        out.textContent =
+          'ok=' + r.ok + '  exitCode=' + r.exitCode + '  timedOut=' + r.timedOut +
+          '\n--- stdout ---\n' + r.stdout +
+          '\n--- stderr ---\n' + (r.stderr || '(空)');
+      } catch (e) {
+        out.textContent = '调用失败：' + e;
+      }
+    }
+  </script>
+</body>
+</html>

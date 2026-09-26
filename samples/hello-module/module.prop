@@ -1,0 +1,10 @@
+id=hello.module
+name=示例模块：Hello
+version=1.0.0
+versionCode=100
+author=ReShizukuX
+description=最简示例模块，演示 action.sh 和 WebUI
+minSdk=24
+requiresRoot=false
+usesWebUI=true
+usesShellBridge=true
