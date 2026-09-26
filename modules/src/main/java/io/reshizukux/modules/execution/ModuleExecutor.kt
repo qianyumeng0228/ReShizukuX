@@ -37,11 +37,14 @@ object ModuleExecutor {
      *
      * @param env 额外环境变量（MODULE_DIR/MODULE_ID 等），空则继承远端默认环境
      * @param timeoutSec 超时秒数，超时后 destroy() 强杀（exitCode=124）
+     * @param onOutput 可选实时输出回调；stdout/stderr 每读到一段字节就以字符串回调一次
+     *   （用于 action.sh 的流式显示，P6 UI 对话框）。为 null 时保持 P1 缓冲行为。
      */
     fun execute(
         script: String,
         env: Map<String, String> = emptyMap(),
-        timeoutSec: Int = 60
+        timeoutSec: Int = 60,
+        onOutput: ((String) -> Unit)? = null
     ): ExecResult {
         val envArray = if (env.isEmpty()) null else env.map { "${it.key}=${it.value}" }.toTypedArray()
         val process = try {
@@ -53,8 +56,8 @@ object ModuleExecutor {
 
         val stdoutBuffer = ByteArrayOutputStream()
         val stderrBuffer = ByteArrayOutputStream()
-        val stdoutThread = pump(process.inputStream, stdoutBuffer, "stdout")
-        val stderrThread = pump(process.errorStream, stderrBuffer, "stderr")
+        val stdoutThread = pump(process.inputStream, stdoutBuffer, "stdout", onOutput)
+        val stderrThread = pump(process.errorStream, stderrBuffer, "stderr", onOutput)
 
         var timedOut = false
         val exitCode = try {
@@ -87,7 +90,12 @@ object ModuleExecutor {
     }
 
     /** 后台线程并发读流，避免 stdout/stderr 管道缓冲区填满导致远端进程阻塞。 */
-    private fun pump(input: InputStream, sink: ByteArrayOutputStream, tag: String): Thread {
+    private fun pump(
+        input: InputStream,
+        sink: ByteArrayOutputStream,
+        tag: String,
+        onOutput: ((String) -> Unit)? = null
+    ): Thread {
         val t = Thread({
             try {
                 input.use { src ->
@@ -95,6 +103,14 @@ object ModuleExecutor {
                     var read: Int
                     while (src.read(buffer).also { read = it } != -1) {
                         synchronized(sink) { sink.write(buffer, 0, read) }
+                        if (onOutput != null) {
+                            val chunk = String(buffer, 0, read, Charsets.UTF_8)
+                            try {
+                                onOutput.invoke(chunk)
+                            } catch (e: Exception) {
+                                Timber.tag(TAG).d(e, "onOutput callback threw")
+                            }
+                        }
                     }
                 }
             } catch (e: Exception) {

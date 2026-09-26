@@ -3,6 +3,9 @@ package io.reshizukux.modules.core
 import android.content.Context
 import io.reshizukux.modules.db.InstalledModule
 import io.reshizukux.modules.db.ModuleDatabase
+import io.reshizukux.modules.execution.CustomizeRunner
+import io.reshizukux.modules.execution.ModuleLogs
+import io.reshizukux.modules.execution.UninstallRunner
 import io.reshizukux.modules.permission.PermissionController
 import io.reshizukux.modules.permission.PermissionLevel
 import timber.log.Timber
@@ -24,8 +27,10 @@ import java.util.zip.ZipFile
  *     error.log         # 存在 = ERROR
  * ```
  *
- * P1：解包 + 校验 + 原子安装 + 启停标记 + 落库。customize.sh/uninstall.sh/service.sh
- * 的实际执行留 P2/P3（见 TODO）。
+ * P1：解包 + 校验 + 原子安装 + 启停标记 + 落库。
+ * P2：install 集成 customize.sh（失败回滚）、uninstall 集成 uninstall.sh（不阻塞）、
+ *     action.sh 由 [io.reshizukux.modules.execution.ActionRunner] 执行。
+ * service.sh 后台执行留 P3。
  */
 object ModuleManager {
 
@@ -102,9 +107,18 @@ object ModuleManager {
                     return Result.failure(IllegalStateException("atomic rename failed for ${spec.id}"))
                 }
 
-                // TODO(P2): 在模块目录执行 customize.sh（工作目录=模块目录，超时 120s，失败回滚删除 target）
-                // val r = ModuleExecutor.execute("sh customize.sh", envOf(spec), timeoutSec = 120)
-                // if (r.exitCode != 0) { target.deleteRecursively(); return Result.failure(...) }
+                // 5b. 执行 customize.sh（超时 120s，工作目录=模块目录，已过 CommandFilter）。
+                //     失败（exitCode != 0 或超时）→ 回滚删除 target，不写数据库。
+                val customizeResult = CustomizeRunner.run(target, spec)
+                if (customizeResult.exitCode != 0 || customizeResult.timedOut) {
+                    target.deleteRecursively()
+                    return Result.failure(
+                        IllegalStateException(
+                            "customize.sh failed (exit=${customizeResult.exitCode}, " +
+                                "timedOut=${customizeResult.timedOut}): ${customizeResult.stderr}"
+                        )
+                    )
+                }
 
                 // 6. 落库（默认 DISABLED + SAFE）
                 val now = System.currentTimeMillis()
@@ -161,10 +175,20 @@ object ModuleManager {
     fun uninstall(moduleId: String): Boolean {
         val moduleDir = getModuleDir(moduleId)
         return try {
-            // TODO(P2): 卸载前同步执行 uninstall.sh（超时 60s，失败不阻塞卸载，仅记日志）
-            // if (File(moduleDir, "uninstall.sh").exists()) ModuleExecutor.execute("sh uninstall.sh", envOf(...), 60)
-            db().moduleDao().deleteById(moduleId)
+            val row = db().moduleDao().getById(moduleId) ?: run {
+                Timber.tag(TAG).w("uninstall: module not found in db: $moduleId")
+                return false
+            }
+            // 若当前 ENABLED，先写 disable 标记（P3 在此 kill -TERM service.sh 进程组；P2 仅标记）
+            if (row.state == ModuleState.ENABLED.name) {
+                File(moduleDir, DISABLE_FILE).createNewFile()
+            }
+            // 卸载钩子：超时 60s，失败不阻塞（日志已写并复制到 .cache 保留）
+            UninstallRunner.run(moduleDir, moduleId)
+            // 删除模块目录
             moduleDir.deleteRecursively()
+            // 删数据库行
+            db().moduleDao().deleteById(moduleId)
             Timber.tag(TAG).i("uninstalled module $moduleId")
             true
         } catch (e: Exception) {
@@ -199,6 +223,16 @@ object ModuleManager {
 
     fun getModule(moduleId: String): ModuleInfo? =
         db().moduleDao().getById(moduleId)?.toModuleInfo(getModuleDir(moduleId))
+
+    // ------------------------------------------------------------------ logs
+
+    /** 读 action-last.log（手动动作输出，尾部 64KB）；模块目录不存在返回 null。 */
+    fun getActionLog(moduleId: String): String? =
+        ModuleLogs.read(getModuleDir(moduleId), "action-last.log")
+
+    /** 读 customize-last.log（安装脚本输出）；模块目录不存在返回 null。 */
+    fun getCustomizeLog(moduleId: String): String? =
+        ModuleLogs.read(getModuleDir(moduleId), "customize-last.log")
 
     // ------------------------------------------------------------------ mapping
 
