@@ -23,17 +23,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import af.shizuku.manager.R
+import io.reshizukux.modules.core.ModuleManager
+import io.reshizukux.modules.repository.RepoManager
 
 /**
  * ShizukuX Portable 的 Compose 宿主 Activity。
  *
- * 与现有 View 体系（MainActivity / Fragment / RecyclerView）共存：这里只是新增一个
- * 五 Tab 骨架入口（状态 / 授权 / 终端 / 自动化 / 设置），不删除、不改造任何既有页面。
+ * 与现有 View 体系（MainActivity / Fragment / RecyclerView）共存：这里是 Compose 五 Tab
+ * 骨架入口（状态 / 授权 / 终端 / 模块 / 设置），不删除、不改造任何既有页面。
+ *
+ * P6（ReShizukuX UI 整合）：
+ *  - 底部导航从「状态/授权/终端/自动化/设置」调整为「状态/授权/终端/模块/设置」。
+ *  - 「自动化」不再作为底部 Tab（设计方案 §4.3：手机端 5 Tab 最佳，自动化规则本质是内置模块）；
+ *    AutomationTab.kt 文件保留，可从模块 Tab 内的「自动化规则」入口启动 AppProfilesActivity。
+ *  - 模块系统（:modules）在主进程首次使用前初始化（ModuleManager / RepoManager）。
  */
 class PortableMainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // P6：模块系统在主进程初始化（:daemon 进程的 ShizukuDaemonService 也会各自 init，幂等）。
+        // RepoManager.init 内部会 ensureDefaultRepo()，首次启动注入官方仓库。
+        ModuleManager.init(this)
+        RepoManager.init(this)
         setContent {
             // 骨架阶段使用默认 MaterialTheme，不引入自定义主题系统。
             MaterialTheme {
@@ -50,14 +62,14 @@ private enum class PortableTab(
     HOME("状态", R.drawable.ic_power_settings_new_24),
     APPS("授权", R.drawable.ic_group_24),
     TERMINAL("终端", R.drawable.ic_code_24),
-    AUTOMATION("自动化", R.drawable.ic_bolt_24),
+    MODULES("模块", R.drawable.ic_install_24),
     SETTINGS("设置", R.drawable.ic_settings_outline_24);
 }
 
 @Composable
 private fun PortableApp() {
     var selected by rememberSaveable { mutableIntStateOf(0) }
-    // When true, the full-screen ADB pairing wizard replaces the four-tab scaffold.
+    // When true, the full-screen ADB pairing wizard replaces the five-tab scaffold.
     var showPairingWizard by rememberSaveable { mutableStateOf(false) }
 
     if (showPairingWizard) {
@@ -96,7 +108,7 @@ private fun PortableApp() {
                 0 -> HomeTab(onPairingRequired = { showPairingWizard = true })
                 1 -> AppsTab()
                 2 -> TerminalTab()
-                3 -> AutomationTab()
+                3 -> ModulesTab()
                 else -> SettingsTab()
             }
         }
