@@ -1546,4 +1546,17 @@
     <string name="rsx_widget_add4">4. 「ReShizukuXステータス」ウィジェットをホーム画面にドラッグ</string>
     <string name="rsx_widget_status_widget">ReShizukuXステータスウィジェット</string>
 
+
+
+    <!-- ReShizukuX home/tab/permission strings -->
+    <string name="rsx_home_permissions_title">権限</string>
+    <string name="rsx_home_perm_adb">ADB（ワイヤレス＆USBデバッグ）</string>
+    <string name="rsx_home_perm_do">デバイスオーナー</string>
+    <string name="rsx_home_perm_root">Root</string>
+    <string name="rsx_home_perm_available">利用可能</string>
+    <string name="rsx_home_perm_unavailable">利用不可</string>
+
+
+    <!-- ReShizukuX home/tab/permission strings -->
+    <string name="rsx_home_perm_not_granted">未許可</string>
 </resources>

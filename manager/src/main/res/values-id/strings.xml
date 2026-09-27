@@ -295,4 +295,45 @@
     <string name="dialog_requesting_legacy_message"><![CDATA[<b>%1$s</b> memiliki dukungan Shizuku modern, namun meminta akses Shizuku kuno. Hal ini bisa terjadi karena Shizuku tidak aktif, harap periksa di aplikasi Shizuku. <p>Shizuku Kuno sudah dihentikan sejak Maret 2019.]]></string>
     <string name="dialog_requesting_legacy_button_open_shizuku">Buka Shizuku</string>
     <string name="wadb_notification_attempt_now">Coba sekarang</string>
+
+
+    <!-- ReShizukuX home/tab/permission strings -->
+    <string name="rsx_tab_home">Status</string>
+    <string name="rsx_tab_apps">Apps</string>
+    <string name="rsx_tab_terminal">Terminal</string>
+    <string name="rsx_tab_modules">Modules</string>
+    <string name="rsx_tab_settings">Settings</string>
+    <string name="rsx_home_title">Service status</string>
+    <string name="rsx_home_not_running">Not running</string>
+    <string name="rsx_home_running">Running</string>
+    <string name="rsx_home_hint">Toggle the switch to start with Root or wireless ADB.</string>
+    <string name="rsx_home_start">Start service</string>
+    <string name="rsx_home_activation">Activation: %1$s</string>
+    <string name="rsx_home_guard">Guard: %1$s</string>
+    <string name="rsx_home_activation_none">Not activated</string>
+    <string name="rsx_home_activation_adb">Wireless ADB</string>
+    <string name="rsx_home_guard_selfheal">Self-heal mode</string>
+    <string name="rsx_home_guard_dual">Dual process</string>
+    <string name="rsx_home_ready">ReShizukuX is ready. You can grant apps access.</string>
+    <string name="rsx_home_crashed">Service crashed</string>
+    <string name="rsx_home_starting">Starting…</string>
+    <string name="rsx_home_stopping">Stopping…</string>
+    <string name="rsx_home_stop_confirm_title">Stop ReShizukuX service?</string>
+    <string name="rsx_home_stop_confirm_msg">Apps relying on ReShizukuX will lose access. The watchdog alarm will also be cancelled until you start it again.</string>
+    <string name="rsx_home_stop">Stop</string>
+    <string name="rsx_home_cancel">Cancel</string>
+    <string name="rsx_home_ok">Got it</string>
+    <string name="rsx_home_error">Error: %1$s</string>
+    <string name="rsx_home_step">Executing step %1$d/11</string>
+    <string name="rsx_home_start_failed">Start failed</string>
+    <string name="rsx_home_permissions_title">Permissions</string>
+    <string name="rsx_home_perm_adb">ADB (wireless &amp; USB debugging)</string>
+    <string name="rsx_home_perm_do">Device Owner</string>
+    <string name="rsx_home_perm_root">Root</string>
+    <string name="rsx_home_perm_available">Available</string>
+    <string name="rsx_home_perm_unavailable">Unavailable</string>
+
+
+    <!-- ReShizukuX home/tab/permission strings -->
+    <string name="rsx_home_perm_not_granted">Not granted</string>
 </resources>

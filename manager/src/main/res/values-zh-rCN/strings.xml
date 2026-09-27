@@ -1677,4 +1677,17 @@
     <string name="rsx_widget_add2">2. 选择「小部件」或「Widgets」</string>
     <string name="rsx_widget_add3">3. 找到 ReShizukuX</string>
     <string name="rsx_widget_add4">4. 拖拽「ReShizukuX 状态」小部件到桌面</string>
-    <string name="rsx_widget_status_widget">ReShizukuX 状态小部件</string></resources>
+    <string name="rsx_widget_status_widget">ReShizukuX 状态小部件</string>
+
+    <!-- ReShizukuX home/tab/permission strings -->
+    <string name="rsx_home_permissions_title">权限</string>
+    <string name="rsx_home_perm_adb">ADB（无线与 USB 调试）</string>
+    <string name="rsx_home_perm_do">设备所有者</string>
+    <string name="rsx_home_perm_root">Root</string>
+    <string name="rsx_home_perm_available">可用</string>
+    <string name="rsx_home_perm_unavailable">不可用</string>
+
+
+    <!-- ReShizukuX home/tab/permission strings -->
+    <string name="rsx_home_perm_not_granted">未授权</string>
+</resources>

@@ -1,5 +1,7 @@
 package af.shizuku.manager.ui
 
+import android.provider.Settings
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,18 +22,24 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
+import af.shizuku.manager.settings.DeviceOwnerHelper
+import af.shizuku.manager.utils.EnvironmentUtils
 import af.shizuku.manager.utils.ShizukuStateMachine
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * 状态 Tab（首页）：单开关驱动 ShizukuX Portable 的 11 步 ON / 5 步 OFF 全流程。
@@ -40,8 +48,13 @@ import kotlinx.coroutines.launch
  * - OFF -> 确认对话框 -> [PortableStartOrchestrator.stopService]
  *
  * 状态来源复用全局 [ShizukuStateMachine]；步骤进度、错误提示、激活模式、守护模式均在本卡片渲染。
+ * 新增权限卡：实时显示 ADB / 设备所有者(DO) / Root 三项权限可用性。
  * 启动过程中开关禁用，防止重复点击。
  */
+
+// Root 权限三态：已授权 -> 可用；设备有 root 但未授予本应用 -> 未授权；无 root -> 不可用。
+private enum class PermState { AVAILABLE, NOT_GRANTED, UNAVAILABLE }
+private data class PermissionItem(@StringRes val labelRes: Int, val state: PermState)
 @Composable
 fun HomeTab(
     onPairingRequired: () -> Unit = {}
@@ -82,6 +95,45 @@ fun HomeTab(
             ShizukuSettings.LaunchMethod.ADB -> context.getString(R.string.rsx_home_activation_adb)
             ShizukuSettings.LaunchMethod.DHIZUKU -> "Dhizuku"
             else -> context.getString(R.string.rsx_home_activation_none)
+        }
+    }
+
+    // --- 权限卡：ADB / 设备所有者(DO) / Root 可用性检测（IO 线程）---
+    fun isPackageInstalled(pkg: String): Boolean = runCatching {
+        context.packageManager.getPackageInfo(pkg, 0); true
+    }.getOrDefault(false)
+
+    val permissions by produceState<List<PermissionItem>>(initialValue = emptyList(), Unit) {
+        value = withContext(Dispatchers.IO) {
+            val adb = runCatching {
+                Settings.Global.getInt(context.contentResolver, Settings.Global.ADB_ENABLED, 0) == 1 ||
+                    Settings.Global.getInt(context.contentResolver, "adb_wifi_enabled", 0) == 1 ||
+                    EnvironmentUtils.getAdbTcpPort() > 0
+            }.getOrDefault(false)
+            val doOwner = runCatching { DeviceOwnerHelper.isDeviceOwner(context) }.getOrDefault(false)
+            // Root 实测：libsu 检查本应用是否已被授予 root（KernelSU/Magisk 通用）。
+            // KernelSU 的 su 是 overlay 挂载，普通应用 stat 不到，文件检测全部失效，
+            // 故以「应用已授权」为主、以「root 管理器已安装」作为设备级 root 证据。
+            val rootGranted = runCatching {
+                com.topjohnwu.superuser.Shell.isAppGrantedRoot() == true
+            }.getOrDefault(false)
+            val rootMgrInstalled = listOf(
+                "com.rosan.installer.x.revived", // KernelSU (Rosan)
+                "me.weishu.kernelsu",            // 旧版 KernelSU
+                "com.rifsxd.ksu.next",           // KernelSU-Next
+                "com.topjohnwu.magisk",          // Magisk
+                "me.bmax.apatch"                 // APatch
+            ).any { isPackageInstalled(it) }
+            val rootState = when {
+                rootGranted -> PermState.AVAILABLE
+                rootMgrInstalled -> PermState.NOT_GRANTED
+                else -> PermState.UNAVAILABLE
+            }
+            listOf(
+                PermissionItem(R.string.rsx_home_perm_adb, if (adb) PermState.AVAILABLE else PermState.UNAVAILABLE),
+                PermissionItem(R.string.rsx_home_perm_do, if (doOwner) PermState.AVAILABLE else PermState.UNAVAILABLE),
+                PermissionItem(R.string.rsx_home_perm_root, rootState)
+            )
         }
     }
 
@@ -240,5 +292,52 @@ fun HomeTab(
             text = stringResource(R.string.rsx_home_guard, guardLabel),
             style = MaterialTheme.typography.bodySmall
         )
+
+        // --- 权限卡：ADB / 设备所有者 / Root ---
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.rsx_home_permissions_title),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                if (permissions.isEmpty()) {
+                    CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.padding(2.dp))
+                } else {
+                    permissions.forEach { p ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(p.labelRes),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            val (stateText, stateColor) = when (p.state) {
+                                PermState.AVAILABLE ->
+                                    stringResource(R.string.rsx_home_perm_available) to Color(0xFF4CAF50)
+                                PermState.NOT_GRANTED ->
+                                    stringResource(R.string.rsx_home_perm_not_granted) to Color(0xFFFF9800)
+                                PermState.UNAVAILABLE ->
+                                    stringResource(R.string.rsx_home_perm_unavailable) to
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                            Text(
+                                text = stateText,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = stateColor
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }

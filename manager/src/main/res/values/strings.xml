@@ -1804,4 +1804,17 @@ Please try the command-line method instead.</string>
     <string name="rsx_widget_add2">2. Choose “Widgets”</string>
     <string name="rsx_widget_add3">3. Find ReShizukuX</string>
     <string name="rsx_widget_add4">4. Drag the “ReShizukuX status” widget onto the home screen</string>
-    <string name="rsx_widget_status_widget">ReShizukuX status widget</string></resources>
+    <string name="rsx_widget_status_widget">ReShizukuX status widget</string>
+
+    <!-- ReShizukuX home/tab/permission strings -->
+    <string name="rsx_home_permissions_title">Permissions</string>
+    <string name="rsx_home_perm_adb">ADB (wireless &amp; USB debugging)</string>
+    <string name="rsx_home_perm_do">Device Owner</string>
+    <string name="rsx_home_perm_root">Root</string>
+    <string name="rsx_home_perm_available">Available</string>
+    <string name="rsx_home_perm_unavailable">Unavailable</string>
+
+
+    <!-- ReShizukuX home/tab/permission strings -->
+    <string name="rsx_home_perm_not_granted">Not granted</string>
+</resources>

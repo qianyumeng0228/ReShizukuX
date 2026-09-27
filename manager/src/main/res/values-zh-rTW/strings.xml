@@ -236,4 +236,45 @@
     <string name="dialog_requesting_legacy_message"><![CDATA[<b>%1$s</b> 支援現代 Shizuku，但它正在要求舊版 Shizuku。這可能是因為 Shizuku 未在執行，請在 Shizuku 應用程式內檢查。<p>舊版 Shizuku 已於 2019 年 3 月被棄用。]]></string>
     <string name="dialog_requesting_legacy_button_open_shizuku">開啟 Shizuku</string>
     <string name="wadb_notification_attempt_now">現在嘗試</string>
+
+
+    <!-- ReShizukuX home/tab/permission strings -->
+    <string name="rsx_tab_home">狀態</string>
+    <string name="rsx_tab_apps">應用</string>
+    <string name="rsx_tab_terminal">終端</string>
+    <string name="rsx_tab_modules">模組</string>
+    <string name="rsx_tab_settings">設定</string>
+    <string name="rsx_home_title">服務狀態</string>
+    <string name="rsx_home_not_running">未運行</string>
+    <string name="rsx_home_running">運行中</string>
+    <string name="rsx_home_hint">打開開關以 Root 或無線 ADB 方式啟動服務。</string>
+    <string name="rsx_home_start">啟動服務</string>
+    <string name="rsx_home_activation">啟動模式：%1$s</string>
+    <string name="rsx_home_guard">守護：%1$s</string>
+    <string name="rsx_home_activation_none">未啟動</string>
+    <string name="rsx_home_activation_adb">無線 ADB</string>
+    <string name="rsx_home_guard_selfheal">自癒模式</string>
+    <string name="rsx_home_guard_dual">雙進程</string>
+    <string name="rsx_home_ready">ReShizukuX 已就緒，可以授權應用程式存取。</string>
+    <string name="rsx_home_crashed">服務崩潰</string>
+    <string name="rsx_home_starting">啟動中…</string>
+    <string name="rsx_home_stopping">停止中…</string>
+    <string name="rsx_home_stop_confirm_title">停止 ReShizukuX 服務？</string>
+    <string name="rsx_home_stop_confirm_msg">依賴 ReShizukuX 的應用程式將失去存取權限。守護鬧鐘將取消，直到再次啟動。</string>
+    <string name="rsx_home_stop">停止</string>
+    <string name="rsx_home_cancel">取消</string>
+    <string name="rsx_home_ok">知道了</string>
+    <string name="rsx_home_error">錯誤：%1$s</string>
+    <string name="rsx_home_step">正在執行第 %1$d/11 步</string>
+    <string name="rsx_home_start_failed">啟動失敗</string>
+    <string name="rsx_home_permissions_title">權限</string>
+    <string name="rsx_home_perm_adb">ADB（無線與 USB 偵錯）</string>
+    <string name="rsx_home_perm_do">裝置擁有者</string>
+    <string name="rsx_home_perm_root">Root</string>
+    <string name="rsx_home_perm_available">可用</string>
+    <string name="rsx_home_perm_unavailable">不可用</string>
+
+
+    <!-- ReShizukuX home/tab/permission strings -->
+    <string name="rsx_home_perm_not_granted">未授權</string>
 </resources>
