@@ -97,70 +97,71 @@ private fun PortableApp() {
     BackHandler(enabled = showPairingWizard) { showPairingWizard = false }
     BackHandler(enabled = fullScreen != null) { fullScreen = null }
 
-    if (showPairingWizard) {
-        AdbPairingWizard(
-            onFinished = { showPairingWizard = false },
-            onCancel = { showPairingWizard = false }
-        )
-        return
-    }
-
-    // 全屏页面渲染
-    if (fullScreen != null) {
-        val onBack = { fullScreen = null }
-        when (fullScreen) {
-            "ota" -> OtaUpdateScreen(onBack = onBack)
-            "backup" -> BackupRestoreScreen(onBack = onBack)
-            "ai" -> AiAssistantScreen(onBack = onBack)
-            "biometric" -> BiometricLockScreen(onBack = onBack)
-            "sentry" -> SentrySettingsScreen(onBack = onBack)
-            "accessibility" -> AccessibilityKeepaliveScreen(onBack = onBack)
-            "theme" -> ThemeSettingsScreen(onBack = onBack)
-            "lottie" -> LottieSettingsScreen(onBack = onBack)
-            "widget" -> WidgetSettingsScreen(onBack = onBack)
-            "language" -> LanguageSettingsScreen(onBack = onBack)
-            "changelog" -> MarkdownScreen.Content(onBack = onBack)
-            "automation" -> AutomationScreen(onBack = onBack)
-            "old_settings" -> {
-                // 启动旧版 SettingsActivity
-                val ctx = LocalContext.current
-                ctx.startActivity(android.content.Intent(ctx, af.shizuku.manager.settings.SettingsActivity::class.java))
-                fullScreen = null
+    // Tab 层与全屏页同处一个 Box：全屏页浮在 Tab 上方，Tab 列表永不离开组合树，
+    // 因此从二级页返回时滚动位置/输入框/筛选状态全部保留。
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            bottomBar = {
+                NavigationBar {
+                    PortableTab.values().forEachIndexed { index, tab ->
+                        NavigationBarItem(
+                            selected = selected == index,
+                            onClick = { selected = index },
+                            icon = {
+                                Icon(
+                                    painter = painterResource(tab.icon),
+                                    contentDescription = stringResource(tab.labelRes)
+                                )
+                            },
+                            label = { Text(stringResource(tab.labelRes)) }
+                        )
+                    }
+                }
             }
-        }
-        return
-    }
-
-    Scaffold(
-        bottomBar = {
-            NavigationBar {
-                PortableTab.values().forEachIndexed { index, tab ->
-                    NavigationBarItem(
-                        selected = selected == index,
-                        onClick = { selected = index },
-                        icon = {
-                            Icon(
-                                painter = painterResource(tab.icon),
-                                contentDescription = stringResource(tab.labelRes)
-                            )
-                        },
-                        label = { Text(stringResource(tab.labelRes)) }
-                    )
+        ) { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                when (selected) {
+                    0 -> HomeTab(onPairingRequired = { showPairingWizard = true })
+                    1 -> AppsTab()
+                    2 -> TerminalTab()
+                    3 -> ModulesTab()
+                    else -> SettingsTab(onNavigate = { route -> fullScreen = route })
                 }
             }
         }
-    ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            when (selected) {
-                0 -> HomeTab(onPairingRequired = { showPairingWizard = true })
-                1 -> AppsTab()
-                2 -> TerminalTab()
-                3 -> ModulesTab()
-                else -> SettingsTab(onNavigate = { route -> fullScreen = route })
+
+        // 配对向导（全屏覆盖层，优先级最高）
+        if (showPairingWizard) {
+            AdbPairingWizard(
+                onFinished = { showPairingWizard = false },
+                onCancel = { showPairingWizard = false }
+            )
+        } else if (fullScreen != null) {
+            // 全屏二级页（覆盖在 Tab 之上，返回时仅收起覆盖层，列表位置保留）
+            val onBack = { fullScreen = null }
+            when (fullScreen) {
+                "ota" -> OtaUpdateScreen(onBack = onBack)
+                "backup" -> BackupRestoreScreen(onBack = onBack)
+                "ai" -> AiAssistantScreen(onBack = onBack)
+                "biometric" -> BiometricLockScreen(onBack = onBack)
+                "sentry" -> SentrySettingsScreen(onBack = onBack)
+                "accessibility" -> AccessibilityKeepaliveScreen(onBack = onBack)
+                "theme" -> ThemeSettingsScreen(onBack = onBack)
+                "lottie" -> LottieSettingsScreen(onBack = onBack)
+                "widget" -> WidgetSettingsScreen(onBack = onBack)
+                "language" -> LanguageSettingsScreen(onBack = onBack)
+                "changelog" -> MarkdownScreen.Content(onBack = onBack)
+                "automation" -> AutomationScreen(onBack = onBack)
+                "old_settings" -> {
+                    // 启动旧版 SettingsActivity（独立 Activity，栈返回后回到 Tab）
+                    val ctx = LocalContext.current
+                    ctx.startActivity(android.content.Intent(ctx, af.shizuku.manager.settings.SettingsActivity::class.java))
+                    fullScreen = null
+                }
             }
         }
     }

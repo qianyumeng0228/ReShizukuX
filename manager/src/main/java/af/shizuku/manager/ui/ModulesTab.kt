@@ -184,85 +184,86 @@ fun ModulesTab() {
         }
     }
 
-    // --- 模块详情页全屏覆盖 ---
-    selectedModuleId?.let { id ->
-        ModuleDetailScreen(
-            moduleId = id,
-            onBack = {
-                selectedModuleId = null
-                refreshKey++
+    // --- 模块详情页全屏覆盖（Box 覆盖层，列表保持组合，返回时滚动位置不丢）---
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            floatingActionButton = {
+                if (tabIndex == 0) {
+                    FloatingActionButton(onClick = { zipPicker.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }) {
+                        Icon(painter = painterResource(R.drawable.ic_add_24), contentDescription = stringResource(R.string.rsx_mod_install_zip))
+                    }
+                }
             }
-        )
-        return
-    }
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text(stringResource(R.string.rsx_mod_search)) },
+                    singleLine = true
+                )
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        floatingActionButton = {
-            if (tabIndex == 0) {
-                FloatingActionButton(onClick = { zipPicker.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }) {
-                    Icon(painter = painterResource(R.drawable.ic_add_24), contentDescription = stringResource(R.string.rsx_mod_install_zip))
+                TabRow(selectedTabIndex = tabIndex) {
+                    Tab(selected = tabIndex == 0, onClick = { tabIndex = 0 }, text = { Text(stringResource(R.string.rsx_mod_installed)) })
+                    Tab(selected = tabIndex == 1, onClick = { tabIndex = 1 }, text = { Text(stringResource(R.string.rsx_mod_online)) })
+                }
+
+                if (tabIndex == 0) {
+                    InstalledList(
+                        modules = installed.filter {
+                            searchQuery.isBlank() ||
+                                it.name.contains(searchQuery, true) ||
+                                it.id.contains(searchQuery, true) ||
+                                it.author.contains(searchQuery, true)
+                        },
+                        busy = busyInstallId,
+                        onToggle = { info, want ->
+                            scope.launch {
+                                withContext(Dispatchers.IO) {
+                                    if (want) ModuleManager.enable(info.id) else ModuleManager.disable(info.id)
+                                }
+                                refreshKey++
+                            }
+                        },
+                        onClick = { selectedModuleId = it.id }
+                    )
+                } else {
+                    RepoList(
+                        repos = repos,
+                        selectedRepoUrl = selectedRepoUrl,
+                        onSelectRepo = { selectedRepoUrl = it },
+                        onRefresh = { scope.launch { refreshRepos() } },
+                        modules = repoModules.filter {
+                            searchQuery.isBlank() ||
+                                it.name.contains(searchQuery, true) ||
+                                it.id.contains(searchQuery, true) ||
+                                it.author.contains(searchQuery, true)
+                        },
+                        installedIds = installed.map { it.id }.toSet(),
+                        loading = loading,
+                        busyInstallId = busyInstallId,
+                        onInstall = { repoUrl, modId -> installFromRepo(repoUrl, modId) }
+                    )
                 }
             }
         }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text(stringResource(R.string.rsx_mod_search)) },
-                singleLine = true
+
+        selectedModuleId?.let { id ->
+            ModuleDetailScreen(
+                moduleId = id,
+                onBack = {
+                    selectedModuleId = null
+                    refreshKey++
+                }
             )
-
-            TabRow(selectedTabIndex = tabIndex) {
-                Tab(selected = tabIndex == 0, onClick = { tabIndex = 0 }, text = { Text(stringResource(R.string.rsx_mod_installed)) })
-                Tab(selected = tabIndex == 1, onClick = { tabIndex = 1 }, text = { Text(stringResource(R.string.rsx_mod_online)) })
-            }
-
-            if (tabIndex == 0) {
-                InstalledList(
-                    modules = installed.filter {
-                        searchQuery.isBlank() ||
-                            it.name.contains(searchQuery, true) ||
-                            it.id.contains(searchQuery, true) ||
-                            it.author.contains(searchQuery, true)
-                    },
-                    busy = busyInstallId,
-                    onToggle = { info, want ->
-                        scope.launch {
-                            withContext(Dispatchers.IO) {
-                                if (want) ModuleManager.enable(info.id) else ModuleManager.disable(info.id)
-                            }
-                            refreshKey++
-                        }
-                    },
-                    onClick = { selectedModuleId = it.id }
-                )
-            } else {
-                RepoList(
-                    repos = repos,
-                    selectedRepoUrl = selectedRepoUrl,
-                    onSelectRepo = { selectedRepoUrl = it },
-                    onRefresh = { scope.launch { refreshRepos() } },
-                    modules = repoModules.filter {
-                        searchQuery.isBlank() ||
-                            it.name.contains(searchQuery, true) ||
-                            it.id.contains(searchQuery, true) ||
-                            it.author.contains(searchQuery, true)
-                    },
-                    installedIds = installed.map { it.id }.toSet(),
-                    loading = loading,
-                    busyInstallId = busyInstallId,
-                    onInstall = { repoUrl, modId -> installFromRepo(repoUrl, modId) }
-                )
-            }
         }
     }
 }
