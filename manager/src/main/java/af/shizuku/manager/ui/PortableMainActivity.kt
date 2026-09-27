@@ -134,33 +134,43 @@ private fun PortableApp() {
             }
         }
 
-        // 配对向导（全屏覆盖层，优先级最高）
+        // 配对向导（全屏覆盖层，优先级最高；Surface 提供不透明背景，避免底层 Tab 透出）
         if (showPairingWizard) {
-            AdbPairingWizard(
-                onFinished = { showPairingWizard = false },
-                onCancel = { showPairingWizard = false }
-            )
+            androidx.compose.material3.Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                AdbPairingWizard(
+                    onFinished = { showPairingWizard = false },
+                    onCancel = { showPairingWizard = false }
+                )
+            }
         } else if (fullScreen != null) {
             // 全屏二级页（覆盖在 Tab 之上，返回时仅收起覆盖层，列表位置保留）
-            val onBack = { fullScreen = null }
-            when (fullScreen) {
-                "ota" -> OtaUpdateScreen(onBack = onBack)
-                "backup" -> BackupRestoreScreen(onBack = onBack)
-                "ai" -> AiAssistantScreen(onBack = onBack)
-                "biometric" -> BiometricLockScreen(onBack = onBack)
-                "sentry" -> SentrySettingsScreen(onBack = onBack)
-                "accessibility" -> AccessibilityKeepaliveScreen(onBack = onBack)
-                "theme" -> ThemeSettingsScreen(onBack = onBack)
-                "lottie" -> LottieSettingsScreen(onBack = onBack)
-                "widget" -> WidgetSettingsScreen(onBack = onBack)
-                "language" -> LanguageSettingsScreen(onBack = onBack)
-                "changelog" -> MarkdownScreen.Content(onBack = onBack)
-                "automation" -> AutomationScreen(onBack = onBack)
-                "old_settings" -> {
-                    // 启动旧版 SettingsActivity（独立 Activity，栈返回后回到 Tab）
-                    val ctx = LocalContext.current
-                    ctx.startActivity(android.content.Intent(ctx, af.shizuku.manager.settings.SettingsActivity::class.java))
-                    fullScreen = null
+            androidx.compose.material3.Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                val onBack = { fullScreen = null }
+                when (fullScreen) {
+                    "ota" -> OtaUpdateScreen(onBack = onBack)
+                    "backup" -> BackupRestoreScreen(onBack = onBack)
+                    "ai" -> AiAssistantScreen(onBack = onBack)
+                    "biometric" -> BiometricLockScreen(onBack = onBack)
+                    "sentry" -> SentrySettingsScreen(onBack = onBack)
+                    "accessibility" -> AccessibilityKeepaliveScreen(onBack = onBack)
+                    "theme" -> ThemeSettingsScreen(onBack = onBack)
+                    "lottie" -> LottieSettingsScreen(onBack = onBack)
+                    "widget" -> WidgetSettingsScreen(onBack = onBack)
+                    "language" -> LanguageSettingsScreen(onBack = onBack)
+                    "changelog" -> MarkdownScreen.Content(onBack = onBack)
+                    "automation" -> AutomationScreen(onBack = onBack)
+                    "old_settings" -> {
+                        // 启动旧版 SettingsActivity（独立 Activity，栈返回后回到 Tab）
+                        val ctx = LocalContext.current
+                        ctx.startActivity(android.content.Intent(ctx, af.shizuku.manager.settings.SettingsActivity::class.java))
+                        fullScreen = null
+                    }
                 }
             }
         }

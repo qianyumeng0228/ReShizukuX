@@ -257,13 +257,18 @@ fun ModulesTab() {
         }
 
         selectedModuleId?.let { id ->
-            ModuleDetailScreen(
-                moduleId = id,
-                onBack = {
-                    selectedModuleId = null
-                    refreshKey++
-                }
-            )
+            androidx.compose.material3.Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                ModuleDetailScreen(
+                    moduleId = id,
+                    onBack = {
+                        selectedModuleId = null
+                        refreshKey++
+                    }
+                )
+            }
         }
     }
 }
