@@ -44,8 +44,9 @@ jobs:
           done
 
       # --- Cloudflare R2 (global CDN) ---
+      # R2 secrets 未配置，暂时禁用。将来配好 CF_R2_* 后把 if 改回 github.event_name == 'release'。
       - name: Upload to Cloudflare R2
-        if: github.event_name == 'release'
+        if: false
         uses: jakejarvis/s3-sync-action@master
         with:
           args: --acl public-read --follow-symlinks
