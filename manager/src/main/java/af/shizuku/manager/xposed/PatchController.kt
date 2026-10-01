@@ -17,6 +17,8 @@ import io.reshizukux.xposed.patcher.ApkPatcher
 import io.reshizukux.xposed.patcher.PatchSpec
 import io.reshizukux.xposed.patcher.util.Logger
 import io.reshizukux.xposed.scan.XposedModuleInfo
+import rikka.shizuku.Shizuku
+import java.io.ByteArrayOutputStream
 import java.io.File
 
 /**
@@ -221,11 +223,137 @@ class PatchController(private val context: Context) {
     }
 
     /**
+     * Install the produced apk, preferring a Shizuku shell route that can *replace* the original
+     * package across signature mismatch.
+     *
+     * The patched apk is signed with LSPatch's own debug keystore, which never matches the target's
+     * original signature, so a plain `pm install -r` (or PackageInstaller.Session commit) over an
+     * already-installed original package fails with INSTALL_FAILED_UPDATE_INCOMPATIBLE. The user saw
+     * "patch 成功" while the phone kept launching the original app. The shell route fixes this:
+     *
+     *   1. push the apk into /data/local/tmp (shell-readable, app-cache is not)
+     *   2. if the target package is currently installed: `pm uninstall -k <pkg>` (keep user data)
+     *   3. `pm install -r /data/local/tmp/...apk` -> fresh install under the patched signature
+     *
+     * Any failure along the way (Shizuku down, shell denied, pm rejected) falls back to the legacy
+     * [fallbackInstall] Session path, which still works when signatures happen to agree.
+     */
+    private fun install(apk: File) {
+        val pkg = target?.packageName
+        if (pkg != null) {
+            runCatching { installViaShizukuShell(apk, pkg) }
+                .onSuccess { ok -> if (ok) return@install }
+        }
+        fallbackInstall(apk)
+    }
+
+    /**
+     * Shell-route install. Returns true only when `pm install` reported Success. Never throws:
+     * any exception is swallowed and mapped to a failed result so the caller falls back.
+     */
+    private fun installViaShizukuShell(apk: File, pkg: String): Boolean {
+        val tmpPath = "/data/local/tmp/lspatch-patched-${System.currentTimeMillis()}.apk"
+        return try {
+            // 1. push apk bytes to a shell-readable path via stdin (app cache dir is off-limits to uid 2000).
+            val push = shExec("cat > '$tmpPath'", stdinBytes = apk.readBytes(), timeoutSec = 180)
+            if (push.first != 0) {
+                installMessage = "推送 APK 到 /data/local/tmp 失败：${push.second.trim().take(200)}"
+                return false
+            }
+            // 2. is the target already installed? If so, remove it (keeping user data) so the
+            //    patched signature can take over without an UPDATE_INCOMPATIBLE mismatch.
+            val installed = try {
+                context.packageManager.getPackageInfo(pkg, 0)
+                true
+            } catch (_: PackageManager.NameNotFoundException) {
+                false
+            }
+            if (installed) {
+                val un = shExec("pm uninstall -k '$pkg'", timeoutSec = 120)
+                // An updated system app uninstall of the *update* may be tolerated even if it's nonzero;
+                // we only gate on the final install step below.
+                logLines.add("[i] pm uninstall -k $pkg -> exit ${un.first} ${un.second.trim().take(80)}")
+            }
+            // 3. install the patched apk.
+            val ins = shExec("pm install -r '$tmpPath'", timeoutSec = 300)
+            shExec("rm -f '$tmpPath'", timeoutSec = 10)
+            val out = ins.second.trim()
+            if (ins.first == 0 && out.contains("Success", ignoreCase = true)) {
+                installMessage = "安装成功：已通过 Shell 替换原包" + if (installed) "（已保留用户数据）" else ""
+                step = PatchStep.DONE
+                true
+            } else {
+                installMessage = "Shell 安装失败（exit=${ins.first}）：${out.take(200)}"
+                // Continue to fallback; leave step to the fallback to set.
+                false
+            }
+        } catch (e: Throwable) {
+            android.util.Log.w("LSPatch-Install", "shell route failed, falling back", e)
+            installMessage = "Shell 安装异常：${e.message ?: e.javaClass.simpleName}，尝试 Session 方式"
+            false
+        }
+    }
+
+    /**
+     * Run `sh -c <script>` through Shizuku, optionally feeding [stdinBytes] to the remote process's
+     * stdin (used to upload the apk). stdout/stderr are pumped on daemon threads to avoid pipe-buffer
+     * deadlock, mirroring modules ModuleExecutor. Working dir is /data/local/tmp per project policy.
+     *
+     * @return Pair(exitCode, combined output); exitCode = -1 when the process could not start.
+     */
+    private fun shExec(script: String, stdinBytes: ByteArray? = null, timeoutSec: Long = 120): Pair<Int, String> {
+        val process = try {
+            Shizuku.newProcess(arrayOf("sh", "-c", script), null, "/data/local/tmp")
+        } catch (e: Exception) {
+            return -1 to ("newProcess failed: ${e.message}")
+        }
+        if (stdinBytes != null) {
+            runCatching {
+                process.outputStream.use { os ->
+                    os.write(stdinBytes)
+                    os.flush()
+                }
+            }
+        }
+        val stdoutBuf = ByteArrayOutputStream()
+        val stderrBuf = ByteArrayOutputStream()
+        val tOut = pump(process.inputStream, stdoutBuf)
+        val tErr = pump(process.errorStream, stderrBuf)
+        val code = try {
+            process.waitFor()
+        } catch (e: Exception) {
+            try { process.destroy() } catch (_: Exception) {}
+            -1
+        }
+        tOut.join(1000)
+        tErr.join(1000)
+        return code to (stdoutBuf.toString(Charsets.UTF_8.name()) + stderrBuf.toString(Charsets.UTF_8.name()))
+    }
+
+    private fun pump(input: java.io.InputStream, sink: ByteArrayOutputStream): Thread {
+        val t = Thread({
+            try {
+                input.use { src ->
+                    val buf = ByteArray(8192)
+                    var n: Int
+                    while (src.read(buf).also { n = it } != -1) {
+                        synchronized(sink) { sink.write(buf, 0, n) }
+                    }
+                }
+            } catch (_: Exception) {
+            }
+        }, "lspatch-sh-pump")
+        t.isDaemon = true
+        t.start()
+        return t
+    }
+
+    /**
      * Silent-ish install via PackageInstaller.Session: when the caller holds install privilege
      * (Shizuku/shell context) the commit lands without user interaction; otherwise the system shows
      * its own confirmation. Failure is reported, never thrown.
      */
-    private fun install(apk: File) {
+    private fun fallbackInstall(apk: File) {
         try {
             val installer = context.packageManager.packageInstaller
             val params = PackageInstaller.SessionParams(

@@ -91,18 +91,19 @@ fun ModulesTab() {
     var searchQuery by remember { mutableStateOf("") }
     // 0=Shell脚本(已安装), 1=Xposed模块(Phase 2 新增), 2=在线仓库, 3=GitHub发现
     var tabIndex by remember { mutableIntStateOf(0) }
+    // 在线仓库(2)内部二级分类: 0=Shell脚本仓库, 1=Xposed模块(LSPosed feed)
+    var onlineSubTab by remember { mutableIntStateOf(0) }
 
     // --- LSPatch patch 向导：null=关闭, 1=选目标/模块/模式, 2=执行+进度 ---
     val patchController = remember { PatchController(context) }
     var patchFlow by remember { mutableStateOf<Int?>(null) }
-    // Patched app list persisted across cold starts via SharedPreferences.
-    val prefs = remember { context.getSharedPreferences("lspatch_patched", android.content.Context.MODE_PRIVATE) }
-    val initialPatched: List<String> = prefs.getStringSet("packages", emptySet())?.toList()?.sorted() ?: emptyList()
-    var patchedPackages by remember { mutableStateOf<List<String>>(initialPatched) }
+    // Patched app list persisted across cold starts via the lspatch_patched SharedPreferences.
+    var patchedPackages by remember { mutableStateOf<List<String>>(af.shizuku.manager.xposed.PatchedAppStore.loadPackages(context)) }
+    var patchedDetails by remember { mutableStateOf<Map<String, af.shizuku.manager.xposed.PatchedAppInfo>>(af.shizuku.manager.xposed.PatchedAppStore.loadDetails(context)) }
 
-    fun savePatched(list: List<String>) {
-        patchedPackages = list
-        prefs.edit().putStringSet("packages", list.toSet()).apply()
+    fun refreshPatched() {
+        patchedPackages = af.shizuku.manager.xposed.PatchedAppStore.loadPackages(context)
+        patchedDetails = af.shizuku.manager.xposed.PatchedAppStore.loadDetails(context)
     }
 
     // Uninstall a patched package via Shizuku shell (pm uninstall), then drop it from the list.
@@ -117,12 +118,21 @@ fun ModulesTab() {
                 }.getOrDefault(-1) == 0
             }
             if (ok) {
-                savePatched(patchedPackages - pkg)
+                af.shizuku.manager.xposed.PatchedAppStore.remove(context, pkg)
+                refreshPatched()
                 snackbarHostState.showSnackbar("已卸载 $pkg")
             } else {
                 snackbarHostState.showSnackbar("卸载失败 $pkg")
             }
         }
+    }
+
+    // 重新 patch: 清除该包的记录，引导用户重走 patch 向导。
+    fun repatchPatched(pkg: String) {
+        af.shizuku.manager.xposed.PatchedAppStore.remove(context, pkg)
+        refreshPatched()
+        patchController.reset()
+        patchFlow = 1
     }
 
     BackHandler(enabled = patchFlow != null) {
@@ -303,28 +313,54 @@ fun ModulesTab() {
                         onClick = { selectedModuleId = it.id }
                     )
                 } else if (tabIndex == 1) {
+                    val patchedAppInfos = patchedPackages.map { pkg ->
+                        patchedDetails[pkg] ?: af.shizuku.manager.xposed.PatchedAppInfo(pkg, 0L, emptyList())
+                    }
                     XposedModulesTabContent(
-                        patchedPackages = patchedPackages,
+                        patchedApps = patchedAppInfos,
                         onStartPatch = { patchFlow = 1 },
-                        onUninstall = { uninstallPatched(it) }
+                        onUninstall = { uninstallPatched(it) },
+                        onRepatch = { repatchPatched(it) }
                     )
                 } else if (tabIndex == 2) {
-                    RepoList(
-                        repos = repos,
-                        selectedRepoUrl = selectedRepoUrl,
-                        onSelectRepo = { selectedRepoUrl = it },
-                        onRefresh = { scope.launch { refreshRepos() } },
-                        modules = repoModules.filter {
-                            searchQuery.isBlank() ||
-                                it.name.contains(searchQuery, true) ||
-                                it.id.contains(searchQuery, true) ||
-                                it.author.contains(searchQuery, true)
-                        },
-                        installedIds = installed.map { it.id }.toSet(),
-                        loading = loading,
-                        busyInstallId = busyInstallId,
-                        onInstall = { repoUrl, modId -> installFromRepo(repoUrl, modId) }
-                    )
+                    // 在线仓库：顶部二级 chip 切换 Shell 脚本仓库 / Xposed 模块在线仓库。
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        AssistChip(
+                            onClick = { onlineSubTab = 0 },
+                            label = { Text("Shell 脚本", style = MaterialTheme.typography.labelSmall) }
+                        )
+                        AssistChip(
+                            onClick = { onlineSubTab = 1 },
+                            label = { Text("Xposed 模块", style = MaterialTheme.typography.labelSmall) }
+                        )
+                    }
+                    if (onlineSubTab == 0) {
+                        RepoList(
+                            repos = repos,
+                            selectedRepoUrl = selectedRepoUrl,
+                            onSelectRepo = { selectedRepoUrl = it },
+                            onRefresh = { scope.launch { refreshRepos() } },
+                            modules = repoModules.filter {
+                                searchQuery.isBlank() ||
+                                    it.name.contains(searchQuery, true) ||
+                                    it.id.contains(searchQuery, true) ||
+                                    it.author.contains(searchQuery, true)
+                            },
+                            installedIds = installed.map { it.id }.toSet(),
+                            loading = loading,
+                            busyInstallId = busyInstallId,
+                            onInstall = { repoUrl, modId -> installFromRepo(repoUrl, modId) }
+                        )
+                    } else {
+                        af.shizuku.manager.ui.xposed.XposedOnlineRepoPane(
+                            query = searchQuery,
+                            onDownloaded = { file ->
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("已下载 ${file.name}，请到 Xposed 分类选择 patch")
+                                }
+                            }
+                        )
+                    }
                 } else if (tabIndex == 3) {
                     // GitHub 发现
                     if (githubLoading) {
@@ -422,7 +458,20 @@ fun ModulesTab() {
                     else -> PatchProgressScreen(
                         controller = patchController,
                         onFinished = { pkg ->
-                            pkg?.let { p -> if (p !in patchedPackages) savePatched(patchedPackages + p) }
+                            pkg?.let { p ->
+                                // Record which modules were baked into this patch.
+                                af.shizuku.manager.xposed.PatchedAppStore.saveDetail(
+                                    context,
+                                    af.shizuku.manager.xposed.PatchedAppInfo(
+                                        packageName = p,
+                                        patchedTimestamp = System.currentTimeMillis(),
+                                        modulePackageNames = patchController.selectedModules.map { it.packageName },
+                                    )
+                                )
+                                val cur = af.shizuku.manager.xposed.PatchedAppStore.loadPackages(context)
+                                af.shizuku.manager.xposed.PatchedAppStore.savePackages(context, (cur + p).distinct().sorted())
+                            }
+                            refreshPatched()
                             patchController.reset()
                             patchFlow = null
                         }

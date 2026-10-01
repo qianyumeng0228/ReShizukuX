@@ -1,7 +1,6 @@
 package af.shizuku.manager.ui.xposed
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,8 +17,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -30,10 +32,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
-import androidx.compose.ui.graphics.asImageBitmap
+import af.shizuku.manager.xposed.PatchedAppInfo
 import io.reshizukux.xposed.scan.XposedModuleInfo
 import io.reshizukux.xposed.scan.XposedModuleScanner
 import kotlinx.coroutines.Dispatchers
@@ -51,9 +54,10 @@ import kotlinx.coroutines.withContext
  */
 @Composable
 fun XposedModulesTabContent(
-    patchedPackages: List<String>,
+    patchedApps: List<PatchedAppInfo>,
     onStartPatch: () -> Unit,
     onUninstall: (String) -> Unit = {},
+    onRepatch: (String) -> Unit = {},
 ) {
     val context = LocalContext.current
     var modules by remember { mutableStateOf<List<XposedModuleInfo>>(emptyList()) }
@@ -111,7 +115,7 @@ fun XposedModulesTabContent(
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
-        if (patchedPackages.isEmpty()) {
+        if (patchedApps.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxWidth().height(80.dp),
                 contentAlignment = Alignment.Center
@@ -124,30 +128,102 @@ fun XposedModulesTabContent(
             }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                items(patchedPackages) { pkg ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onUninstall(pkg) }
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                pkg,
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                            Text(
-                                "点按卸载",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    }
+                items(patchedApps, key = { it.packageName }) { info ->
+                    PatchedAppCard(
+                        info = info,
+                        onUninstall = { onUninstall(info.packageName) },
+                        onRepatch = { onRepatch(info.packageName) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PatchedAppCard(
+    info: PatchedAppInfo,
+    onUninstall: () -> Unit,
+    onRepatch: () -> Unit,
+) {
+    val context = LocalContext.current
+    val pm = context.packageManager
+
+    // Resolve the app icon + label off PackageManager; if the patched apk was uninstalled out-of-band,
+    // the package is gone and we fall back to a letter avatar + raw package name.
+    val label = remember(info.packageName) {
+        runCatching {
+            pm.getApplicationLabel(pm.getApplicationInfo(info.packageName, 0)).toString()
+        }.getOrDefault(info.packageName)
+    }
+    val iconBitmap = remember(info.packageName) {
+        runCatching { pm.getApplicationIcon(info.packageName).toBitmap() }.getOrNull()
+    }
+
+    var menuOpen by remember { mutableStateOf(false) }
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            if (iconBitmap != null) {
+                androidx.compose.foundation.Image(
+                    bitmap = iconBitmap.asImageBitmap(),
+                    contentDescription = label,
+                    modifier = Modifier.size(40.dp).clip(CircleShape)
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(MaterialTheme.colorScheme.primaryContainer, shape = CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        label.firstOrNull()?.uppercase() ?: "?",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Text(label, style = MaterialTheme.typography.titleSmall)
+                Text(
+                    info.packageName,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                val n = info.modulePackageNames.size
+                Text(
+                    "已嵌入 $n 个模块",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                if (n > 0) {
+                    Text(
+                        info.modulePackageNames.joinToString(", "),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Box {
+                TextButton(onClick = { menuOpen = true }) {
+                    Text("⋮", style = MaterialTheme.typography.titleMedium)
+                }
+                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                    DropdownMenuItem(
+                        text = { Text("卸载 patched APK") },
+                        onClick = { menuOpen = false; onUninstall() }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("重新 patch") },
+                        onClick = { menuOpen = false; onRepatch() }
+                    )
                 }
             }
         }

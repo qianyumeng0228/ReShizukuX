@@ -10,6 +10,8 @@
 // com.android.* subproject from the root build.gradle, so they are not repeated here.
 plugins {
     id("com.android.library")
+    // Required for @Serializable on XposedRepoModule / repo DTOs (online LSPosed module repo).
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.2.20"
 }
 
 android {
@@ -25,6 +27,10 @@ dependencies {
 
     // FilenameUtils.getBaseName used when naming the output apk.
     implementation("commons-io:commons-io:2.16.1")
+
+    // Online modules.lsposed.org repo JSON parsing (XposedRepoRepository).
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.coroutines.core)
 
     // Real APK re-packing engine: vendored com.android.tools.build.apkzlib (Phase 2 replaces
     // the old compile-only stubs). Pulls in Guava, apksig and bouncycastle transitively.
