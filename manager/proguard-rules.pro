@@ -150,3 +150,10 @@
 # system FingerprintManager (deprecated but present); R8 minify reports missing class.
 -dontwarn android.hardware.fingerprint.**
 -keep class android.hardware.fingerprint.** { *; }
+
+# ReShizukuX Xposed module (LSPatch integration)
+-dontwarn com.google.auto.value.**
+-keep class com.android.tools.build.apkzlib.** { *; }
+-keep class com.wind.meditor.** { *; }
+-keep class pxb.android.axml.** { *; }
+-keep class io.reshizukux.xposed.** { *; }
