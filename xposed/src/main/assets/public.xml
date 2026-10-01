@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Minimal android framework attr resource-id table for meditor (com.wind.meditor).
+
+  meditor writes newly-added manifest attributes as binary AXML entries. The platform
+  resolves android-namespace attributes by their framework resource id, not by name, so
+  each AttributeItem("debuggable") etc. must resolve to the correct 0x0101xxxx id.
+  ResourceIdXmlReader reads this file as a classpath resource at "assets/public.xml" and
+  looks up <public type="attr" name="..."> by attribute name.
+
+  IDs below were dumped verbatim from the target device's framework-res.apk
+  (aapt2 dump resources), so they match the exact Android 16 framework the patched apps
+  run against. Add more rows here if ApkPatcher starts emitting new attributes.
+-->
+<resources>
+    <public type="attr" name="name" id="0x01010003" />
+    <public type="attr" name="value" id="0x01010024" />
+    <public type="attr" name="label" id="0x01010001" />
+    <public type="attr" name="debuggable" id="0x0101000f" />
+    <public type="attr" name="versionCode" id="0x0101021b" />
+    <public type="attr" name="versionName" id="0x0101021c" />
+    <public type="attr" name="minSdkVersion" id="0x0101020c" />
+    <public type="attr" name="targetSdkVersion" id="0x01010270" />
+    <public type="attr" name="appComponentFactory" id="0x0101057a" />
+    <public type="attr" name="authorities" id="0x01010018" />
+    <public type="attr" name="permission" id="0x01010006" />
+    <public type="attr" name="exported" id="0x01010010" />
+    <public type="attr" name="grantUriPermissions" id="0x0101001b" />
+    <public type="attr" name="extractNativeLibs" id="0x010104ea" />
+    <public type="attr" name="usesCleartextTraffic" id="0x010104ec" />
+</resources>
