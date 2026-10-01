@@ -1,5 +1,6 @@
 package af.shizuku.manager.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -53,6 +54,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import af.shizuku.manager.R
+import af.shizuku.manager.ui.xposed.PatchProgressScreen
+import af.shizuku.manager.ui.xposed.PatchTargetSelectScreen
+import af.shizuku.manager.ui.xposed.XposedModulesTabContent
+import af.shizuku.manager.xposed.PatchController
 import io.reshizukux.modules.core.ModuleInfo
 import io.reshizukux.modules.core.ModuleManager
 import io.reshizukux.modules.core.ModuleState
@@ -84,7 +89,18 @@ fun ModulesTab() {
     val snackbarHostState = remember { SnackbarHostState() }
 
     var searchQuery by remember { mutableStateOf("") }
-    var tabIndex by remember { mutableIntStateOf(0) } // 0=已安装, 1=在线仓库, 2=GitHub发现
+    // 0=Shell脚本(已安装), 1=Xposed模块(Phase 2 新增), 2=在线仓库, 3=GitHub发现
+    var tabIndex by remember { mutableIntStateOf(0) }
+
+    // --- LSPatch patch 向导：null=关闭, 1=选目标/模块/模式, 2=执行+进度 ---
+    val patchController = remember { PatchController(context) }
+    var patchFlow by remember { mutableStateOf<Int?>(null) }
+    var patchedPackages by remember { mutableStateOf<List<String>>(emptyList()) }
+
+    BackHandler(enabled = patchFlow != null) {
+        patchFlow = null
+        patchController.reset()
+    }
 
     var installed by remember { mutableStateOf<List<ModuleInfo>>(emptyList()) }
     var repos by remember { mutableStateOf<List<Repo>>(emptyList()) }
@@ -162,12 +178,12 @@ fun ModulesTab() {
     }
 
     LaunchedEffect(tabIndex, selectedRepoUrl) {
-        if (tabIndex == 1 && repos.isEmpty()) refreshRepos()
-        if (tabIndex == 1) loadRepoModules()
+        if (tabIndex == 2 && repos.isEmpty()) refreshRepos()
+        if (tabIndex == 2) loadRepoModules()
     }
 
     LaunchedEffect(tabIndex) {
-        if (tabIndex == 2 && githubModules.isEmpty() && !githubLoading) {
+        if (tabIndex == 3 && githubModules.isEmpty() && !githubLoading) {
             githubLoading = true
             githubError = null
             val result = RepoManager.searchGithubModules()
@@ -207,9 +223,12 @@ fun ModulesTab() {
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
             floatingActionButton = {
-                if (tabIndex == 0) {
-                    FloatingActionButton(onClick = { zipPicker.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }) {
+                when (tabIndex) {
+                    0 -> FloatingActionButton(onClick = { zipPicker.launch(arrayOf("application/zip", "application/octet-stream", "*/*")) }) {
                         Icon(painter = painterResource(R.drawable.ic_add_24), contentDescription = stringResource(R.string.rsx_mod_install_zip))
+                    }
+                    1 -> FloatingActionButton(onClick = { patchFlow = 1 }) {
+                        Icon(painter = painterResource(R.drawable.ic_add_24), contentDescription = "新建 Patch")
                     }
                 }
             }
@@ -231,8 +250,9 @@ fun ModulesTab() {
 
                 TabRow(selectedTabIndex = tabIndex) {
                     Tab(selected = tabIndex == 0, onClick = { tabIndex = 0 }, text = { Text(stringResource(R.string.rsx_mod_installed)) })
-                    Tab(selected = tabIndex == 1, onClick = { tabIndex = 1 }, text = { Text(stringResource(R.string.rsx_mod_online)) })
-                    Tab(selected = tabIndex == 2, onClick = { tabIndex = 2 }, text = { Text("GitHub") })
+                    Tab(selected = tabIndex == 1, onClick = { tabIndex = 1 }, text = { Text("Xposed") })
+                    Tab(selected = tabIndex == 2, onClick = { tabIndex = 2 }, text = { Text(stringResource(R.string.rsx_mod_online)) })
+                    Tab(selected = tabIndex == 3, onClick = { tabIndex = 3 }, text = { Text("GitHub") })
                 }
 
                 if (tabIndex == 0) {
@@ -255,6 +275,11 @@ fun ModulesTab() {
                         onClick = { selectedModuleId = it.id }
                     )
                 } else if (tabIndex == 1) {
+                    XposedModulesTabContent(
+                        patchedPackages = patchedPackages,
+                        onStartPatch = { patchFlow = 1 }
+                    )
+                } else if (tabIndex == 2) {
                     RepoList(
                         repos = repos,
                         selectedRepoUrl = selectedRepoUrl,
@@ -271,7 +296,7 @@ fun ModulesTab() {
                         busyInstallId = busyInstallId,
                         onInstall = { repoUrl, modId -> installFromRepo(repoUrl, modId) }
                     )
-                } else if (tabIndex == 2) {
+                } else if (tabIndex == 3) {
                     // GitHub 发现
                     if (githubLoading) {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -350,6 +375,30 @@ fun ModulesTab() {
                         refreshKey++
                     }
                 )
+            }
+        }
+
+        // LSPatch 新建 Patch 向导全屏覆盖层（与模块详情同款 Box 覆盖模式）。
+        if (patchFlow != null) {
+            androidx.compose.material3.Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colorScheme.background
+            ) {
+                when (patchFlow) {
+                    1 -> PatchTargetSelectScreen(
+                        controller = patchController,
+                        onBack = { patchFlow = null },
+                        onStarted = { patchFlow = 2 }
+                    )
+                    else -> PatchProgressScreen(
+                        controller = patchController,
+                        onFinished = { pkg ->
+                            pkg?.let { p -> if (p !in patchedPackages) patchedPackages = patchedPackages + p }
+                            patchController.reset()
+                            patchFlow = null
+                        }
+                    )
+                }
             }
         }
     }

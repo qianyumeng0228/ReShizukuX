@@ -79,3 +79,8 @@ project(":modules").projectDir = file("modules")
 // Phase 1 ships compilation-only scaffolding (see io.reshizukux.xposed.patcher package docs);
 // actual patching execution lands in a later phase.
 include ":xposed"
+
+// Vendored com.android.tools.build.apkzlib (Google AGP APK-operations library, Apache-2.0),
+// copied verbatim from LSPatch v1.2. Replaces the Phase-1 compile-only stubs under
+// xposed/.../com/android/tools/build/apkzlib.
+include ":apkzlib"

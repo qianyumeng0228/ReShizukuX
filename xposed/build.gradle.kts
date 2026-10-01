@@ -25,4 +25,8 @@ dependencies {
 
     // FilenameUtils.getBaseName used when naming the output apk.
     implementation("commons-io:commons-io:2.16.1")
+
+    // Real APK re-packing engine: vendored com.android.tools.build.apkzlib (Phase 2 replaces
+    // the old compile-only stubs). Pulls in Guava, apksig and bouncycastle transitively.
+    implementation(project(":apkzlib"))
 }
