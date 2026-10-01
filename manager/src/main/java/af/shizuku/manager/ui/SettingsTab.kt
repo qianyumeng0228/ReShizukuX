@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -17,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +29,9 @@ import androidx.compose.ui.unit.dp
 import af.shizuku.manager.BuildConfig
 import af.shizuku.manager.R
 import af.shizuku.manager.ShizukuSettings
+import af.shizuku.manager.settings.DeviceOwnerHelper
+import af.shizuku.manager.settings.DeviceOwnerProvisioner
+import kotlinx.coroutines.launch
 
 /**
  * 设置 Tab（ReShizukuX beta2 多语言版）：
@@ -40,11 +46,17 @@ fun SettingsTab(
     onNavigate: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     var startOnBoot by remember { mutableStateOf(ShizukuSettings.getStartOnBoot(context)) }
     var watchdog by remember { mutableStateOf(ShizukuSettings.getWatchdog()) }
     var wifiReassert by remember { mutableStateOf(ShizukuSettings.isWifiDebugReassertEnabled()) }
     var forceWadb by remember { mutableStateOf(ShizukuSettings.isForceStartWadbEnabled()) }
+
+    // DO provisioning state
+    var showDoConfirm by remember { mutableStateOf(false) }
+    var doBusy by remember { mutableStateOf(false) }
+    var doResult by remember { mutableStateOf<DeviceOwnerProvisioner.Result?>(null) }
 
     Column(
         modifier = Modifier
@@ -121,6 +133,13 @@ fun SettingsTab(
                 SettingRow(title = stringResource(R.string.rsx_settings_automation), subtitle = stringResource(R.string.rsx_settings_automation_desc), onClick = { onNavigate("automation") })
                 SettingRow(title = stringResource(R.string.rsx_settings_changelog), subtitle = stringResource(R.string.rsx_settings_changelog_desc), onClick = { onNavigate("changelog") })
                 SettingRow(title = stringResource(R.string.rsx_settings_old), subtitle = stringResource(R.string.rsx_settings_old_desc), onClick = { onNavigate("old_settings") })
+                val doActive = remember { mutableStateOf(DeviceOwnerHelper.isDeviceOwner(context)) }
+                SettingRow(
+                    title = stringResource(R.string.rsx_settings_do_activate) +
+                        if (doActive.value) " ✓" else "",
+                    subtitle = stringResource(R.string.rsx_settings_do_activate_desc),
+                    onClick = { if (!doBusy) showDoConfirm = true }
+                )
             }
         }
 
@@ -144,6 +163,43 @@ fun SettingsTab(
                 )
             }
         }
+    }
+
+    // === DO provisioning confirm dialog ===
+    if (showDoConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDoConfirm = false },
+            title = { Text(stringResource(R.string.rsx_do_confirm_title)) },
+            text = { Text(stringResource(R.string.rsx_do_confirm_msg)) },
+            confirmButton = {
+                Button(onClick = {
+                    showDoConfirm = false
+                    doBusy = true
+                    scope.launch {
+                        val r = DeviceOwnerProvisioner.provision(context)
+                        doResult = r
+                        doBusy = false
+                    }
+                }) { Text(stringResource(R.string.rsx_do_proceed)) }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { showDoConfirm = false }) {
+                    Text(stringResource(R.string.rsx_do_cancel))
+                }
+            }
+        )
+    }
+
+    // === DO result dialog ===
+    doResult?.let { r ->
+        AlertDialog(
+            onDismissRequest = { doResult = null },
+            title = { Text(stringResource(R.string.rsx_do_result_title)) },
+            text = { Text(r.message) },
+            confirmButton = {
+                Button(onClick = { doResult = null }) { Text(stringResource(R.string.rsx_do_ok)) }
+            }
+        )
     }
 }
 

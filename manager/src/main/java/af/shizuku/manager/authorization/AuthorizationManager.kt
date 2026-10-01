@@ -57,6 +57,7 @@ object AuthorizationManager {
                     if (BuildConfig.APPLICATION_ID == pi.packageName) continue
                     val perms = pi.requestedPermissions
                     if (perms?.contains(Manifest.permission.API_V23) != true &&
+                        perms?.contains("xyz.shizuku.extra.permission.API_V23") != true &&
                         perms?.contains(ServerConstants.PERMISSION_LEGACY) != true &&
                         perms?.contains(ServerConstants.PERMISSION_ORIGINAL) != true) continue
                     packages.add(pi)

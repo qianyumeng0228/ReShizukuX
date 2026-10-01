@@ -1449,6 +1449,25 @@ Please try the command-line method instead.</string>
     <string name="rsx_settings_changelog_desc">View version notes (Markdown)</string>
     <string name="rsx_settings_old">Legacy full settings</string>
     <string name="rsx_settings_old_desc">Open the classic settings page</string>
+    <string name="rsx_settings_do_activate">One-tap Device Owner</string>
+    <string name="rsx_settings_do_activate_desc">Become Device Owner without removing accounts</string>
+    <string name="rsx_do_already_owner">Already Device Owner — nothing to do.</string>
+    <string name="rsx_do_shizuku_not_running">Shizuku is not running. Start it first.</string>
+    <string name="rsx_do_success">Device Owner activated successfully. No accounts were removed.</string>
+    <string name="rsx_do_verify_failed">Command ran but Device Owner not confirmed: %1$s</string>
+    <string name="rsx_do_err_already_owner">Another app already holds Device Owner. One device = one owner.</string>
+    <string name="rsx_do_err_accounts">Still has accounts on device. This method should bypass that — please report this error.</string>
+    <string name="rsx_do_err_multiuser">Multiple users / app clones exist. Remove them first.</string>
+    <string name="rsx_do_err_unknown_admin">Admin receiver not registered. Reinstall the app and try again.</string>
+    <string name="rsx_do_err_not_allowed">Not allowed by system: %1$s</string>
+    <string name="rsx_do_err_no_output">No output from dpm command.</string>
+    <string name="rsx_do_err_unknown">Failed: %1$s</string>
+    <string name="rsx_do_confirm_title">Activate Device Owner?</string>
+    <string name="rsx_do_confirm_msg">This temporarily flips the setup-complete flag so dpm skips the account check. Home/Recents keys will be unresponsive for a few seconds. Do NOT reboot or force-stop the app during this. Keep screen on.</string>
+    <string name="rsx_do_cancel">Cancel</string>
+    <string name="rsx_do_proceed">Proceed</string>
+    <string name="rsx_do_result_title">Device Owner result</string>
+    <string name="rsx_do_ok">OK</string>
     <string name="rsx_settings_about_name">ReShizukuX</string>
     <string name="rsx_settings_about_version">Version %1$s (%2$d)</string>
     <string name="rsx_settings_about_desc">Rootless module system · feature-first</string>

@@ -1,5 +1,5 @@
 # KotlinX Serialization — keep all @Serializable classes and serializers
--keepattributes *Annotation*, InnerClasses
+-keepattributes *Annotation*, InnerClasses, EnclosingMethod
 -dontnote kotlinx.serialization.**
 -keepclassmembers class kotlinx.serialization.json.** {
     *** Companion;
@@ -15,5 +15,5 @@
     kotlinx.serialization.KSerializer serializer(...);
 }
 
-# Room entities are kept by room compiler, but be safe
+# Room entities
 -keep class io.reshizukux.modules.db.** { *; }

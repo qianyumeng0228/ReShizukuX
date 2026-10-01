@@ -6,6 +6,8 @@ import io.reshizukux.modules.db.ModuleDatabase
 import io.reshizukux.modules.db.Repo
 import io.reshizukux.modules.db.RepoModule
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
@@ -26,19 +28,19 @@ import java.net.URL
  */
 object RepoManager {
 
-    /** 官方默认仓库（占位，实际仓库后续创建）。 */
+    /** 官方默认仓库（jsDelivr CDN，国内可直连 GitHub 文件）。
+     *  使用不可变 tag URL（@v1.0.0）：jsDelivr 对分支名（@main）缓存持久不更新，
+     *  tag URL 即时生效，已从真机验证 modules.json 与模块 zip 均 200。 */
     const val DEFAULT_REPO_URL =
-        "https://raw.githubusercontent.com/qianyumeng0228/reshizukux-modules/main/modules.json"
+        "https://cdn.jsdelivr.net/gh/qianyumeng0228/reshizukux-modules@v1.0.0/modules.json"
 
-    private const val DEFAULT_REPO_NAME = "ReShizukuX Official"
+    private const val DEFAULT_REPO_NAME = "ReShizukuX 官方模块仓库"
 
     private const val USER_AGENT = "ReShizukuX-ModuleStore/1.0"
 
     /** 刷新 modules.json：连接超时 15s。 */
-    private const val CONNECT_TIMEOUT_MS = 15_000
-
-    /** 刷新 modules.json：读取超时 30s。 */
-    private const val READ_TIMEOUT_MS = 30_000
+    private const val CONNECT_TIMEOUT_MS = 5_000
+    private const val READ_TIMEOUT_MS = 10_000
 
     /** 模块下载读取超时 60s。 */
     private const val DOWNLOAD_READ_TIMEOUT_MS = 60_000
@@ -89,8 +91,22 @@ object RepoManager {
 
     /**
      * 首次启动时若 repos 表为空，自动注入官方默认仓库（enabled=true）。
+     * 同时把旧的 raw.githubusercontent.com URL 迁移到 jsDelivr CDN（国内可直连）。
      */
     fun ensureDefaultRepo() {
+        // 迁移旧 URL（raw 直连被墙 → jsdelivr @main 分支缓存不更新 → @v1.0.0 不可变 tag）
+        // 所有旧分支 URL（@main / @master）一律从 DB 清掉，随后 count==0 时写入 @v1.0.0。
+        val oldUrls = listOf(
+            "https://raw.githubusercontent.com/qianyumeng0228/reshizukux-modules/main/modules.json",
+            "https://cdn.jsdelivr.net/gh/qianyumeng0228/reshizukux-modules@main/modules.json",
+            "https://cdn.jsdelivr.net/gh/qianyumeng0228/reshizukux-modules@master/modules.json"
+        )
+        for (old in oldUrls) {
+            if (db().repoDao().getByUrl(old) != null) {
+                db().repoDao().deleteByUrl(old)
+                db().repoModuleDao().deleteByRepo(old)
+            }
+        }
         if (db().repoDao().count() == 0) {
             db().repoDao().upsert(
                 Repo(
@@ -120,63 +136,103 @@ object RepoManager {
         runCatching {
             val url = normalizeRepoUrl(rawUrl)
 
-            // 1. 拉取 modules.json 文本
-            val body = httpGet(url, CONNECT_TIMEOUT_MS, READ_TIMEOUT_MS)
-                .getOrElse { throw IOException("fetch modules.json failed: ${it.message}", it) }
+            // 1. 先从 assets 加载（立即返回，不依赖网络/DNS）
+            val assetBody = loadAssetManifest()
+            if (assetBody != null) {
+                parseAndStore(url, assetBody)
+            }
 
-            // 2. 解析
-            val manifest = try {
-                RepoManifest.Json.decodeFromString(RepoManifest.serializer(), body)
-            } catch (e: Exception) {
-                throw IOException("modules.json parse failed: ${e.message}", e)
-            }
-            if (manifest.name.isBlank()) {
-                throw IOException("modules.json missing required field: name")
-            }
-            manifest.modules.forEach { info ->
-                if (info.id.isBlank() || info.downloadUrl.isBlank() || info.name.isBlank()) {
-                    throw IOException("module entry missing required field (id/name/downloadUrl): ${info.id}")
+            // 2. 网络刷新 fire-and-forget（DNS 可能 hang，不阻塞 UI）
+            kotlinx.coroutines.GlobalScope.launch(Dispatchers.IO) {
+                runCatching {
+                    val body = httpGet(url, CONNECT_TIMEOUT_MS, READ_TIMEOUT_MS)
+                        .getOrElse { throw IOException("fetch modules.json failed: ${it.message}", it) }
+                    parseAndStore(url, body)
                 }
             }
+            Unit
+        }
+    }
 
-            // 3. 事务写入：更新 repo 元数据 + 替换模块缓存
-            val database = db()
-            val now = System.currentTimeMillis()
-            database.runInTransaction {
-                val existing = database.repoDao().getByUrl(url)
-                database.repoDao().upsert(
-                    Repo(
-                        url = url,
-                        name = manifest.name,
-                        publicKey = existing?.publicKey,
-                        enabled = existing?.enabled ?: true,
-                        lastRefresh = now
-                    )
+    private fun loadAssetManifest(): String? {
+        return try {
+            appContext?.assets?.open("modules.json")?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
+        } catch (_: Exception) { null }
+    }
+
+    private fun parseAndStore(url: String, body: String) {
+        // 用 org.json 手动解析（避免 R8 release 下 kotlinx.serialization 反射问题）
+        val root = org.json.JSONObject(body)
+        val name = root.optString("name", "")
+        if (name.isBlank()) throw IOException("modules.json missing required field: name")
+
+        val modulesArr = root.optJSONArray("modules")
+        val infos = mutableListOf<RepoModuleInfo>()
+        if (modulesArr != null) {
+            for (i in 0 until modulesArr.length()) {
+                val o = modulesArr.getJSONObject(i)
+                val id = o.optString("id", "")
+                val modName = o.optString("name", "")
+                val downloadUrl = o.optString("downloadUrl", "")
+                if (id.isBlank() || modName.isBlank() || downloadUrl.isBlank()) {
+                    throw IOException("module entry missing required field (id/name/downloadUrl): $id")
+                }
+                infos.add(RepoModuleInfo(
+                    id = id,
+                    name = modName,
+                    version = o.optString("version", ""),
+                    versionCode = o.optInt("versionCode", 0),
+                    author = o.optString("author", ""),
+                    description = o.optString("description", ""),
+                    downloadUrl = downloadUrl,
+                    sha256 = o.optString("sha256", "").takeIf { it.isNotEmpty() },
+                    signature = o.optString("signature", "").takeIf { it.isNotEmpty() },
+                    publicKey = o.optString("publicKey", "").takeIf { it.isNotEmpty() },
+                    minSdk = if (o.isNull("minSdk")) null else o.optInt("minSdk", 0).takeIf { it > 0 },
+                    requiresRoot = if (o.isNull("requiresRoot")) null else o.optBoolean("requiresRoot", false),
+                    usesWebUI = if (o.isNull("usesWebUI")) null else o.optBoolean("usesWebUI", false),
+                    changelog = o.optString("changelog", "").takeIf { it.isNotEmpty() },
+                    lastUpdated = if (o.isNull("lastUpdated")) 0L else o.optLong("lastUpdated", 0L)
+                ))
+            }
+        }
+
+        val database = db()
+        val now = System.currentTimeMillis()
+        database.runInTransaction {
+            val existing = database.repoDao().getByUrl(url)
+            database.repoDao().upsert(
+                Repo(
+                    url = url,
+                    name = name,
+                    publicKey = existing?.publicKey,
+                    enabled = existing?.enabled ?: true,
+                    lastRefresh = now
                 )
-                database.repoModuleDao().deleteByRepo(url)
-                val rows = manifest.modules.map { info ->
-                    RepoModule(
-                        repoUrl = url,
-                        id = info.id,
-                        name = info.name,
-                        version = info.version,
-                        versionCode = info.versionCode,
-                        author = info.author,
-                        description = info.description,
-                        downloadUrl = info.downloadUrl,
-                        sha256 = info.sha256?.trim()?.takeIf { it.isNotEmpty() },
-                        signature = info.signature?.trim()?.takeIf { it.isNotEmpty() },
-                        publicKey = info.publicKey?.trim()?.takeIf { it.isNotEmpty() },
-                        minSdk = info.minSdk,
-                        requiresRoot = info.requiresRoot,
-                        usesWebUI = info.usesWebUI,
-                        changelog = info.changelog,
-                        lastUpdated = info.lastUpdated
-                    )
-                }
-                if (rows.isNotEmpty()) {
-                    database.repoModuleDao().upsertAll(rows)
-                }
+            )
+            database.repoModuleDao().deleteByRepo(url)
+            val rows = infos.map { info ->
+                RepoModule(
+                    repoUrl = url,
+                    id = info.id,
+                    name = info.name,
+                    version = info.version,
+                    versionCode = info.versionCode,
+                    author = info.author,
+                    description = info.description,
+                    downloadUrl = info.downloadUrl,
+                    sha256 = info.sha256,
+                    signature = info.signature,
+                    publicKey = info.publicKey,
+                    minSdk = info.minSdk,
+                    requiresRoot = info.requiresRoot,
+                    usesWebUI = info.usesWebUI,
+                    changelog = info.changelog,
+                    lastUpdated = info.lastUpdated
+                )
+            }
+            if (rows.isNotEmpty()) {
+                database.repoModuleDao().upsertAll(rows)
             }
         }
     }
@@ -354,4 +410,66 @@ object RepoManager {
         }
         return u
     }
+
+    // ---------------------------------------------------------------------
+    // GitHub Topic 搜索（参考 Shevery）
+    // ---------------------------------------------------------------------
+
+    data class GitHubModule(
+        val fullName: String,       // owner/repo
+        val name: String,           // repo name
+        val description: String,
+        val htmlUrl: String,
+        val stars: Int,
+        val author: String,
+        val updatedAt: String
+    )
+
+    /**
+     * 搜索 GitHub 上 topic 为 reshizukux-module 的仓库。
+     * 通过 gh-proxy.com 代理 api.github.com。
+     */
+    suspend fun searchGithubModules(query: String = ""): Result<List<GitHubModule>> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                // 用 gh-proxy 代理 GitHub API
+                val q = if (query.isBlank()) "(topic:reshizukux-module OR topic:shevery-module)"
+                        else "(topic:reshizukux-module OR topic:shevery-module) $query"
+                val apiUrl = "https://gh-proxy.com/https://api.github.com/search/repositories?q=" +
+                        java.net.URLEncoder.encode(q, "UTF-8") + "&sort=updated&per_page=30"
+
+                val conn = (URL(apiUrl).openConnection() as HttpURLConnection).apply {
+                    requestMethod = "GET"
+                    connectTimeout = CONNECT_TIMEOUT_MS
+                    readTimeout = READ_TIMEOUT_MS
+                    setRequestProperty("User-Agent", USER_AGENT)
+                    setRequestProperty("Accept", "application/vnd.github+json")
+                }
+                try {
+                    val code = conn.responseCode
+                    if (code !in 200..299) {
+                        throw IOException("GitHub API HTTP $code")
+                    }
+                    val body = conn.inputStream.bufferedReader(Charsets.UTF_8).readText()
+                    val root = org.json.JSONObject(body)
+                    val items = root.optJSONArray("items") ?: return@runCatching emptyList()
+                    val result = mutableListOf<GitHubModule>()
+                    for (i in 0 until items.length()) {
+                        val o = items.getJSONObject(i)
+                        result.add(GitHubModule(
+                            fullName = o.optString("full_name", ""),
+                            name = o.optString("name", ""),
+                            description = o.optString("description", "").ifBlank { "（无描述）" },
+                            htmlUrl = o.optString("html_url", ""),
+                            stars = o.optInt("stargazers_count", 0),
+                            author = o.optJSONObject("owner")?.optString("login", "") ?: "",
+                            updatedAt = o.optString("updated_at", "")
+                        ))
+                    }
+                    result
+                } finally {
+                    conn.disconnect()
+                }
+            }
+        }
 }

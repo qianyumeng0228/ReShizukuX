@@ -8,10 +8,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -80,12 +84,15 @@ fun ModulesTab() {
     val snackbarHostState = remember { SnackbarHostState() }
 
     var searchQuery by remember { mutableStateOf("") }
-    var tabIndex by remember { mutableIntStateOf(0) } // 0=已安装, 1=在线仓库
+    var tabIndex by remember { mutableIntStateOf(0) } // 0=已安装, 1=在线仓库, 2=GitHub发现
 
     var installed by remember { mutableStateOf<List<ModuleInfo>>(emptyList()) }
     var repos by remember { mutableStateOf<List<Repo>>(emptyList()) }
     var selectedRepoUrl by remember { mutableStateOf<String?>(null) }
     var repoModules by remember { mutableStateOf<List<RepoModule>>(emptyList()) }
+    var githubModules by remember { mutableStateOf<List<RepoManager.GitHubModule>>(emptyList()) }
+    var githubLoading by remember { mutableStateOf(false) }
+    var githubError by remember { mutableStateOf<String?>(null) }
     var loading by remember { mutableStateOf(false) }
     var busyInstallId by remember { mutableStateOf<String?>(null) }
 
@@ -135,19 +142,19 @@ fun ModulesTab() {
 
     suspend fun refreshRepos() {
         loading = true
-        withContext(Dispatchers.IO) { RepoManager.ensureDefaultRepo() }
-        val repoList = withContext(Dispatchers.IO) { RepoManager.getRepos() }
-        repos = repoList
-        if (selectedRepoUrl == null) selectedRepoUrl = repoList.firstOrNull()?.url
-        val url = selectedRepoUrl
-        if (url != null) {
-            val r = withContext(Dispatchers.IO) { RepoManager.refreshRepo(url) }
-            r.onFailure { e ->
-                snackbarHostState.showSnackbar(context.getString(R.string.rsx_mod_repo_failed, e.message ?: ""))
+        try {
+            withContext(Dispatchers.IO) { RepoManager.ensureDefaultRepo() }
+            val repoList = withContext(Dispatchers.IO) { RepoManager.getRepos() }
+            repos = repoList
+            if (selectedRepoUrl == null) selectedRepoUrl = repoList.firstOrNull()?.url
+            val url = selectedRepoUrl
+            if (url != null) {
+                runCatching { RepoManager.refreshRepo(url) }
             }
+            loadRepoModules()
+        } finally {
+            loading = false
         }
-        loadRepoModules()
-        loading = false
     }
 
     LaunchedEffect(refreshKey) {
@@ -157,6 +164,17 @@ fun ModulesTab() {
     LaunchedEffect(tabIndex, selectedRepoUrl) {
         if (tabIndex == 1 && repos.isEmpty()) refreshRepos()
         if (tabIndex == 1) loadRepoModules()
+    }
+
+    LaunchedEffect(tabIndex) {
+        if (tabIndex == 2 && githubModules.isEmpty() && !githubLoading) {
+            githubLoading = true
+            githubError = null
+            val result = RepoManager.searchGithubModules()
+            githubLoading = false
+            result.onSuccess { githubModules = it }
+                .onFailure { githubError = it.message ?: "GitHub 搜索失败" }
+        }
     }
 
     // 进入仓库 Tab 时若已选仓库，下拉刷新。
@@ -214,6 +232,7 @@ fun ModulesTab() {
                 TabRow(selectedTabIndex = tabIndex) {
                     Tab(selected = tabIndex == 0, onClick = { tabIndex = 0 }, text = { Text(stringResource(R.string.rsx_mod_installed)) })
                     Tab(selected = tabIndex == 1, onClick = { tabIndex = 1 }, text = { Text(stringResource(R.string.rsx_mod_online)) })
+                    Tab(selected = tabIndex == 2, onClick = { tabIndex = 2 }, text = { Text("GitHub") })
                 }
 
                 if (tabIndex == 0) {
@@ -235,7 +254,7 @@ fun ModulesTab() {
                         },
                         onClick = { selectedModuleId = it.id }
                     )
-                } else {
+                } else if (tabIndex == 1) {
                     RepoList(
                         repos = repos,
                         selectedRepoUrl = selectedRepoUrl,
@@ -252,6 +271,69 @@ fun ModulesTab() {
                         busyInstallId = busyInstallId,
                         onInstall = { repoUrl, modId -> installFromRepo(repoUrl, modId) }
                     )
+                } else if (tabIndex == 2) {
+                    // GitHub 发现
+                    if (githubLoading) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    } else if (githubError != null) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(githubError!!, color = MaterialTheme.colorScheme.error)
+                                Spacer(modifier = Modifier.height(8.dp))
+                                TextButton(onClick = {
+                                    githubLoading = true
+                                    githubError = null
+                                    scope.launch {
+                                        val result = RepoManager.searchGithubModules()
+                                        githubLoading = false
+                                        result.onSuccess { githubModules = it }
+                                            .onFailure { githubError = it.message ?: "失败" }
+                                    }
+                                }) { Text("重试") }
+                            }
+                        }
+                    } else if (githubModules.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text("GitHub 上暂无带 reshizukux-module 或 shevery-module 标签的模块",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(githubModules) { m ->
+                                androidx.compose.material3.ElevatedCard {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Text(m.name, style = MaterialTheme.typography.titleSmall)
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(m.description, style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                            Text("★ ${m.stars}", style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                            Text("@${m.author}", style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        TextButton(onClick = {
+                                            // 打开 GitHub 页面
+                                            val intent = android.content.Intent(
+                                                android.content.Intent.ACTION_VIEW,
+                                                android.net.Uri.parse(m.htmlUrl)
+                                            )
+                                            context.startActivity(intent)
+                                        }) { Text("打开仓库") }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

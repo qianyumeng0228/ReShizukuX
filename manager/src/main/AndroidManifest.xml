@@ -108,7 +108,7 @@
         <!-- Compose 四 Tab 骨架宿主（Portable 新入口）。LAUNCHER 从原 LauncherAlias
              移到这里；MainActivity 及 View 体系页面全部保留，仅不再是桌面入口。 -->
         <activity
-            android:name=".ui.PortableMainActivity"
+            android:name="af.shizuku.manager.ui.PortableMainActivity"
             android:exported="true"
             android:icon="@mipmap/rsx_ic_launcher"
             android:theme="@style/Theme.App.Portable">
@@ -120,7 +120,7 @@
 
         <!-- Main launcher activity -->
         <activity
-            android:name=".MainActivity"
+            android:name="af.shizuku.manager.MainActivity"
             android:banner="@mipmap/rsx_banner"
             android:exported="true"
             android:theme="@style/Theme.App.Starting" />
