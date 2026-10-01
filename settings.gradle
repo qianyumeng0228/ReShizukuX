@@ -74,3 +74,8 @@ project(":server-shared").projectDir = file("$root${File.separator}server-shared
 
 include ":modules"
 project(":modules").projectDir = file("modules")
+
+// ReShizukuX Xposed/LSPatch-integration support: APK re-packing engine + module scanner.
+// Phase 1 ships compilation-only scaffolding (see io.reshizukux.xposed.patcher package docs);
+// actual patching execution lands in a later phase.
+include ":xposed"

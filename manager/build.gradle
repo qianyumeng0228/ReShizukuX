@@ -184,6 +184,7 @@ dependencies {
     implementation project(":database")
     implementation project(":common")
     implementation project(":modules")
+    implementation project(":xposed")
     api project(":core:ui")
 
     implementation libs.hidden.compat
