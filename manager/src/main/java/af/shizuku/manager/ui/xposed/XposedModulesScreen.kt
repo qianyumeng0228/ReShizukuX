@@ -1,6 +1,7 @@
 package af.shizuku.manager.ui.xposed
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,6 +53,7 @@ import kotlinx.coroutines.withContext
 fun XposedModulesTabContent(
     patchedPackages: List<String>,
     onStartPatch: () -> Unit,
+    onUninstall: (String) -> Unit = {},
 ) {
     val context = LocalContext.current
     var modules by remember { mutableStateOf<List<XposedModuleInfo>>(emptyList()) }
@@ -123,12 +125,28 @@ fun XposedModulesTabContent(
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 items(patchedPackages) { pkg ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            pkg,
-                            modifier = Modifier.padding(12.dp),
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onUninstall(pkg) }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                pkg,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                "点按卸载",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 }
             }

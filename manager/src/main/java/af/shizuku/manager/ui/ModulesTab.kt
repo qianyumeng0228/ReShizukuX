@@ -95,7 +95,35 @@ fun ModulesTab() {
     // --- LSPatch patch 向导：null=关闭, 1=选目标/模块/模式, 2=执行+进度 ---
     val patchController = remember { PatchController(context) }
     var patchFlow by remember { mutableStateOf<Int?>(null) }
-    var patchedPackages by remember { mutableStateOf<List<String>>(emptyList()) }
+    // Patched app list persisted across cold starts via SharedPreferences.
+    val prefs = remember { context.getSharedPreferences("lspatch_patched", android.content.Context.MODE_PRIVATE) }
+    val initialPatched: List<String> = prefs.getStringSet("packages", emptySet())?.toList()?.sorted() ?: emptyList()
+    var patchedPackages by remember { mutableStateOf<List<String>>(initialPatched) }
+
+    fun savePatched(list: List<String>) {
+        patchedPackages = list
+        prefs.edit().putStringSet("packages", list.toSet()).apply()
+    }
+
+    // Uninstall a patched package via Shizuku shell (pm uninstall), then drop it from the list.
+    fun uninstallPatched(pkg: String) {
+        scope.launch {
+            val ok = withContext(Dispatchers.IO) {
+                runCatching {
+                    val p = rikka.shizuku.Shizuku.newProcess(
+                        arrayOf("pm", "uninstall", pkg), null, null
+                    )
+                    p.waitFor()
+                }.getOrDefault(-1) == 0
+            }
+            if (ok) {
+                savePatched(patchedPackages - pkg)
+                snackbarHostState.showSnackbar("已卸载 $pkg")
+            } else {
+                snackbarHostState.showSnackbar("卸载失败 $pkg")
+            }
+        }
+    }
 
     BackHandler(enabled = patchFlow != null) {
         patchFlow = null
@@ -277,7 +305,8 @@ fun ModulesTab() {
                 } else if (tabIndex == 1) {
                     XposedModulesTabContent(
                         patchedPackages = patchedPackages,
-                        onStartPatch = { patchFlow = 1 }
+                        onStartPatch = { patchFlow = 1 },
+                        onUninstall = { uninstallPatched(it) }
                     )
                 } else if (tabIndex == 2) {
                     RepoList(
@@ -393,7 +422,7 @@ fun ModulesTab() {
                     else -> PatchProgressScreen(
                         controller = patchController,
                         onFinished = { pkg ->
-                            pkg?.let { p -> if (p !in patchedPackages) patchedPackages = patchedPackages + p }
+                            pkg?.let { p -> if (p !in patchedPackages) savePatched(patchedPackages + p) }
                             patchController.reset()
                             patchFlow = null
                         }

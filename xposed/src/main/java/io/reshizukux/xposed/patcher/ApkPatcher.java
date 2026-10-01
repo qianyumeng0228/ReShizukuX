@@ -364,11 +364,12 @@ public final class ApkPatcher {
         for (String arch : ARCHES) {
             String entryName = "assets/lspatch/so/" + arch + "/liblspatch.so";
             try (InputStream is = getClass().getClassLoader().getResourceAsStream(entryName)) {
-                if (is == null) throw new PatchException("Missing native library for " + arch);
+                if (is == null) {
+                    logger.d("skipped " + entryName + " (not bundled in this build)");
+                    continue;
+                }
                 // Stored, not deflated: it is mapped straight out of the apk at runtime.
                 dstZFile.add(entryName, is, false);
-            } catch (PatchException e) {
-                throw e;
             } catch (IOException e) {
                 throw new PatchException("Error when adding native lib for " + arch, e);
             }

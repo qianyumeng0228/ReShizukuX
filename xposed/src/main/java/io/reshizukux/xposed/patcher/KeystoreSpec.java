@@ -73,17 +73,25 @@ public final class KeystoreSpec {
     }
 
     KeyStore load(ClassLoader loader) throws IOException {
-        try {
-            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            try (InputStream is = open(loader)) {
-                keyStore.load(is, password.toCharArray());
+        // The bundled keystore is a JKS file (magic FE ED FE ED). On a desktop JVM
+        // KeyStore.getDefaultType() is "jks", but on Android it is "BKS", which
+        // cannot read a JKS file and throws "Wrong version of key store". Try the
+        // types in order until one accepts the bytes; the file format is fixed so
+        // only the first attempt ever succeeds.
+        String[] typesToTry = { "PKCS12", "BKS", "JKS" };
+        Exception lastError = null;
+        for (String type : typesToTry) {
+            try {
+                KeyStore keyStore = KeyStore.getInstance(type);
+                try (InputStream is = open(loader)) {
+                    keyStore.load(is, password.toCharArray());
+                }
+                return keyStore;
+            } catch (Exception e) {
+                lastError = e;
             }
-            return keyStore;
-        } catch (IOException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new PatchException("Failed to load the signing keystore", e);
         }
+        throw new PatchException("Failed to load the signing keystore", lastError);
     }
 
     @Override

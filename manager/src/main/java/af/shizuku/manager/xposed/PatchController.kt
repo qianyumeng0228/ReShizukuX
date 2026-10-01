@@ -203,7 +203,19 @@ class PatchController(private val context: Context) {
                 step = PatchStep.FAILED
             }
         } catch (e: Throwable) {
-            error = e.message ?: e.javaClass.simpleName
+            // Log the full chain to logcat; the UI only shows the top message.
+            android.util.Log.e("LSPatch-Patch", "Patch failed", e)
+            // Build a multi-line message that walks the cause chain so the root
+            // cause is visible in the progress screen without needing logcat.
+            val sb = StringBuilder(e.message ?: e.javaClass.simpleName)
+            var cause = e.cause
+            var depth = 0
+            while (cause != null && depth < 5) {
+                sb.append("\n  ↳ ").append(cause.message ?: cause.javaClass.simpleName)
+                cause = cause.cause
+                depth++
+            }
+            error = sb.toString()
             step = PatchStep.FAILED
         }
     }
@@ -225,16 +237,16 @@ class PatchController(private val context: Context) {
                     apk.inputStream().use { it.copyTo(out) }
                     session.fsync(out)
                 }
-                val intent = Intent(context, context.javaClass).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                val installIntent = Intent("${context.packageName}.lspatch.INSTALL_COMMITTED").apply {
+                    setPackage(context.packageName)
                 }
-                val pi = PendingIntent.getBroadcast(
-                    context,
-                    sessionId,
-                    Intent("${context.packageName}.lspatch.INSTALL_COMMITTED"),
-                    PendingIntent.FLAG_UPDATE_CURRENT or
-                        (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0)
-                )
+                // PackageInstaller.commit() requires a *mutable* PendingIntent so the system can
+                // fill in the result extras; Android 14+ only forbids mutable *implicit* intents,
+                // so pinning the package above makes FLAG_MUTABLE legal again.
+                val flags = PendingIntent.FLAG_UPDATE_CURRENT or
+                    (if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE
+                     else 0)
+                val pi = PendingIntent.getBroadcast(context, sessionId, installIntent, flags)
                 session.commit(pi.intentSender)
             }
             installMessage = "已提交安装：${apk.name}"
