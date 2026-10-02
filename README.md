@@ -4,7 +4,7 @@
 
 ## 这是什么？
 
-ReShizukuX 是 Shizuku（`moe.shizuku.privileged.api`）的增强重制版，包名与原版一致，可直接替代。在保留 Shizuku server 三模式激活（Root / 无线 ADB / Dhizuku）和完整授权体系的同时，新增了两大模块系统：
+ReShizukuX 是基于 [ShizukuX](https://github.com/qianyumeng0228/ShizukuX) 的增强重制版，包名与原版 Shizuku 一致（`moe.shizuku.privileged.api`），可直接替代。在保留 Shizuku server 三模式激活（Root / 无线 ADB / Dhizuku）和完整授权体系的同时，新增了两大模块系统：
 
 1. **Xposed 模块引擎**：内置 LSPatch 兼容的 APK patch 能力，免 Root 给任意 App 加载 Xposed 模块，支持 Manager 模式动态管理作用域
 2. **Shell 脚本模块**：Magisk 式 ZIP 模块，通过 Shizuku 特权执行脚本，支持后台常驻、安装/卸载钩子、WebUI
@@ -64,4 +64,4 @@ gradlew.bat :manager:assembleRelease
 
 GPL-3.0（继承 LSPatch）+ Apache 2.0（Shizuku 上游）
 
-上游：Shizuku（RikkaApps）、ShizukuX（qianyumeng0228）、LSPatch（LSPosed）、Stellar、Shevery
+上游：ShizukuX（qianyumeng0228）、Shizuku（RikkaApps）、LSPatch（LSPosed）、Stellar、Shevery
