@@ -57,13 +57,34 @@ class XposedModuleScanner(private val packageManager: PackageManager) {
 
         /** Legacy module: manifest meta-data naming the minimum Xposed API it needs. */
         private const val META_XPOSED_MIN_VERSION = "xposedminversion"
+
+        // 问题 #10：扫描结果缓存（maxSize=1）。遍历全部已安装包并逐个解 apk zip 很贵，
+        // 向导在选目标/选模块间来回跳转时 5 分钟内直接复用上次结果。
+        private const val CACHE_TTL_MS = 5 * 60 * 1000L
+        private const val CACHE_KEY = "scan"
+
+        private class CacheEntry(val result: List<XposedModuleInfo>, val atMillis: Long)
+
+        private val cache = android.util.LruCache<String, CacheEntry>(1)
     }
 
     /**
      * @return every installed package that looks like an Xposed module, in no particular order.
      *         Packages that cannot be opened (uninstalled mid-scan, unreadable apk) are skipped.
+     *         5 分钟内重复调用直接复用缓存（问题 #10）。
      */
     fun scan(): List<XposedModuleInfo> {
+        cache.get(CACHE_KEY)?.let {
+            if (System.currentTimeMillis() - it.atMillis < CACHE_TTL_MS) {
+                return it.result
+            }
+        }
+        val result = doScan()
+        cache.put(CACHE_KEY, CacheEntry(result, System.currentTimeMillis()))
+        return result
+    }
+
+    private fun doScan(): List<XposedModuleInfo> {
         val packages = try {
             packageManager.getInstalledPackages(PackageManager.GET_META_DATA)
         } catch (e: Throwable) {

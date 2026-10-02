@@ -1,6 +1,7 @@
 package af.shizuku.manager.xposed
 
 import android.content.Context
+import android.content.pm.PackageManager
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -64,6 +65,15 @@ object ScopeStore {
         modulePackageName: String,
         enabled: Boolean,
     ): Set<String> {
+        // 问题 #5：启用前先确认模块包确实安装在本机，避免把已卸载模块写进 scope，
+        // 运行时 getModules() 才爆 NPE/找不到 apk。
+        if (enabled) {
+            try {
+                context.packageManager.getPackageInfo(modulePackageName, 0)
+            } catch (e: PackageManager.NameNotFoundException) {
+                throw IllegalArgumentException("模块包不存在：$modulePackageName", e)
+            }
+        }
         val table = load(context)
         val current = table.targets[targetPackageName].orEmpty().toMutableSet()
         if (enabled) current.add(modulePackageName) else current.remove(modulePackageName)

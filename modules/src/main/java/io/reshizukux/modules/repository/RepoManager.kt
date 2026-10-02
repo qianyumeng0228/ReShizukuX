@@ -48,8 +48,18 @@ object RepoManager {
     /** 模块下载体积上限 100MB。 */
     private const val MAX_DOWNLOAD_BYTES = 100L * 1024 * 1024
 
+    /** 问题 #8：手动跟随重定向的最大次数，超过即报错。 */
+    private const val MAX_REDIRECTS = 5
+
     @Volatile
     private var appContext: Context? = null
+
+    /**
+     * 问题 #15：仓库网络刷新失败回调（主线程外触发）。由 UI 层注入，收到后弹
+     * snackbar「仓库加载失败，请检查网络」。
+     */
+    @Volatile
+    var onRefreshError: ((String) -> Unit)? = null
 
     fun init(context: Context) {
         if (appContext == null) {
@@ -143,11 +153,14 @@ object RepoManager {
             }
 
             // 2. 网络刷新 fire-and-forget（DNS 可能 hang，不阻塞 UI）
-            kotlinx.coroutines.GlobalScope.launch(Dispatchers.IO) {
+            GlobalScope.launch(Dispatchers.IO) {
                 runCatching {
                     val body = httpGet(url, CONNECT_TIMEOUT_MS, READ_TIMEOUT_MS)
                         .getOrElse { throw IOException("fetch modules.json failed: ${it.message}", it) }
                     parseAndStore(url, body)
+                }.onFailure {
+                    // 问题 #15：网络/解析失败上报给 UI（snackbar）。
+                    onRefreshError?.invoke(it.message ?: "network error")
                 }
             }
             Unit
@@ -362,37 +375,53 @@ object RepoManager {
 
     /**
      * 流式下载二进制到 [target]，60s 读取超时，超过 [MAX_DOWNLOAD_BYTES] 中止。
+     * 问题 #8：关闭自动重定向，手动跟随 Location，最多 [MAX_REDIRECTS] 次，超过报错。
      */
     private fun downloadToFile(downloadUrl: String, target: File) {
-        val conn = (URL(downloadUrl).openConnection() as HttpURLConnection).apply {
-            requestMethod = "GET"
-            connectTimeout = CONNECT_TIMEOUT_MS
-            readTimeout = DOWNLOAD_READ_TIMEOUT_MS
-            instanceFollowRedirects = true
-            setRequestProperty("User-Agent", USER_AGENT)
-        }
-        try {
-            val code = conn.responseCode
-            if (code !in 200..299) {
-                throw IOException("HTTP $code when downloading $downloadUrl")
+        var current = downloadUrl
+        repeat(MAX_REDIRECTS + 1) { hop ->
+            val conn = (URL(current).openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+                connectTimeout = CONNECT_TIMEOUT_MS
+                readTimeout = DOWNLOAD_READ_TIMEOUT_MS
+                instanceFollowRedirects = false
+                setRequestProperty("User-Agent", USER_AGENT)
             }
-            conn.inputStream.use { input ->
-                target.outputStream().use { output ->
-                    val buffer = ByteArray(8192)
-                    var total = 0L
-                    while (true) {
-                        val read = input.read(buffer)
-                        if (read == -1) break
-                        total += read
-                        if (total > MAX_DOWNLOAD_BYTES) {
-                            throw IOException("download exceeds 100MB cap: $downloadUrl")
+            try {
+                val code = conn.responseCode
+                if (code in 300..399) {
+                    val location = conn.getHeaderField("Location")
+                    if (location == null) {
+                        throw IOException("HTTP $code without Location header: $current")
+                    }
+                    if (hop >= MAX_REDIRECTS) {
+                        throw IOException("重定向次数超过 $MAX_REDIRECTS 次：$downloadUrl")
+                    }
+                    current = URL(URL(current), location).toString()
+                    return@repeat
+                }
+                if (code !in 200..299) {
+                    throw IOException("HTTP $code when downloading $downloadUrl")
+                }
+                conn.inputStream.use { input ->
+                    target.outputStream().use { output ->
+                        val buffer = ByteArray(8192)
+                        var total = 0L
+                        while (true) {
+                            val read = input.read(buffer)
+                            if (read == -1) break
+                            total += read
+                            if (total > MAX_DOWNLOAD_BYTES) {
+                                throw IOException("download exceeds 100MB cap: $downloadUrl")
+                            }
+                            output.write(buffer, 0, read)
                         }
-                        output.write(buffer, 0, read)
                     }
                 }
+                return
+            } finally {
+                conn.disconnect()
             }
-        } finally {
-            conn.disconnect()
         }
     }
 

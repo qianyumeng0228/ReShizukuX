@@ -1,6 +1,7 @@
 package io.reshizukux.modules.core
 
 import android.content.Context
+import android.os.Build
 import io.reshizukux.modules.db.InstalledModule
 import io.reshizukux.modules.db.ModuleDatabase
 import io.reshizukux.modules.execution.CustomizeRunner
@@ -118,6 +119,9 @@ object ModuleManager {
                 if (violations.isNotEmpty()) {
                     return Result.failure(IllegalStateException("ZIP validation failed: ${violations.joinToString("; ")}"))
                 }
+                // 1b. CRC 完整性校验（问题 #3）：逐个 entry 读全量数据并比对 central directory
+                //     记录的 CRC32，损坏/截断的 zip 在解包前就拒绝，避免解出半个模块。
+                verifyZipCrc(zip)
                 // 2. 解析 module.prop
                 val propEntry = zip.getEntry("module.prop")
                     ?: return Result.failure(IllegalStateException("module.prop missing in ZIP"))
@@ -129,6 +133,13 @@ object ModuleManager {
                 tmpProp.delete()
                 if (spec == null) {
                     return Result.failure(IllegalStateException("module.prop parse/validation failed"))
+                }
+
+                // 问题 #9：minSdk 校验（module.prop 里声明了才检查）。
+                if (spec.minSdk > 0 && Build.VERSION.SDK_INT < spec.minSdk) {
+                    return Result.failure(IllegalStateException(
+                        "模块需要 Android API ${spec.minSdk}+，当前 API ${Build.VERSION.SDK_INT}"
+                    ))
                 }
 
                 // 3. 取签名/公钥：参数优先，其次 ZIP 内 module.sig / module.pubkey
@@ -265,6 +276,31 @@ object ModuleManager {
                 backupDir.renameTo(target)
             }
         }.onFailure { Timber.tag(TAG).w(it, "restore backup failed") }
+    }
+
+    /**
+     * 逐 entry 校验 CRC32（问题 #3）：读完全部未压缩数据后与 central directory 记录的
+     * [java.util.zip.ZipEntry.getCrc] 比对。任一项不匹配即抛 [java.util.zip.ZipException]。
+     */
+    private fun verifyZipCrc(zip: ZipFile) {
+        val entries = zip.entries()
+        while (entries.hasMoreElements()) {
+            val entry = entries.nextElement()
+            if (entry.isDirectory) continue
+            val expected = entry.crc
+            if (expected == 0L) continue
+            val crc32 = java.util.zip.CRC32()
+            zip.getInputStream(entry).use { input ->
+                val buf = ByteArray(8192)
+                var n: Int
+                while (input.read(buf).also { n = it } != -1) {
+                    crc32.update(buf, 0, n)
+                }
+            }
+            if (crc32.value != expected) {
+                throw java.util.zip.ZipException("ZIP CRC 校验失败：${entry.name}")
+            }
+        }
     }
 
     private fun extractZip(zip: ZipFile, targetDir: File) {

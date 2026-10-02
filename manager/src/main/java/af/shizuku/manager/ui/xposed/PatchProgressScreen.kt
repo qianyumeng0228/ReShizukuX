@@ -16,7 +16,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -34,8 +39,19 @@ fun PatchProgressScreen(
     controller: PatchController,
     onFinished: (targetPackage: String?) -> Unit,
 ) {
+    // 问题 #14：用 rememberSaveable 记录 patch 是否已触发过，configuration change（如旋转屏幕）
+    // 后重组不会再跑一次 runPatch，也不会重复弹完成/失败结果。
+    var patchLaunched by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) { controller.runPatch() }
+        if (!patchLaunched) {
+            patchLaunched = true
+            controller.attachJob(coroutineContext[kotlinx.coroutines.Job])
+            withContext(Dispatchers.IO) { controller.runPatch() }
+        }
+    }
+    // 问题 #7：向导关闭/离开此屏时取消仍在后台运行的 patch job。
+    DisposableEffect(Unit) {
+        onDispose { controller.onCleared() }
     }
 
     Column(

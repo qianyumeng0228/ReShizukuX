@@ -77,7 +77,7 @@ object ManagerService : IFrameworkService.Stub() {
                 .onFailure { Log.w(TAG, "failed to build module $modulePkg for $app", it) }
                 .getOrNull()
         }
-        Log.d(TAG, "serving ${served.size}/${scoped.size} module(s) to $app (legacy=$legacy): ${served.map { it.packageName }}")
+        Log.d(TAG, "serving ${served.size}/${scoped.size} module(s) to $app (legacy=$legacy): ${served.map { it.packageName ?: "" }}")
         return served
     }
 
@@ -101,8 +101,8 @@ object ManagerService : IFrameworkService.Stub() {
         val list = callerModules(legacy = false)
         Log.d(TAG, "getModules: ${list.map { it.packageName }}")
         // Record which modules this host process runs, so a later scope toggle can find it as a
-        // hot-reload target.
-        HotReloadRegistry.recordModules(Binder.getCallingUid(), Binder.getCallingPid(), list.map { it.packageName })
+        // hot-reload target. 问题 #16：packageName 可空（AIDL String），空保护避免 NPE。
+        HotReloadRegistry.recordModules(Binder.getCallingUid(), Binder.getCallingPid(), list.map { it.packageName ?: "" })
         return list
     }
 

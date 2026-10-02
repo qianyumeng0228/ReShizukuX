@@ -142,10 +142,29 @@ class PatchController(private val context: Context) {
         }
     }
 
-    /** Runs the engine on the calling coroutine's IO dispatcher. Callers switch context first. */
+    /** patch 任务绑定的协程 job，onCleared 时取消（configuration change / 向导关闭）。 */
+    private var job: kotlinx.coroutines.Job? = null
+
+    fun attachJob(job: kotlinx.coroutines.Job?) {
+        this.job = job
+    }
+
+    /** UI 在 onDispose 时调用：取消仍在跑的 patch 协程。 */
+    fun onCleared() {
+        job?.cancel()
+        job = null
+    }
+
     fun runPatch() {
         val target = target ?: run {
             error = "No target app selected"
+            step = PatchStep.FAILED
+            return
+        }
+        // 问题 #17：目标 App 在扫描后、patch 前被卸载时，apk 文件已不存在，
+        // ApkPatcher 会抛出难懂的底层错误；这里提前给出明确提示。
+        if (!File(target.apkPath).exists()) {
+            error = "目标应用已卸载，请重新选择"
             step = PatchStep.FAILED
             return
         }
@@ -156,6 +175,17 @@ class PatchController(private val context: Context) {
         outputApk = null
         installMessage = null
         step = PatchStep.RUNNING
+
+        // 问题 #1：patch 结束（成功或失败）统一清理临时目录。install() 在此之前已把
+        // apk 字节推到 /data/local/tmp 或写入 PackageInstaller session，删除 outDir 不影响安装。
+        try {
+            runPatchInternal(target, outDir)
+        } finally {
+            outDir.deleteRecursively()
+        }
+    }
+
+    private fun runPatchInternal(target: PatchTargetApp, outDir: File) {
 
         val useManager = mode == PatchMode.MANAGER
         val spec = try {
@@ -290,6 +320,17 @@ class PatchController(private val context: Context) {
      *      so the UI tells the user to reinstall manually instead of silently falling back.
      */
     private fun installViaShizukuShell(apk: File, pkg: String): Boolean {
+        // 问题 #6：先确认 Shizuku binder 可用且本应用已获授权，再执行任何 pm 命令；
+        // 不可用直接返回 false 走 session fallback，避免在未授权状态下静默失败。
+        val granted = try {
+            Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+        } catch (_: Throwable) {
+            false
+        }
+        if (!Shizuku.pingBinder() || !granted) {
+            android.util.Log.w("LSPatch-Install", "Shizuku not ready / permission not granted, shell route unavailable")
+            return false
+        }
         val tmpPath = "/data/local/tmp/lspatch-patched-${System.currentTimeMillis()}.apk"
         return try {
             // 1. push apk bytes to a shell-readable path via stdin (app cache dir is off-limits to uid 2000).
@@ -479,6 +520,20 @@ class PatchController(private val context: Context) {
      * the actual status; any synchronous throw abandons the session and reports FAILED.
      */
     private fun fallbackInstall(apk: File) {
+        // 问题 #2：split apk（splitSourceDirs 非空）目前无法被 LSPatch 正确重打包/安装，
+        // 静默失败会让用户以为 patch 成功；这里给出明确提示。
+        val targetPkg = target?.packageName
+        if (targetPkg != null) {
+            val splits = runCatching {
+                context.packageManager.getPackageInfo(targetPkg, 0)
+                    .applicationInfo?.splitSourceDirs
+            }.getOrNull()
+            if (!splits.isNullOrEmpty()) {
+                installMessage = "暂不支持 split apk，请选单 apk 应用"
+                step = PatchStep.FAILED
+                return
+            }
+        }
         val action = "${context.packageName}.lspatch.INSTALL_COMMITTED"
         val installer = context.packageManager.packageInstaller
         var sessionId = -1

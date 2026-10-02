@@ -29,6 +29,17 @@ import timber.log.Timber
 class WatchdogAlarmReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent?) {
+        // 问题 #12：防抖——30 秒内重复触发（如系统批量投递/重复闹钟）直接丢弃，
+        // 避免短时间内反复 restart WatchdogService / daemon。
+        val now = System.currentTimeMillis()
+        synchronized(this) {
+            if (now - lastFiredAt < DEBOUNCE_MS) {
+                Timber.tag(TAG).d("duplicate alarm within ${DEBOUNCE_MS}ms, ignored")
+                return
+            }
+            lastFiredAt = now
+        }
+
         if (!ShizukuSettings.getWatchdog()) {
             Timber.tag(TAG).d("Watchdog disabled in settings, not rescheduling alarm")
             return
@@ -58,6 +69,12 @@ class WatchdogAlarmReceiver : BroadcastReceiver() {
         private val INTERVAL_MS = 15 * 60 * 1000L // 15 min: tight enough for a meaningfully
         // faster recovery than the 2h WorkManager backstop, loose enough not to be a battery
         // complaint on its own (matches the tightest interval WorkManager itself allows).
+
+        /** 问题 #12：防抖窗口。 */
+        private const val DEBOUNCE_MS = 30_000L
+
+        @Volatile
+        private var lastFiredAt = 0L
 
         private fun pendingIntent(context: Context): PendingIntent {
             val intent = Intent(context, WatchdogAlarmReceiver::class.java)

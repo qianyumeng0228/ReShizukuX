@@ -91,7 +91,12 @@ object AuthorizationManager {
         } catch (e: Throwable) {
             LOGGER.w(e, "attach Scene package to list failed")
         }
-        return packages
+        // 问题 #13：授权列表里过滤掉 manager 自身（moe.shizuku.privileged.api），
+        // 自己给自己授权没有意义，也避免列表首项永远是自己。
+        return packages.filterNot {
+            it.packageName == BuildConfig.APPLICATION_ID ||
+                it.packageName == "moe.shizuku.privileged.api"
+        }
     }
 
     fun isPlusApiSupported(pi: PackageInfo): Boolean {

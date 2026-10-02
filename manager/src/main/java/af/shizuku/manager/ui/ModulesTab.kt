@@ -66,6 +66,7 @@ import io.reshizukux.modules.db.Repo
 import io.reshizukux.modules.db.RepoModule
 import io.reshizukux.modules.repository.RepoManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -89,6 +90,18 @@ fun ModulesTab() {
     val snackbarHostState = remember { SnackbarHostState() }
 
     var searchQuery by remember { mutableStateOf("") }
+    // 问题 #18：搜索框 300ms debounce，避免每敲一个字符就过滤整列。
+    var debouncedQuery by remember { mutableStateOf("") }
+    LaunchedEffect(searchQuery) {
+        delay(300)
+        debouncedQuery = searchQuery
+    }
+    // 问题 #15：仓库网络刷新失败时弹 snackbar。
+    LaunchedEffect(Unit) {
+        RepoManager.onRefreshError = {
+            scope.launch { snackbarHostState.showSnackbar("仓库加载失败，请检查网络") }
+        }
+    }
     // 0=Shell脚本(已安装), 1=Xposed模块(Phase 2 新增), 2=在线仓库, 3=GitHub发现
     var tabIndex by remember { mutableIntStateOf(0) }
     // 在线仓库(2)内部二级分类: 0=Shell脚本仓库, 1=Xposed模块(LSPosed feed)
@@ -203,7 +216,11 @@ fun ModulesTab() {
             if (selectedRepoUrl == null) selectedRepoUrl = repoList.firstOrNull()?.url
             val url = selectedRepoUrl
             if (url != null) {
-                runCatching { RepoManager.refreshRepo(url) }
+                // 问题 #15：同步段失败（assets 解析等）也弹 snackbar；异步网络失败由
+                // RepoManager.onRefreshError 回调处理。
+                RepoManager.refreshRepo(url).onFailure {
+                    snackbarHostState.showSnackbar("仓库加载失败，请检查网络")
+                }
             }
             loadRepoModules()
         } finally {
@@ -296,10 +313,10 @@ fun ModulesTab() {
                 if (tabIndex == 0) {
                     InstalledList(
                         modules = installed.filter {
-                            searchQuery.isBlank() ||
-                                it.name.contains(searchQuery, true) ||
-                                it.id.contains(searchQuery, true) ||
-                                it.author.contains(searchQuery, true)
+                            debouncedQuery.isBlank() ||
+                                it.name.contains(debouncedQuery, true) ||
+                                it.id.contains(debouncedQuery, true) ||
+                                it.author.contains(debouncedQuery, true)
                         },
                         busy = busyInstallId,
                         onToggle = { info, want ->
@@ -341,10 +358,10 @@ fun ModulesTab() {
                             onSelectRepo = { selectedRepoUrl = it },
                             onRefresh = { scope.launch { refreshRepos() } },
                             modules = repoModules.filter {
-                                searchQuery.isBlank() ||
-                                    it.name.contains(searchQuery, true) ||
-                                    it.id.contains(searchQuery, true) ||
-                                    it.author.contains(searchQuery, true)
+                                debouncedQuery.isBlank() ||
+                                    it.name.contains(debouncedQuery, true) ||
+                                    it.id.contains(debouncedQuery, true) ||
+                                    it.author.contains(debouncedQuery, true)
                             },
                             installedIds = installed.map { it.id }.toSet(),
                             loading = loading,
@@ -353,7 +370,7 @@ fun ModulesTab() {
                         )
                     } else {
                         af.shizuku.manager.ui.xposed.XposedOnlineRepoPane(
-                            query = searchQuery,
+                            query = debouncedQuery,
                             onDownloaded = { file ->
                                 scope.launch {
                                     snackbarHostState.showSnackbar("已下载 ${file.name}，请到 Xposed 分类选择 patch")

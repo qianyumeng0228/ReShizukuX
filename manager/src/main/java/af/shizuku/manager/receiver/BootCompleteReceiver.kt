@@ -50,14 +50,25 @@ class BootCompleteReceiver : BroadcastReceiver() {
             }
         }
 
-        try {
-            ShizukuReceiverStarter.start(context)
-        } catch (e: Exception) {
-            // LOCKED_BOOT_COMPLETED fires during direct boot, before credential-encrypted storage
-            // is available — WorkManager can't initialize and prefs may be inaccessible. This is
-            // expected; the later BOOT_COMPLETED (post-unlock) handles auto-start. Catch broadly so
-            // no variant crashes the receiver, and log at warn (breadcrumb, not a billed Sentry event).
-            Timber.tag("BootCompleteReceiver").w(e, "Auto-start skipped (service not ready, e.g. direct boot)")
+        // 问题 #11：ROOT 模式开机自启前先探测 su 二进制。设备未 root 时强行走 root 路径
+        // 只会让 libsu 卡住/失败；无 su 则跳过 root 启动，等待后续 ADB/无线调试路径或用户手动操作。
+        val wantsRoot = ShizukuSettings.getLastLaunchMode() == ShizukuSettings.LaunchMethod.ROOT
+        val hasSu = java.io.File("/system/bin/su").exists() ||
+            java.io.File("/system/xbin/su").exists()
+        if (wantsRoot && !hasSu) {
+            Timber.tag("BootCompleteReceiver").w(
+                "ROOT 模式但未检测到 su（/system/bin/su、/system/xbin/su），跳过开机 root 自启"
+            )
+        } else {
+            try {
+                ShizukuReceiverStarter.start(context)
+            } catch (e: Exception) {
+                // LOCKED_BOOT_COMPLETED fires during direct boot, before credential-encrypted storage
+                // is available — WorkManager can't initialize and prefs may be inaccessible. This is
+                // expected; the later BOOT_COMPLETED (post-unlock) handles auto-start. Catch broadly so
+                // no variant crashes the receiver, and log at warn (breadcrumb, not a billed Sentry event).
+                Timber.tag("BootCompleteReceiver").w(e, "Auto-start skipped (service not ready, e.g. direct boot)")
+            }
         }
         try {
             if (ShizukuSettings.getWatchdog()) {
