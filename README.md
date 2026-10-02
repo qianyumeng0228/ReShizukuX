@@ -1,67 +1,79 @@
+<div align="center">
+
 # ReShizukuX
 
-> 基于 Shizuku 的增强重制版 —— 在保留原版 Shizuku 核心能力的基础上，集成 Xposed 模块引擎与 Shell 脚本模块系统，一个 App 搞定免 Root 特权与模块生态。
+**English** | [简体中文](./README.zh-CN.md)
 
-## 这是什么？
+**Shizuku enhanced rebuild with built-in Xposed engine**
 
-ReShizukuX 是基于 [ShizukuX](https://github.com/qianyumeng0228/ShizukuX) 的增强重制版，包名与原版 Shizuku 一致（`moe.shizuku.privileged.api`），可直接替代。在保留 Shizuku server 三模式激活（Root / 无线 ADB / Dhizuku）和完整授权体系的同时，新增了两大模块系统：
+ReShizukuX is a community-enhanced rebuild based on [ShizukuX](https://github.com/qianyumeng0228/ShizukuX), which itself traces back to [RikkaApps/Shizuku](https://github.com/RikkaApps/Shizuku). It keeps the original Shizuku privileged process architecture and adds a built-in Xposed module engine plus a Shell script module system — one app, no root required.
 
-1. **Xposed 模块引擎**：内置 LSPatch 兼容的 APK patch 能力，免 Root 给任意 App 加载 Xposed 模块，支持 Manager 模式动态管理作用域
-2. **Shell 脚本模块**：Magisk 式 ZIP 模块，通过 Shizuku 特权执行脚本，支持后台常驻、安装/卸载钩子、WebUI
+[![Stars](https://img.shields.io/github/stars/qianyumeng0228/ReShizukuX?style=for-the-badge&color=bfb330&labelColor=807820)](https://github.com/qianyumeng0228/ReShizukuX/stargazers)
+[![Downloads](https://img.shields.io/github/downloads/qianyumeng0228/ReShizukuX/total?style=for-the-badge&color=bf7830&labelColor=805020)](https://github.com/qianyumeng0228/ReShizukuX/releases)
+[![Latest Release](https://img.shields.io/github/v/release/qianyumeng0228/ReShizukuX?style=for-the-badge&color=3060bf&labelColor=204080&label=Latest)](https://github.com/qianyumeng0228/ReShizukuX/releases/latest)
 
-## 功能总览
+> **Heritage note**: ReShizukuX is an independent rebuild of ShizukuX (qianyumeng0228), integrating LSPatch's APK patch engine and a Magisk-style script module system. It has **no affiliation** with RikkaApps/Shizuku, LSPosed/LSPatch, or Shevery. All upstream copyright notices are preserved.
 
-| 模块 | 功能 |
-|------|------|
-| **状态** | 服务运行状态、激活模式（Root/ADB/Dhizuku）、Root/ADB/DO 三项权限检测、单开关一键启动、守护模式显示 |
-| **授权** | 已声明 Shizuku 权限的应用列表，一键 grant/revoke，搜索 + 全部/已授权/未授权筛选 |
-| **终端** | 通过 Shizuku shell 执行命令，历史命令记录（持久化）、常用命令快捷栏、停止按钮 |
-| **模块** | Xposed 模块扫描 + APK patch + 作用域管理；Shell 脚本模块安装；在线仓库浏览；GitHub topic 搜索 |
-| **设置** | 开机自启、守护模式、无线调试守护、语言切换、主题、版本信息 |
+</div>
 
-## 核心特性
+## ⬇️ Download
 
-### 三模式激活
-- **Root**：KernelSU / Magisk / APatch 授权后自动启动 server
-- **无线 ADB**：5 步配对向导，配对一次后重启自动复活（5555 回环探测）
-- **Dhizuku / 设备所有者**：无需启动 server，直接通过 DO 权限工作
+Grab the latest release from [GitHub Releases](https://github.com/qianyumeng0228/ReShizukuX/releases).
 
-### 三层保活
-- 开机自启（BootCompleteReceiver）
-- daemon 双进程互守（`:daemon` 独立进程，5s 轮询 + 60s/5 次熔断）
-- 15min Alarm 兜底
+## ✨ Core Features
 
-### Xposed 模块引擎
-- 扫描本机已安装的 Xposed 模块 APK（modern + legacy）
-- Integrated 模式：模块烤入 patched APK
-- Manager 模式：运行时通过 IPC 动态下发模块，改作用域只需 force-stop
-- 接入 LSPosed 在线仓库（1000+ 模块）
-- Shizuku 静默安装 patched APK（root shell 通道）
+*   **Three activation modes**: unified **Root**, **Wireless ADB**, and **Dhizuku (Device Owner)** as permission sources — one toggle auto-detects the best method.
+*   **Three-layer keep-alive**: boot self-start → daemon mutual watchdog (`:daemon` process, 5s polling + circuit breaker) → 15-min Alarm fallback.
+*   **No-WiFi revival**: after one ADB pairing, loopback probe on port 5555 auto-revives after reboot — no WiFi, no wireless debugging needed.
+*   **Step-by-step pairing wizard**: 5-step Compose wizard with notification RemoteInput (MIUI-friendly, avoids switching apps).
+*   **Root/ADB/DO permission dashboard**: home page shows live status of all three permission sources.
+*   **Built-in terminal**: execute shell commands via Shizuku privilege, with persistent command history, quick commands, and stop button.
 
-### Shell 脚本模块
-- ZIP 包格式：`module.prop` + `customize.sh` + `action.sh` + `service.sh` + `uninstall.sh`
-- 权限三档：SAFE（全禁）/ 半开放 / 全开放
-- 官方仓库 + GitHub topic 发现
+## 🔧 Xposed Module Engine
 
-## 安装
+ReShizukuX integrates LSPatch-compatible APK patching — no root needed to load Xposed modules into arbitrary apps:
 
-1. 卸载冲突应用（Shevery 等同包名应用）
-2. 安装 Release APK
-3. 开启「开发者选项 → 无线调试」
-4. 点开关，按配对向导完成配对（Root 设备跳过配对直接用 Root 模式）
-5. 配对一次后重启自动复活
+*   **Module scanner**: auto-detects installed Xposed module APKs (modern + legacy).
+*   **Integrated mode**: modules baked into the patched APK at build time.
+*   **Manager mode**: modules delivered at runtime via IPC — change scope and force-stop, no repatch needed.
+*   **LSPosed repository**: browse 1000+ modules from modules.lsposed.org directly in-app.
+*   **Silent install**: patched APK installed via Shizuku root shell, preserving app data.
+*   **GitHub topic search**: discover new Xposed modules by GitHub topic.
 
-## 构建
+## 📦 Shell Script Modules
 
-```bash
-# JDK 21 + Android SDK
-gradlew.bat :manager:assembleRelease
-```
+Magisk-style ZIP modules executed through Shizuku privilege:
 
-产物：`manager/build/outputs/apk/release/manager-release.apk`（约 15 MB，R8 minify）
+*   **ZIP format**: `module.prop` + `customize.sh` + `action.sh` + `service.sh` + `uninstall.sh`.
+*   **Permission tiers**: SAFE (deny-all) by default, opt-in per hook.
+*   **Official repo + GitHub discovery**: browse and install with one tap.
 
-## License
+## 🛠️ Architecture
 
-GPL-3.0（继承 LSPatch）+ Apache 2.0（Shizuku 上游）
+*   **Package name**: `moe.shizuku.privileged.api` — drop-in replacement for original Shizuku.
+*   **Compose UI**: 5 tabs (Status / Authorization / Terminal / Modules / Settings), single Activity.
+*   **R8 minify**: release APK ~15 MB.
 
-上游：ShizukuX（qianyumeng0228）、Shizuku（RikkaApps）、LSPatch（LSPosed）、Stellar、Shevery
+## ☑️ System Requirements
+
+**Minimum: Android 9+ · Target: Android 16 (SDK 36)**
+
+- **Root mode**: KernelSU / Magisk / APatch
+- **Wireless ADB mode**: Android 11+
+- **Dhizuku mode**: device owner setup
+
+## 🙏 Acknowledgements
+
+ReShizukuX is built on the shoulders of:
+
+| Project | Author | License | Role |
+|---------|--------|---------|------|
+| [Shizuku](https://github.com/RikkaApps/Shizuku) | RikkaApps | Apache 2.0 | Foundation privileged process |
+| [ShizukuX](https://github.com/qianyumeng0228/ShizukuX) | qianyumeng0228 | Apache 2.0 | Direct upstream fork |
+| [LSPatch](https://github.com/LSPosed/LSPatch) | LSPosed | GPL-3.0 | APK patch engine |
+| [Stellar](https://github.com/roro2239/Stellar) | roro2239 | Apache 2.0 | Keep-alive reference |
+| [Shevery](https://github.com/HmnDev-Tech/shevery) | HmnDev-Tech | Apache 2.0 | Module system reference |
+
+## 📃 License
+
+GPL-3.0 (inherited from LSPatch) + Apache 2.0 (Shizuku upstream)
