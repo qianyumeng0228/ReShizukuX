@@ -34,6 +34,15 @@ class WatchdogService : Service() {
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var job: Job? = null
 
+    /**
+     * Set only when the user deliberately asks to stop the watchdog (notification "关闭" button →
+     * [ACTION_STOP_SERVICE]). The settings toggle-off path already persists the preference itself
+     * via [ShizukuSettings.setWatchdog], so it does NOT need this flag. Everything else that tears
+     * the service down (system memory pressure killing the FGS, user swiping away recents,
+     * startForeground failing and stopSelf()) leaves the user's watchdog choice untouched.
+     */
+    private var userInitiatedStop = false
+
     // Returns false on failure so callers can bail out via stopSelf() instead of crashing
     // (RemoteServiceException$CannotPostForegroundServiceNotificationException, background-start
     // restrictions, etc. — same pattern as AutomationService.ensureForeground(), SHIZUKUPLUS-5P).
@@ -122,6 +131,9 @@ class WatchdogService : Service() {
             return START_NOT_STICKY
         }
         if (intent?.action == ACTION_STOP_SERVICE) {
+            // Notification "关闭" button: the user explicitly wants the watchdog off. Mark it so
+            // onDestroy persists the preference; any other teardown path must not flip the switch.
+            userInitiatedStop = true
             stopSelf()
             return START_NOT_STICKY
         }
@@ -132,7 +144,14 @@ class WatchdogService : Service() {
         job?.cancel()
         scope.cancel()
         isRunning.set(false)
-        ShizukuSettings.setWatchdog(applicationContext, false)
+        // Only persist "watchdog off" when the user asked for it. The system killing this FGS
+        // (memory pressure, swipe from recents, startForeground failure) must NOT silently turn
+        // the user's watchdog switch off.
+        if (userInitiatedStop) {
+            ShizukuSettings.setWatchdog(applicationContext, false)
+        } else {
+            Timber.tag(TAG).d("onDestroy without user-initiated stop; leaving watchdog setting untouched")
+        }
         super.onDestroy()
     }
 

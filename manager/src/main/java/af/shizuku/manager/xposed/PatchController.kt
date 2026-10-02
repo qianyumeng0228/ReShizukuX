@@ -21,6 +21,7 @@ import io.reshizukux.xposed.scan.XposedModuleInfo
 import rikka.shizuku.Shizuku
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 /**
  * One candidate target application for a patch job.
@@ -248,15 +249,45 @@ class PatchController(private val context: Context) {
     private fun install(apk: File) {
         val pkg = target?.packageName
         if (pkg != null) {
-            runCatching { installViaShizukuShell(apk, pkg) }
-                .onSuccess { ok -> if (ok) return@install }
+            try {
+                val ok = installViaShizukuShell(apk, pkg)
+                if (ok) return
+            } catch (fatal: FatalInstallException) {
+                // The original package was already uninstalled (-k) and the patched apk then
+                // failed to land. The PackageInstaller session path cannot recover a
+                // signature-mismatch state and would just mislead the user into thinking the app
+                // is still there — report the failure loudly and stop.
+                android.util.Log.e("LSPatch-Install", fatal.message, fatal)
+                installMessage = fatal.message
+                step = PatchStep.FAILED
+                return
+            } catch (e: Throwable) {
+                // Any other shell-route error (Shizuku down, push failed, ...) → fall through.
+                android.util.Log.w("LSPatch-Install", "shell route failed, falling back", e)
+            }
         }
         fallbackInstall(apk)
     }
 
     /**
-     * Shell-route install. Returns true only when `pm install` reported Success. Never throws:
-     * any exception is swallowed and mapped to a failed result so the caller falls back.
+     * Thrown when the original package has already been uninstalled (-k) but the patched apk then
+     * failed to install. The caller must NOT fall back to [fallbackInstall] in this state.
+     */
+    private class FatalInstallException(message: String) : Exception(message)
+
+    /**
+     * Shell-route install. Returns true only when `pm install` reported Success.
+     *
+     * Order matters: we never uninstall the original package before we know a fresh install can
+     * land. Steps:
+     *   1. push the apk to /data/local/tmp
+     *   2. if the target is installed, first try `pm install -r` (overwrite) — when the signing
+     *      key already matches (e.g. re-patching with the same LSPatch key) this succeeds and user
+     *      data is untouched.
+     *   3. only if that overwrite fails (INSTALL_FAILED_UPDATE_INCOMPATIBLE / signature mismatch)
+     *      do we `pm uninstall -k <pkg>` and retry the install.
+     *   4. if that retry also fails, the original package is gone — throw [FatalInstallException]
+     *      so the UI tells the user to reinstall manually instead of silently falling back.
      */
     private fun installViaShizukuShell(apk: File, pkg: String): Boolean {
         val tmpPath = "/data/local/tmp/lspatch-patched-${System.currentTimeMillis()}.apk"
@@ -267,34 +298,69 @@ class PatchController(private val context: Context) {
                 installMessage = context.getString(R.string.xposed_push_apk_failed, push.second.trim().take(200))
                 return false
             }
-            // 2. is the target already installed? If so, remove it (keeping user data) so the
-            //    patched signature can take over without an UPDATE_INCOMPATIBLE mismatch.
+
+            fun installOk(result: Pair<Int, String>): Boolean =
+                result.first == 0 && result.second.trim().contains("Success", ignoreCase = true)
+
+            // 2. is the target already installed?
             val installed = try {
                 context.packageManager.getPackageInfo(pkg, 0)
                 true
             } catch (_: PackageManager.NameNotFoundException) {
                 false
             }
-            if (installed) {
-                val un = shExec("pm uninstall -k '$pkg'", timeoutSec = 120)
-                // An updated system app uninstall of the *update* may be tolerated even if it's nonzero;
-                // we only gate on the final install step below.
-                logLines.add("[i] pm uninstall -k $pkg -> exit ${un.first} ${un.second.trim().take(80)}")
+
+            if (!installed) {
+                // Fresh target: just install.
+                val ins = shExec("pm install -r '$tmpPath'", timeoutSec = 300)
+                shExec("rm -f '$tmpPath'", timeoutSec = 10)
+                return if (installOk(ins)) {
+                    installMessage = context.getString(R.string.xposed_install_shell_success)
+                    step = PatchStep.DONE
+                    true
+                } else {
+                    installMessage = context.getString(
+                        R.string.xposed_install_shell_failed, ins.first, ins.second.trim().take(200)
+                    )
+                    false
+                }
             }
-            // 3. install the patched apk.
-            val ins = shExec("pm install -r '$tmpPath'", timeoutSec = 300)
-            shExec("rm -f '$tmpPath'", timeoutSec = 10)
-            val out = ins.second.trim()
-            if (ins.first == 0 && out.contains("Success", ignoreCase = true)) {
-                installMessage = context.getString(R.string.xposed_install_shell_success) +
-                    if (installed) context.getString(R.string.xposed_install_shell_success_keep) else ""
+
+            // 3a. Target is installed: try an overwrite first, WITHOUT removing the original.
+            val first = shExec("pm install -r '$tmpPath'", timeoutSec = 300)
+            if (installOk(first)) {
+                shExec("rm -f '$tmpPath'", timeoutSec = 10)
+                installMessage = context.getString(R.string.xposed_install_shell_success)
                 step = PatchStep.DONE
-                true
-            } else {
-                installMessage = context.getString(R.string.xposed_install_shell_failed, ins.first, out.take(200))
-                // Continue to fallback; leave step to the fallback to set.
-                false
+                return true
             }
+            logLines.add("[i] pm install -r -> exit ${first.first} ${first.second.trim().take(120)}")
+
+            // 3b. Overwrite failed (almost always INSTALL_FAILED_UPDATE_INCOMPATIBLE: patched key
+            //     != original key). Only now remove the original package (keeping user data).
+            val un = shExec("pm uninstall -k '$pkg'", timeoutSec = 120)
+            logLines.add("[i] pm uninstall -k $pkg -> exit ${un.first} ${un.second.trim().take(80)}")
+
+            // 3c. Install the patched apk under the patched signature.
+            val second = shExec("pm install -r '$tmpPath'", timeoutSec = 300)
+            shExec("rm -f '$tmpPath'", timeoutSec = 10)
+            if (installOk(second)) {
+                installMessage = context.getString(R.string.xposed_install_shell_success) +
+                    context.getString(R.string.xposed_install_shell_success_keep)
+                step = PatchStep.DONE
+                return true
+            }
+
+            // 4. The original package is gone but the patched apk did not land. Do NOT fall back:
+            //    surface this loudly so the user knows their app was uninstalled.
+            throw FatalInstallException(
+                "原包 $pkg 已卸载（保留用户数据），但 patched apk 安装失败：" +
+                    "exit=${second.first} out=${second.second.trim().take(200)}。" +
+                    "请手动重装原应用后再试。"
+            )
+        } catch (fatal: FatalInstallException) {
+            // Re-throw untouched so the caller does not fall back to the session installer.
+            throw fatal
         } catch (e: Throwable) {
             android.util.Log.w("LSPatch-Install", "shell route failed, falling back", e)
             installMessage = context.getString(
@@ -329,15 +395,58 @@ class PatchController(private val context: Context) {
         val stderrBuf = ByteArrayOutputStream()
         val tOut = pump(process.inputStream, stdoutBuf)
         val tErr = pump(process.errorStream, stderrBuf)
-        val code = try {
-            process.waitFor()
-        } catch (e: Exception) {
-            try { process.destroy() } catch (_: Exception) {}
-            -1
-        }
+        val code = waitForProcess(process, timeoutSec)
         tOut.join(1000)
         tErr.join(1000)
         return code to (stdoutBuf.toString(Charsets.UTF_8.name()) + stderrBuf.toString(Charsets.UTF_8.name()))
+    }
+
+    /**
+     * Waits for [process] to exit, enforcing [timeoutSec]. Returns the exit code, or 124 when the
+     * process outlived the timeout and was forcibly killed.
+     *
+     * [Process.waitFor(long, TimeUnit)] / [Process.destroyForcibly] only exist on API 26+; the
+     * project minSdk is 24, so on older devices we park a daemon thread on the no-timeout
+     * [Process.waitFor] and join it with the timeout — if it hasn't finished we destroy (the best
+     * available kill on API 24/25) and report 124.
+     */
+    private fun waitForProcess(process: Process, timeoutSec: Long): Int {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return try {
+                val finished = process.waitFor(timeoutSec, TimeUnit.SECONDS)
+                if (finished) {
+                    process.exitValue()
+                } else {
+                    android.util.Log.w("LSPatch-shExec", "timed out after ${timeoutSec}s; killing process")
+                    process.destroyForcibly()
+                    process.waitFor()
+                    124
+                }
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                runCatching { process.destroyForcibly() }
+                -1
+            }
+        }
+        // API 24-25 fallback: daemon thread blocks on the unbounded waitFor, we join with a timeout.
+        val waiter = Thread({
+            runCatching { process.waitFor() }
+        }, "lspatch-sh-waiter").apply { isDaemon = true; start() }
+        return try {
+            waiter.join(timeoutSec * 1000)
+            if (waiter.isAlive) {
+                android.util.Log.w("LSPatch-shExec", "timed out after ${timeoutSec}s; killing process")
+                runCatching { process.destroy() }
+                waiter.join(2000)
+                124
+            } else {
+                runCatching { process.exitValue() }.getOrDefault(-1)
+            }
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+            runCatching { process.destroy() }
+            -1
+        }
     }
 
     private fun pump(input: java.io.InputStream, sink: ByteArrayOutputStream): Thread {

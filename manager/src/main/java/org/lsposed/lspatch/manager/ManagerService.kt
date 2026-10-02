@@ -49,6 +49,17 @@ object ManagerService : IFrameworkService.Stub() {
     }
 
     /**
+     * Whitelist gate: only patched apps that actually live in [ScopeStore] may talk to this
+     * service. Without it any app could bind [org.lsposed.lspatch.manager.ModuleService] and
+     * call [openManagerApk] to read the manager's own apk (code + resources), or enumerate
+     * modules via [getModules]/[getLegacyModules].
+     */
+    private fun isAllowedCaller(pkg: String?): Boolean {
+        if (pkg == null) return false
+        return runCatching { ScopeStore.targets(appContext).contains(pkg) }.getOrDefault(false)
+    }
+
+    /**
      * The [LoadedModule]s the caller's patched app has scoped, split modern vs legacy. Each scoped
      * module package is read out of its installed apk and only served when its kind matches
      * [legacy]; a module of the other kind is closed and skipped.
@@ -73,12 +84,20 @@ object ManagerService : IFrameworkService.Stub() {
     override fun isLogMuted(): Boolean = false
 
     override fun getLegacyModules(): List<LoadedModule> {
+        if (!isAllowedCaller(callerPackage())) {
+            Log.w(TAG, "getLegacyModules: caller not a patched app, returning empty (uid=${Binder.getCallingUid()})")
+            return emptyList()
+        }
         val list = callerModules(legacy = true)
         Log.d(TAG, "getLegacyModules: ${list.map { it.packageName }}")
         return list
     }
 
     override fun getModules(): List<LoadedModule> {
+        if (!isAllowedCaller(callerPackage())) {
+            Log.w(TAG, "getModules: caller not a patched app, returning empty (uid=${Binder.getCallingUid()})")
+            return emptyList()
+        }
         val list = callerModules(legacy = false)
         Log.d(TAG, "getModules: ${list.map { it.packageName }}")
         // Record which modules this host process runs, so a later scope toggle can find it as a
@@ -90,11 +109,20 @@ object ManagerService : IFrameworkService.Stub() {
     override fun getPrefsPath(packageName: String): String =
         File(Environment.getDataDirectory(), "data/$packageName/shared_prefs/").absolutePath
 
-    override fun openManagerApk(): ParcelFileDescriptor? = runCatching {
-        ParcelFileDescriptor.open(
-            File(appContext.applicationInfo.sourceDir), ParcelFileDescriptor.MODE_READ_ONLY
-        )
-    }.onFailure { Log.e(TAG, "openManagerApk failed", it) }.getOrNull()
+    override fun openManagerApk(): ParcelFileDescriptor? {
+        // Hard gate: handing out the manager apk's PFD lets the caller read the manager's entire
+        // code/resources. Only whitelisted patched apps may ask for it.
+        val pkg = callerPackage()
+        if (!isAllowedCaller(pkg)) {
+            Log.w(TAG, "openManagerApk denied for uid=${Binder.getCallingUid()} pkg=$pkg")
+            throw SecurityException("caller not a patched app")
+        }
+        return runCatching {
+            ParcelFileDescriptor.open(
+                File(appContext.applicationInfo.sourceDir), ParcelFileDescriptor.MODE_READ_ONLY
+            )
+        }.onFailure { Log.e(TAG, "openManagerApk failed", it) }.getOrNull()
+    }
 
     override fun requestManagerService(): IBinder? = null
 
