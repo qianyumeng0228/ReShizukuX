@@ -521,8 +521,19 @@
             </intent-filter>
         </receiver>
 
+        <!-- ReShizukuX LSPatch Manager-mode IPC: the precompiled loader.dex baked into a patched
+             app binds here by explicit ComponentName
+             (ComponentName("moe.shizuku.privileged.api", "org.lsposed.lspatch.manager.ModuleService"))
+             and receives an IFrameworkService binder back. Exported on purpose: the whole point
+             is that a separate, untrusted patched process can bind, and ungated on the upstream
+             model (authentication is a TODO upstream too): every call resolves the caller by
+             Binder.getCallingUid() and serves only that uid's scoped modules. -->
         <service
-            android:name=".adb.AdbPairingService"
+            android:name="org.lsposed.lspatch.manager.ModuleService"
+            android:exported="true" />
+
+        <service
+            android:name=".service.AdbPairingService"
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
 

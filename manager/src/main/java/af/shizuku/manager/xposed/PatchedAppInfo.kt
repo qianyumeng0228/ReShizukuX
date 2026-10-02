@@ -18,6 +18,13 @@ data class PatchedAppInfo(
     val packageName: String,
     val patchedTimestamp: Long,
     val modulePackageNames: List<String> = emptyList(),
+    /**
+     * True when this patch was built in Manager mode (useManager=true): modules are served live by
+     * this manager over IPC, so the "manage scope" UI applies and toggling a module takes effect on
+     * the next launch. False for Integrated patches, where the modules in [modulePackageNames] were
+     * baked into the apk and the scope table does not apply.
+     */
+    val useManager: Boolean = false,
 )
 
 /**

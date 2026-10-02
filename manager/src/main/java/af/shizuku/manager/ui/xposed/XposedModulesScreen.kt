@@ -14,12 +14,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -37,6 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import af.shizuku.manager.xposed.PatchedAppInfo
+import af.shizuku.manager.xposed.ScopeStore
 import io.reshizukux.xposed.scan.XposedModuleInfo
 import io.reshizukux.xposed.scan.XposedModuleScanner
 import kotlinx.coroutines.Dispatchers
@@ -161,6 +164,7 @@ private fun PatchedAppCard(
     }
 
     var menuOpen by remember { mutableStateOf(false) }
+    var scopeOpen by remember { mutableStateOf(false) }
 
     Card(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -197,18 +201,27 @@ private fun PatchedAppCard(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                val n = info.modulePackageNames.size
-                Text(
-                    "已嵌入 $n 个模块",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                if (n > 0) {
+                if (info.useManager) {
+                    val n = ScopeStore.modulesFor(context, info.packageName).size
                     Text(
-                        info.modulePackageNames.joinToString(", "),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        "Manager 模式 · 已授权 $n 个模块",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
                     )
+                } else {
+                    val n = info.modulePackageNames.size
+                    Text(
+                        "已嵌入 $n 个模块",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    if (n > 0) {
+                        Text(
+                            info.modulePackageNames.joinToString(", "),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
             Box {
@@ -216,6 +229,12 @@ private fun PatchedAppCard(
                     Text("⋮", style = MaterialTheme.typography.titleMedium)
                 }
                 DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                    if (info.useManager) {
+                        DropdownMenuItem(
+                            text = { Text("管理作用域") },
+                            onClick = { menuOpen = false; scopeOpen = true }
+                        )
+                    }
                     DropdownMenuItem(
                         text = { Text("卸载 patched APK") },
                         onClick = { menuOpen = false; onUninstall() }
@@ -228,6 +247,76 @@ private fun PatchedAppCard(
             }
         }
     }
+
+    if (scopeOpen) {
+        ScopeManageDialog(targetPackage = info.packageName, onDismiss = { scopeOpen = false })
+    }
+}
+
+/**
+ * Manager-mode scope editor for one patched app: lists every installed Xposed module with a
+ * switch, persisting the on/off set to [ScopeStore]. The patched app reads this table on its next
+ * launch through the IPC ModuleService -- so after changing anything the user must force-stop the
+ * target app, which the dialog says out loud.
+ */
+@Composable
+private fun ScopeManageDialog(targetPackage: String, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    var modules by remember { mutableStateOf<List<XposedModuleInfo>>(emptyList()) }
+    var enabled by remember(targetPackage) {
+        mutableStateOf(ScopeStore.modulesFor(context, targetPackage))
+    }
+
+    LaunchedEffect(targetPackage) {
+        modules = withContext(Dispatchers.IO) {
+            runCatching { XposedModuleScanner(context.packageManager).scan() }.getOrDefault(emptyList())
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("管理作用域：$targetPackage") },
+        text = {
+            Column {
+                if (modules.isEmpty()) {
+                    Text("未检测到 Xposed 模块", style = MaterialTheme.typography.bodyMedium)
+                } else {
+                    modules.forEach { mod ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(mod.name, style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    mod.packageName,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = mod.packageName in enabled,
+                                onCheckedChange = { want ->
+                                    enabled = ScopeStore.setModuleEnabled(
+                                        context, targetPackage, mod.packageName, want
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    "改完后请强制停止目标 App，下次启动时按新作用域加载模块。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("完成") }
+        }
+    )
 }
 
 @Composable

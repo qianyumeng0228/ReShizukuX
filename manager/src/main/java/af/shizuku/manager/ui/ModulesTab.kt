@@ -459,13 +459,15 @@ fun ModulesTab() {
                         controller = patchController,
                         onFinished = { pkg ->
                             pkg?.let { p ->
-                                // Record which modules were baked into this patch.
+                                // Record which modules were baked into this patch (Integrated),
+                                // and whether this was a Manager-mode patch (scope managed live).
                                 af.shizuku.manager.xposed.PatchedAppStore.saveDetail(
                                     context,
                                     af.shizuku.manager.xposed.PatchedAppInfo(
                                         packageName = p,
                                         patchedTimestamp = System.currentTimeMillis(),
                                         modulePackageNames = patchController.selectedModules.map { it.packageName },
+                                        useManager = patchController.mode == af.shizuku.manager.xposed.PatchMode.MANAGER,
                                     )
                                 )
                                 val cur = af.shizuku.manager.xposed.PatchedAppStore.loadPackages(context)

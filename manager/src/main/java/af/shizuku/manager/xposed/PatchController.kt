@@ -162,7 +162,13 @@ class PatchController(private val context: Context) {
                 .outputDir(outDir)
                 .useManager(useManager)
                 .forceOverwrite(true)
-            if (!useManager) {
+            if (useManager) {
+                // The patched app's metaloader reads config.json, sees useManager=true, and binds
+                // to this package for its modules. Without this it would fall back to the upstream
+                // default "org.lsposed.lspatch" -- a package that does not exist on this device, so
+                // the app would start unhooked. context.packageName IS moe.shizuku.privileged.api.
+                builder.managerPackageName(context.packageName)
+            } else {
                 selectedModules.forEach { builder.module(File(it.apkPath)) }
             }
             builder.build()

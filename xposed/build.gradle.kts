@@ -16,6 +16,14 @@ plugins {
 
 android {
     namespace = "io.reshizukux.xposed"
+
+    buildFeatures {
+        // Generates the org.matrix.vector.ipc.* AIDL stubs the precompiled loader.dex speaks
+        // over (IFrameworkService / IProcessChannel / IModuleService). The manager app (:manager)
+        // depends on this library, so the generated stubs ship inside the manager APK and the
+        // exported ModuleService can hand out a matching IFrameworkService.Stub to patched apps.
+        aidl = true
+    }
 }
 
 dependencies {
