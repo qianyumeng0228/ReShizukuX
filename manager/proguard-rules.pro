@@ -157,3 +157,8 @@
 -keep class com.wind.meditor.** { *; }
 -keep class pxb.android.axml.** { *; }
 -keep class io.reshizukux.xposed.** { *; }
+
+# Manager-mode IPC surface the precompiled loader.dex speaks over: AIDL stubs (transaction order)
+# and the LoadedModule/ModuleCode Parcelables (on-wire field order). R8 must not rename, shrink or
+# reorder any of them -- an already-patched app deserializes these by wire order, not by name.
+-keep class org.matrix.vector.ipc.** { *; }

@@ -37,13 +37,34 @@ public final class LoadedModule implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        // Same AIDL-generated size-prefix layout as ModuleCode (verified against loader.dex):
+        // leading int size placeholder, fields, then backfill size. code/applicationInfo are nested
+        // parcelables written with a 0/1 presence int each (the loader reads them via
+        // _Parcel.readTypedObject). writeParcelable()/writeStrongBinder-as-polymorphic would emit a
+        // concrete class name string first and break the alignment.
+        int start = dest.dataPosition();
+        dest.writeInt(0);
         dest.writeString(packageName);
         dest.writeInt(appId);
         dest.writeLong(versionCode);
         dest.writeString(apkPath);
-        dest.writeParcelable(code, flags);
-        dest.writeParcelable(applicationInfo, flags);
+        if (code != null) {
+            dest.writeInt(1);
+            code.writeToParcel(dest, flags);
+        } else {
+            dest.writeInt(0);
+        }
+        if (applicationInfo != null) {
+            dest.writeInt(1);
+            applicationInfo.writeToParcel(dest, flags);
+        } else {
+            dest.writeInt(0);
+        }
         dest.writeStrongBinder(service != null ? service.asBinder() : null);
+        int end = dest.dataPosition();
+        dest.setDataPosition(start);
+        dest.writeInt(end - start);
+        dest.setDataPosition(end);
     }
 
     public static final Creator<LoadedModule> CREATOR = new Creator<LoadedModule>() {

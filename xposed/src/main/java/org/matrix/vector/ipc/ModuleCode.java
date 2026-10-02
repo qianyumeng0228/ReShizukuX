@@ -36,7 +36,29 @@ public final class ModuleCode implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeList(preLoadedDexes);
+        // Exact AIDL-generated on-wire layout (verified against the precompiled loader.dex):
+        // a leading int size-prefix placeholder, then the fields, then backfill the size. The
+        // precompiled readFromParcel() reads the size first and bounds every subsequent read against
+        // it -- omitting the size prefix makes the loader misread our first field as the parcelable
+        // size and lands on the SharedMemory list read at a wrong offset, surfacing as
+        // "Unable to create SharedMemory from a null FileDescriptor".
+        int start = dest.dataPosition();
+        dest.writeInt(0);
+        // preLoadedDexes: count int, then per element a 0/1 presence int followed by the
+        // SharedMemory's own writeToParcel() (which emits the file descriptor).
+        if (preLoadedDexes == null) {
+            dest.writeInt(-1);
+        } else {
+            dest.writeInt(preLoadedDexes.size());
+            for (SharedMemory dex : preLoadedDexes) {
+                if (dex == null) {
+                    dest.writeInt(0);
+                } else {
+                    dest.writeInt(1);
+                    dex.writeToParcel(dest, flags);
+                }
+            }
+        }
         dest.writeStringList(moduleClassNames);
         dest.writeStringList(moduleLibraryNames);
         dest.writeInt(legacy ? 1 : 0);
@@ -44,6 +66,10 @@ public final class ModuleCode implements Parcelable {
         dest.writeInt(autoHotReload ? 1 : 0);
         dest.writeInt(exceptionPassthrough ? 1 : 0);
         dest.writeString(nativeLibraryDir);
+        int end = dest.dataPosition();
+        dest.setDataPosition(start);
+        dest.writeInt(end - start);
+        dest.setDataPosition(end);
     }
 
     public static final Creator<ModuleCode> CREATOR = new Creator<ModuleCode>() {

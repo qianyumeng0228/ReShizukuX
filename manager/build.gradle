@@ -78,6 +78,12 @@ android {
             excludes += ["**"]
         }
     }
+    // Manager 模式下，patched 应用的 metaloader 直接从本 apk 的
+    // assets/lspatch/so/<abi>/liblspatch.so 里 dlopen。
+    // 动态链接器只能 mmap 未压缩且页对齐的 .so，因此 .so 必须 STORED。
+    androidResources {
+        noCompress += [".so"]
+    }
     dependenciesInfo {
         includeInApk = false
     }

@@ -29,6 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,7 +44,9 @@ import af.shizuku.manager.xposed.ScopeStore
 import io.reshizukux.xposed.scan.XposedModuleInfo
 import io.reshizukux.xposed.scan.XposedModuleScanner
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.lsposed.lspatch.manager.HotReloadRegistry
 
 /**
  * The "Xposed 模块" category of the Modules tab.
@@ -262,6 +265,7 @@ private fun PatchedAppCard(
 @Composable
 private fun ScopeManageDialog(targetPackage: String, onDismiss: () -> Unit) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var modules by remember { mutableStateOf<List<XposedModuleInfo>>(emptyList()) }
     var enabled by remember(targetPackage) {
         mutableStateOf(ScopeStore.modulesFor(context, targetPackage))
@@ -300,6 +304,16 @@ private fun ScopeManageDialog(targetPackage: String, onDismiss: () -> Unit) {
                                     enabled = ScopeStore.setModuleEnabled(
                                         context, targetPackage, mod.packageName, want
                                     )
+                                    // Best-effort: if the patched app is already running, push a hot
+                                    // reload into it off the UI thread; otherwise the change still
+                                    // lands on the next launch (the hint below says so).
+                                    scope.launch(Dispatchers.IO) {
+                                        runCatching {
+                                            HotReloadRegistry.notifyScopeChanged(
+                                                context.packageManager, targetPackage, mod.packageName, want
+                                            )
+                                        }
+                                    }
                                 }
                             )
                         }

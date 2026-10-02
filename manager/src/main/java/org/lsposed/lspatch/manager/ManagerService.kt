@@ -21,11 +21,11 @@ import java.io.File
  * caller from [Binder.getCallingUid] (onBind itself does not run inside the calling transaction,
  * which is why identity is established here, not in onBind).
  *
- * Minimum-viable scope: the connection comes up and `getModules()` answers an empty list. The
- * scope table ([ScopeStore]) is read and logged so the plumbing is observable; actually handing a
- * real [LoadedModule] -- mapping the module apk's dex into shared memory and building its
- * [org.matrix.vector.ipc.ModuleCode] -- is the daemon's job and lands in a later phase. An empty
- * list is what the loader expects when no module is scoped anyway, so a patched app starts clean.
+ * Real module delivery: `getModules()` / `getLegacyModules()` resolve the patched app from the
+ * calling uid, read its row out of [ScopeStore], and for each scoped module package build a fresh
+ * [LoadedModule] -- the module apk's dexes mapped into shared memory by [ModuleApkLoader] -- exactly
+ * like LSPatch's `ConfigManager.getModuleFilesForApp`. A caller can only ever read its own modules,
+ * and a fresh generation is built per request because the framework consumes the shared memory.
  */
 object ManagerService : IFrameworkService.Stub() {
 
@@ -48,28 +48,43 @@ object ManagerService : IFrameworkService.Stub() {
         }
     }
 
-    /** The module packages the user scoped to [app], split modern vs legacy. */
-    private fun scopedModules(app: String, legacy: Boolean): Set<String> {
-        val all = ScopeStore.modulesFor(appContext, app)
-        // The modern/legacy split needs XposedModuleScanner to classify each package; for the
-        // minimum-viable connection we just report the whole set the user scoped, and serve no
-        // concrete LoadedModule yet. Both directions return an empty list below.
-        Log.d(TAG, "scoped for $app (legacy=$legacy): $all")
-        return emptySet()
+    /**
+     * The [LoadedModule]s the caller's patched app has scoped, split modern vs legacy. Each scoped
+     * module package is read out of its installed apk and only served when its kind matches
+     * [legacy]; a module of the other kind is closed and skipped.
+     */
+    private fun callerModules(legacy: Boolean): List<LoadedModule> {
+        val app = callerPackage() ?: return emptyList()
+        val scoped = ScopeStore.modulesFor(appContext, app)
+        if (scoped.isEmpty()) {
+            Log.d(TAG, "no modules scoped for $app (legacy=$legacy)")
+            return emptyList()
+        }
+        val pm = appContext.packageManager
+        val served = scoped.mapNotNull { modulePkg ->
+            runCatching { ModuleApkLoader.buildLoadedModule(pm, modulePkg, legacy) }
+                .onFailure { Log.w(TAG, "failed to build module $modulePkg for $app", it) }
+                .getOrNull()
+        }
+        Log.d(TAG, "serving ${served.size}/${scoped.size} module(s) to $app (legacy=$legacy): ${served.map { it.packageName }}")
+        return served
     }
 
     override fun isLogMuted(): Boolean = false
 
     override fun getLegacyModules(): List<LoadedModule> {
-        val app = callerPackage() ?: return emptyList()
-        scopedModules(app, legacy = true)
-        return emptyList()
+        val list = callerModules(legacy = true)
+        Log.d(TAG, "getLegacyModules: ${list.map { it.packageName }}")
+        return list
     }
 
     override fun getModules(): List<LoadedModule> {
-        val app = callerPackage() ?: return emptyList()
-        scopedModules(app, legacy = false)
-        return emptyList()
+        val list = callerModules(legacy = false)
+        Log.d(TAG, "getModules: ${list.map { it.packageName }}")
+        // Record which modules this host process runs, so a later scope toggle can find it as a
+        // hot-reload target.
+        HotReloadRegistry.recordModules(Binder.getCallingUid(), Binder.getCallingPid(), list.map { it.packageName })
+        return list
     }
 
     override fun getPrefsPath(packageName: String): String =
@@ -84,12 +99,12 @@ object ManagerService : IFrameworkService.Stub() {
     override fun requestManagerService(): IBinder? = null
 
     override fun attachProcessChannel(channel: IProcessChannel?) {
-        // Hot reload target registration. The channel the patched app hands back is kept so the
-        // manager could later drive a reload into it; for the minimum-viable connection we only
-        // record that it attached. Dropping it here is fine -- the app rebinds and re-attaches on
-        // its next launch.
+        if (channel == null) return
         val uid = Binder.getCallingUid()
         val pid = Binder.getCallingPid()
-        Log.d(TAG, "process channel attached by uid=$uid pid=$pid (hot reload not driven yet)")
+        val name = callerPackage() ?: "uid$uid"
+        // The host's way back in, kept in the registry so the manager can drive a hot reload into
+        // it; dropped when the channel dies.
+        HotReloadRegistry.attach(uid, pid, name, channel)
     }
 }
