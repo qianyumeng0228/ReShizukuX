@@ -43,15 +43,21 @@ object ScopeStore {
             .apply()
     }
 
+    // 所有公开读写方法都在 ScopeStore 单例 monitor 上同步：UI 线程可能调 modulesFor/setModuleEnabled，
+    // 而 patched-app 的 Binder 调用线程可能并发读同一张表，读改写（load→modify→save）必须原子。
+
     /** Module package names the user scoped to [targetPackageName]; empty when none. */
+    @Synchronized
     fun modulesFor(context: Context, targetPackageName: String): Set<String> =
         load(context).targets[targetPackageName].orEmpty()
 
     /** Every target package that has at least one module scoped to it. */
+    @Synchronized
     fun targets(context: Context): Set<String> =
         load(context).targets.filterValues { it.isNotEmpty() }.keys.toSet()
 
     /** Enables or disables [modulePackageName] for [targetPackageName]; returns the new set. */
+    @Synchronized
     fun setModuleEnabled(
         context: Context,
         targetPackageName: String,
@@ -68,6 +74,7 @@ object ScopeStore {
     }
 
     /** Drops every row for [targetPackageName] (e.g. when the patched app is uninstalled). */
+    @Synchronized
     fun removeTarget(context: Context, targetPackageName: String) {
         val table = load(context)
         if (!table.targets.containsKey(targetPackageName)) return

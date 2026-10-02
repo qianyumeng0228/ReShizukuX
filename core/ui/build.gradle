@@ -5,7 +5,9 @@ plugins {
 
 android {
     namespace = "af.shizuku.core.ui"
-    compileSdk = 35
+    // 与根 build.gradle subprojects 统一设定的 compileSdk=37 对齐；此前写死 35 与 :common 冲突。
+    // minSdk=24、targetSdk=37 由根项目 subprojects 默认值统一提供，此处不显式覆盖。
+    compileSdk = 37
 
     defaultConfig {
         minSdk = 24

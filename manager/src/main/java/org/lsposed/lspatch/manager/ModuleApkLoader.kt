@@ -66,22 +66,38 @@ object ModuleApkLoader {
             runCatching {
                 // SharedMemory.create takes an int size; a classesN.dex is orders of magnitude under 2GB.
                 val memory = SharedMemory.create(null, size.toInt())
-                val buffer = memory.mapReadWrite()
-                apk.getInputStream(dex).use { input ->
-                    val channel = Channels.newChannel(input)
-                    // Stop as soon as the region is full: the buffer is exactly dex.size bytes and the
-                    // stream decompresses to exactly that. Reading past a full MappedByteBuffer makes
-                    // ReadableByteChannelImpl.read() return 0 forever (it has no backing array, so once
-                    // dst.remaining()==0 each read reads 0 bytes and never signals EOF) -- a busy-loop
-                    // that pinned a binder thread at 100% CPU and ANR-killed the patched app.
-                    while (buffer.hasRemaining()) {
-                        if (channel.read(buffer) == -1) break
+                // Guard the region: create() succeeds, but mapReadWrite()/stream-copy/setProtect may
+                // still throw. Without this finally the SharedMemory fd (and any already-mapped buffer)
+                // leaks on the binder thread for every failed dex.
+                var mapped = false
+                var handedOver = false
+                try {
+                    val buffer = memory.mapReadWrite()
+                    mapped = true
+                    try {
+                        apk.getInputStream(dex).use { input ->
+                            val channel = Channels.newChannel(input)
+                            // Stop as soon as the region is full: the buffer is exactly dex.size bytes and the
+                            // stream decompresses to exactly that. Reading past a full MappedByteBuffer makes
+                            // ReadableByteChannelImpl.read() return 0 forever (it has no backing array, so once
+                            // dst.remaining()==0 each read reads 0 bytes and never signals EOF) -- a busy-loop
+                            // that pinned a binder thread at 100% CPU and ANR-killed the patched app.
+                            while (buffer.hasRemaining()) {
+                                if (channel.read(buffer) == -1) break
+                            }
+                        }
+                        SharedMemory.unmap(buffer)
+                        mapped = false
+                        memory.setProtect(OsConstants.PROT_READ)
+                        out.add(memory)
+                        handedOver = true
+                        Log.i(TAG, "mapped ${dex.name} size=$size bytes into SharedMemory")
+                    } finally {
+                        if (mapped) SharedMemory.unmap(buffer)
                     }
+                } finally {
+                    if (!handedOver) memory.close()
                 }
-                SharedMemory.unmap(buffer)
-                memory.setProtect(OsConstants.PROT_READ)
-                out.add(memory)
-                Log.i(TAG, "mapped ${dex.name} size=$size bytes into SharedMemory")
             }.onFailure {
                 Log.w(TAG, "Can not load ${dex.name} in ${apk.name}", it)
             }

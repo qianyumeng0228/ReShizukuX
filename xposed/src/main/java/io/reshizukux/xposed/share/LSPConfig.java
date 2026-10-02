@@ -29,7 +29,8 @@ public class LSPConfig {
         instance = new LSPConfig();
         instance.API_CODE = 0;
         instance.VERSION_CODE = 0;
-        instance.VERSION_NAME = "phase1-placeholder";
+        // xposed 是 library 且未开启 BuildConfig，直接硬编码与根版本号一致；不再使用 "phase1-placeholder"。
+        instance.VERSION_NAME = "14.0.0-beta2";
         instance.CORE_VERSION_CODE = 0;
         instance.CORE_VERSION_NAME = "phase1-placeholder";
         instance.CORE_VERSION_HASH = "";

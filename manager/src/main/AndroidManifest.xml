@@ -36,7 +36,14 @@
         tools:targetApi="33" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <!-- Required by the LSPatch/Xposed module scanner: XposedModuleScanner must enumerate every
+         installed application to detect module entry points (META-INF/xposed/ or assets/xposed_init)
+         and list candidate patch targets. Package visibility filtering on Android 11+ would otherwise
+         hide non-launcher apps. tools:ignore suppresses the Play-data-safety lint warning; this build
+         is sideloaded, not distributed through Play. -->
+    <uses-permission
+        android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission" />
 
     <!-- Chinese ROMs (MIUI/HyperOS) gate QUERY_ALL_PACKAGES behind an extra runtime-granted "get installed apps" special access. Declared so it can be requested at runtime; on stock AOSP the permission does not exist and the request is skipped. -->
     <uses-permission android:name="com.android.permission.GET_INSTALLED_APPS" />

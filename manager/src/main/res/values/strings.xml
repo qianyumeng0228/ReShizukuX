@@ -1836,4 +1836,28 @@ Please try the command-line method instead.</string>
 
     <!-- ReShizukuX home/tab/permission strings -->
     <string name="rsx_home_perm_not_granted">Not granted</string>
+
+    <!-- ReShizukuX Xposed/LSPatch patching wizard + module list. Default value is the Chinese UI
+         text currently shown on screen; no per-locale translations yet (phase 1). -->
+    <string name="xposed_push_apk_failed">推送 APK 到 /data/local/tmp 失败：%1$s</string>
+    <string name="xposed_install_shell_success">安装成功：已通过 Shell 替换原包</string>
+    <string name="xposed_install_shell_success_keep">（已保留用户数据）</string>
+    <string name="xposed_install_shell_failed">Shell 安装失败（exit=%1$d）：%2$s</string>
+    <string name="xposed_install_shell_exception">Shell 安装异常：%1$s，尝试 Session 方式</string>
+    <string name="xposed_install_session_submitted">已提交安装：%1$s</string>
+    <string name="xposed_install_session_commit_success">安装成功（Session 提交完成）</string>
+    <string name="xposed_install_session_commit_failed">Session 安装失败：%1$s</string>
+    <string name="xposed_install_session_failed">生成成功，但静默安装失败：%1$s</string>
+    <string name="xposed_modules_installed_title">已安装 Xposed 模块</string>
+    <string name="xposed_modules_none">未检测到 Xposed 模块</string>
+    <string name="xposed_patched_apps_title">已 patch 的应用</string>
+    <string name="xposed_patched_apps_empty">暂无已 patch 应用</string>
+    <string name="xposed_manager_scope_count">Manager 模式 · 已授权 %1$d 个模块</string>
+    <string name="xposed_embedded_count">已嵌入 %1$d 个模块</string>
+    <string name="xposed_menu_manage_scope">管理作用域</string>
+    <string name="xposed_menu_uninstall">卸载 patched APK</string>
+    <string name="xposed_menu_repatch">重新 patch</string>
+    <string name="xposed_scope_title">管理作用域：%1$s</string>
+    <string name="xposed_scope_hint">改完后请强制停止目标 App，下次启动时按新作用域加载模块。</string>
+    <string name="xposed_done">完成</string>
 </resources>

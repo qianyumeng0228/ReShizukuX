@@ -37,8 +37,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
+import af.shizuku.manager.R
 import af.shizuku.manager.xposed.PatchedAppInfo
 import af.shizuku.manager.xposed.ScopeStore
 import io.reshizukux.xposed.scan.XposedModuleInfo
@@ -84,7 +86,7 @@ fun XposedModulesTabContent(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Text(
-            "已安装 Xposed 模块",
+            stringResource(R.string.xposed_modules_installed_title),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -99,7 +101,7 @@ fun XposedModulesTabContent(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "未检测到 Xposed 模块",
+                    stringResource(R.string.xposed_modules_none),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -117,7 +119,7 @@ fun XposedModulesTabContent(
 
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            "已 patch 的应用",
+            stringResource(R.string.xposed_patched_apps_title),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -127,7 +129,7 @@ fun XposedModulesTabContent(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "暂无已 patch 应用",
+                    stringResource(R.string.xposed_patched_apps_empty),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -207,14 +209,14 @@ private fun PatchedAppCard(
                 if (info.useManager) {
                     val n = ScopeStore.modulesFor(context, info.packageName).size
                     Text(
-                        "Manager 模式 · 已授权 $n 个模块",
+                        stringResource(R.string.xposed_manager_scope_count, n),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
                 } else {
                     val n = info.modulePackageNames.size
                     Text(
-                        "已嵌入 $n 个模块",
+                        stringResource(R.string.xposed_embedded_count, n),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -234,16 +236,16 @@ private fun PatchedAppCard(
                 DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                     if (info.useManager) {
                         DropdownMenuItem(
-                            text = { Text("管理作用域") },
+                            text = { Text(stringResource(R.string.xposed_menu_manage_scope)) },
                             onClick = { menuOpen = false; scopeOpen = true }
                         )
                     }
                     DropdownMenuItem(
-                        text = { Text("卸载 patched APK") },
+                        text = { Text(stringResource(R.string.xposed_menu_uninstall)) },
                         onClick = { menuOpen = false; onUninstall() }
                     )
                     DropdownMenuItem(
-                        text = { Text("重新 patch") },
+                        text = { Text(stringResource(R.string.xposed_menu_repatch)) },
                         onClick = { menuOpen = false; onRepatch() }
                     )
                 }
@@ -279,11 +281,11 @@ private fun ScopeManageDialog(targetPackage: String, onDismiss: () -> Unit) {
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("管理作用域：$targetPackage") },
+        title = { Text(stringResource(R.string.xposed_scope_title, targetPackage)) },
         text = {
             Column {
                 if (modules.isEmpty()) {
-                    Text("未检测到 Xposed 模块", style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.xposed_modules_none), style = MaterialTheme.typography.bodyMedium)
                 } else {
                     modules.forEach { mod ->
                         Row(
@@ -321,14 +323,14 @@ private fun ScopeManageDialog(targetPackage: String, onDismiss: () -> Unit) {
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    "改完后请强制停止目标 App，下次启动时按新作用域加载模块。",
+                    stringResource(R.string.xposed_scope_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("完成") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.xposed_done)) }
         }
     )
 }

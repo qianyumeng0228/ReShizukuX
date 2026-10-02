@@ -1,5 +1,6 @@
 package af.shizuku.manager.xposed
 
+import af.shizuku.manager.R
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
@@ -263,7 +264,7 @@ class PatchController(private val context: Context) {
             // 1. push apk bytes to a shell-readable path via stdin (app cache dir is off-limits to uid 2000).
             val push = shExec("cat > '$tmpPath'", stdinBytes = apk.readBytes(), timeoutSec = 180)
             if (push.first != 0) {
-                installMessage = "推送 APK 到 /data/local/tmp 失败：${push.second.trim().take(200)}"
+                installMessage = context.getString(R.string.xposed_push_apk_failed, push.second.trim().take(200))
                 return false
             }
             // 2. is the target already installed? If so, remove it (keeping user data) so the
@@ -285,17 +286,20 @@ class PatchController(private val context: Context) {
             shExec("rm -f '$tmpPath'", timeoutSec = 10)
             val out = ins.second.trim()
             if (ins.first == 0 && out.contains("Success", ignoreCase = true)) {
-                installMessage = "安装成功：已通过 Shell 替换原包" + if (installed) "（已保留用户数据）" else ""
+                installMessage = context.getString(R.string.xposed_install_shell_success) +
+                    if (installed) context.getString(R.string.xposed_install_shell_success_keep) else ""
                 step = PatchStep.DONE
                 true
             } else {
-                installMessage = "Shell 安装失败（exit=${ins.first}）：${out.take(200)}"
+                installMessage = context.getString(R.string.xposed_install_shell_failed, ins.first, out.take(200))
                 // Continue to fallback; leave step to the fallback to set.
                 false
             }
         } catch (e: Throwable) {
             android.util.Log.w("LSPatch-Install", "shell route failed, falling back", e)
-            installMessage = "Shell 安装异常：${e.message ?: e.javaClass.simpleName}，尝试 Session 方式"
+            installMessage = context.getString(
+                R.string.xposed_install_shell_exception, e.message ?: e.javaClass.simpleName
+            )
             false
         }
     }
@@ -357,21 +361,52 @@ class PatchController(private val context: Context) {
     /**
      * Silent-ish install via PackageInstaller.Session: when the caller holds install privilege
      * (Shizuku/shell context) the commit lands without user interaction; otherwise the system shows
-     * its own confirmation. Failure is reported, never thrown.
+     * its own confirmation.
+     *
+     * commit() is asynchronous and only *enqueues* the session: the real result (STATUS_SUCCESS vs
+     * STATUS_FAILURE + message) is delivered back through the PendingIntent broadcast. Previously we
+     * set [PatchStep.DONE] immediately and even on the exception path, so a failed session was reported
+     * as success. Now a one-shot [BroadcastReceiver] observes the broadcast and flips DONE/FAILED on
+     * the actual status; any synchronous throw abandons the session and reports FAILED.
      */
     private fun fallbackInstall(apk: File) {
+        val action = "${context.packageName}.lspatch.INSTALL_COMMITTED"
+        val installer = context.packageManager.packageInstaller
+        var sessionId = -1
+        val receiver = object : android.content.BroadcastReceiver() {
+            override fun onReceive(ctx: Context?, intent: Intent?) {
+                runCatching { context.unregisterReceiver(this) }
+                val status = intent?.getIntExtra(
+                    PackageInstaller.EXTRA_STATUS, PackageInstaller.STATUS_FAILURE
+                ) ?: PackageInstaller.STATUS_FAILURE
+                if (status == PackageInstaller.STATUS_SUCCESS) {
+                    installMessage = context.getString(R.string.xposed_install_session_commit_success)
+                    step = PatchStep.DONE
+                } else {
+                    val msg = intent?.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)
+                        ?: status.toString()
+                    installMessage = context.getString(R.string.xposed_install_session_commit_failed, msg)
+                    step = PatchStep.FAILED
+                }
+            }
+        }
         try {
-            val installer = context.packageManager.packageInstaller
+            val filter = android.content.IntentFilter(action)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                context.registerReceiver(receiver, filter)
+            }
             val params = PackageInstaller.SessionParams(
                 PackageInstaller.SessionParams.MODE_FULL_INSTALL
             ).apply { setSize(apk.length()) }
-            val sessionId = installer.createSession(params)
+            sessionId = installer.createSession(params)
             installer.openSession(sessionId).use { session ->
                 session.openWrite("lspatch", 0, apk.length()).use { out ->
                     apk.inputStream().use { it.copyTo(out) }
                     session.fsync(out)
                 }
-                val installIntent = Intent("${context.packageName}.lspatch.INSTALL_COMMITTED").apply {
+                val installIntent = Intent(action).apply {
                     setPackage(context.packageName)
                 }
                 // PackageInstaller.commit() requires a *mutable* PendingIntent so the system can
@@ -383,11 +418,17 @@ class PatchController(private val context: Context) {
                 val pi = PendingIntent.getBroadcast(context, sessionId, installIntent, flags)
                 session.commit(pi.intentSender)
             }
-            installMessage = "已提交安装：${apk.name}"
-            step = PatchStep.DONE
+            // commit() only enqueued the session; the receiver below (or its failure path) sets
+            // the final DONE/FAILED. We surface "submitted" as an intermediate message only.
+            installMessage = context.getString(R.string.xposed_install_session_submitted, apk.name)
         } catch (e: Throwable) {
-            installMessage = "生成成功，但静默安装失败：${e.message ?: e.javaClass.simpleName}"
-            step = PatchStep.DONE
+            runCatching { context.unregisterReceiver(receiver) }
+            runCatching { if (sessionId != -1) installer.abandonSession(sessionId) }
+            android.util.Log.e("LSPatch-Install", "session install failed", e)
+            installMessage = context.getString(
+                R.string.xposed_install_session_failed, e.message ?: e.javaClass.simpleName
+            )
+            step = PatchStep.FAILED
         }
     }
 

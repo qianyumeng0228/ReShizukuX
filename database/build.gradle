@@ -6,7 +6,8 @@ plugins {
 
 android {
     namespace = "af.shizuku.manager.database"
-    compileSdk = 35
+    // compileSdk/minSdk/targetSdk 由根 build.gradle subprojects 统一设为 37/24/37；
+    // 此前写死 compileSdk=35 与 :common/:api 要求的 37 冲突，导致 checkReleaseAarMetadata 失败。
 
     defaultConfig {
         minSdk = 24
